@@ -25,6 +25,7 @@
     "vue-router": "^4.2.5"
   },
   "devDependencies": {
+    "@types/node": "^22.13.14",
     "@umijs/openapi": "^1.13.0",
     "@vitejs/plugin-vue": "^5.1.4",
     "autoprefixer": "^10.4.17",

@@ -32,9 +32,10 @@ service.interceptors.request.use(
 // 响应拦截器
 service.interceptors.response.use(
   (response: AxiosResponse) => {
+    console.log('response', response)
     const res = response.data
     // 这里可以根据后端的约定对响应数据进行处理
-    if (res.code === 200) {
+    if (res.code === 0) {
       return res.data
     }
     // 处理其他状态码
@@ -45,20 +46,20 @@ service.interceptors.response.use(
     // 处理HTTP错误状态
     if (error.response) {
       switch (error.response.status) {
-        case 401:
+        case 40100:
           // 未授权，清除token并跳转到登录页面
           localStorage.removeItem('token')
           // 可以在这里添加路由跳转逻辑
           break
-        case 403:
+        case 40300:
           // 权限不足
           console.error('No permission')
           break
-        case 404:
+        case 40400:
           // 请求的资源不存在
           console.error('Resource not found')
           break
-        case 500:
+        case 50000:
           // 服务器错误
           console.error('Server error')
           break

@@ -38,6 +38,12 @@ declare namespace API {
     status?: number;
   };
 
+  type BaseResponseArticlePageVO = {
+    code?: number;
+    data?: ArticlePageVO;
+    message?: string;
+  };
+
   type BaseResponsePageResponseArticlePageVO = {
     code?: number;
     data?: PageResponseArticlePageVO;

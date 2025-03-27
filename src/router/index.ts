@@ -38,6 +38,11 @@ const router = createRouter({
       path: '/contact',
       name: 'Contact',
       component: Contact
+    },
+    {
+      path: '/article/:id',
+      name: 'ArticleDetail',
+      component: () => import('../views/ArticleDetail.vue')
     }
   ]
 })
