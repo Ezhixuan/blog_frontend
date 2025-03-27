@@ -5,6 +5,8 @@ import Blogs from '../views/Blogs.vue'
 import Project from '../views/Project.vue'
 import Friend from '../views/Friend.vue'
 import Contact from '../views/Contact.vue'
+import Login from '../views/Login.vue'
+import Register from '../views/Register.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -43,6 +45,16 @@ const router = createRouter({
       path: '/article/:id',
       name: 'ArticleDetail',
       component: () => import('../views/ArticleDetail.vue')
+    },
+    {
+      path: '/login',
+      name: 'Login',
+      component: Login
+    },
+    {
+      path: '/register',
+      name: 'Register',
+      component: Register
     }
   ]
 })

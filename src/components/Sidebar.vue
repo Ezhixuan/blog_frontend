@@ -1,7 +1,78 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { HomeIcon, UserIcon, DocumentTextIcon, CodeBracketIcon, UserGroupIcon, EnvelopeIcon } from '@heroicons/vue/24/outline';
-import { RouterLink } from 'vue-router';
+import { RouterLink, useRouter } from 'vue-router';
+import { getLoginUserInfo } from '@/api/generated/api/sysUserController';
+import axios from 'axios';
+
+const router = useRouter();
+const isLoggedIn = ref(false);
+const showLoginDialog = ref(false);
+const isLoading = ref(true);
+const hideTimeout = ref<number | null>(null);
+
+// 检查登录状态
+const checkLoginStatus = async () => {
+  try {
+    const response = await getLoginUserInfo();
+    isLoggedIn.value = response.data?.data != null;
+  } catch (error) {
+    isLoggedIn.value = false;
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+// 处理导航
+const handleNavigation = (path: string) => {
+  router.push(path);
+  showLoginDialog.value = false;
+  if (hideTimeout.value !== null) {
+    clearTimeout(hideTimeout.value);
+    hideTimeout.value = null;
+  }
+};
+
+// 处理鼠标进入头像
+const handleMouseEnter = () => {
+  if (!isLoggedIn.value && !isLoading.value) {
+    // 如果存在延时隐藏，取消它
+    if (hideTimeout.value !== null) {
+      clearTimeout(hideTimeout.value);
+      hideTimeout.value = null;
+    }
+    showLoginDialog.value = true;
+  }
+};
+
+// 处理鼠标离开头像
+const handleMouseLeave = () => {
+  // 设置延时隐藏，1.5秒后隐藏登录框
+  hideTimeout.value = setTimeout(() => {
+    showLoginDialog.value = false;
+    hideTimeout.value = null;
+  }, 1500) as unknown as number;
+};
+
+// 清除隐藏定时器
+const clearHideTimeout = () => {
+  if (hideTimeout.value !== null) {
+    clearTimeout(hideTimeout.value);
+    hideTimeout.value = null;
+  }
+};
+
+// 处理对话框鼠标离开
+const handleDialogLeave = () => {
+  hideTimeout.value = setTimeout(() => {
+    showLoginDialog.value = false;
+    hideTimeout.value = null;
+  }, 500) as unknown as number;
+};
+
+onMounted(() => {
+  checkLoginStatus();
+});
 
 const menuItems = [
   { name: 'Home', icon: HomeIcon, link: '/' },
@@ -24,16 +95,62 @@ const tags = [
   { name: 'Frosti', count: 2 },
   { name: 'Blog', count: 2 },
 ];
+
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+}
+
+const token = getCookie('xuanBlog');
+console.log(token); // 打印 token
 </script>
 
 <template>
   <aside class="w-64 bg-white shadow-lg p-6 min-h-screen">
     <!-- Profile -->
-    <div class="text-center mb-8">
-      <img src="https://avatars.githubusercontent.com/u/46998172?v=4" 
-           alt="Profile" 
-           class="w-32 h-32 rounded-full mx-auto mb-4 border-4 border-slate-100 hover:rotate-[360deg] transition-transform duration-500"
+    <div class="text-center mb-8 relative">
+      <div
+        @mouseenter="handleMouseEnter"
+        @mouseleave="handleMouseLeave"
+        class="relative inline-block"
       >
+        <img
+          src="https://avatars.githubusercontent.com/u/46998172?v=4" 
+          alt="Profile" 
+          class="w-32 h-32 rounded-full mx-auto mb-4 border-4 border-slate-100 hover:rotate-[360deg] transition-transform duration-500"
+        >
+        
+        <!-- Login Dialog -->
+        <div
+          v-if="showLoginDialog"
+          class="absolute left-1/2 transform -translate-x-1/2 mt-2 w-48 bg-white rounded-lg shadow-xl p-4 z-10
+                 animate-fade-in-up border border-gray-200"
+          @mouseenter="clearHideTimeout"
+          @mouseleave="handleDialogLeave"
+        >
+          <div class="text-center space-y-3">
+            <p class="text-gray-600 text-sm mb-2">登录后体验更多功能</p>
+            <button
+              @click="handleNavigation('/login')"
+              class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              登录
+            </button>
+            <button
+              @click="handleNavigation('/register')"
+              class="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+            >
+              注册
+            </button>
+          </div>
+          
+          <!-- Arrow -->
+          <div class="absolute -top-2 left-1/2 transform -translate-x-1/2">
+            <div class="border-8 border-transparent border-b-white"></div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Navigation -->

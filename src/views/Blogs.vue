@@ -81,11 +81,11 @@ const loadArticles = async () => {
     console.log('API响应数据:', res);
     
     // 根据实际返回数据结构进行处理
-    if (res.data) {
-      articles.value = res.data || [];
-      total.value = Number(res.total) || 0;
+    if (res.data && res.data.data) {
+      articles.value = res.data.data.data || [];
+      total.value = res.data.data.total || 0;
     } else {
-      console.error('获取文章列表失败:', res.message);
+      console.error('获取文章列表失败:', res.data?.message);
       articles.value = [];
       total.value = 0;
     }

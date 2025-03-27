@@ -14,6 +14,7 @@ service.interceptors.request.use(
   (config: AxiosRequestConfig) => {
     // 在发送请求之前做些什么
     const token = localStorage.getItem('token')
+    console.log("token  = " + token);
     if (token) {
       config.headers = {
         ...config.headers,
@@ -33,14 +34,14 @@ service.interceptors.request.use(
 service.interceptors.response.use(
   (response: AxiosResponse) => {
     console.log('response', response)
-    const res = response.data
+    const res = response
     // 这里可以根据后端的约定对响应数据进行处理
-    if (res.code === 0) {
-      return res.data
+    if (res.data.code === 0) {
+      return res
     }
     // 处理其他状态码
-    console.error('Response error:', res.message || 'Error')
-    return Promise.reject(new Error(res.message || 'Error'))
+    console.error('Response error:', res.data.message || 'Error')
+    return Promise.reject(new Error(res.data.message || 'Error'))
   },
   (error) => {
     // 处理HTTP错误状态

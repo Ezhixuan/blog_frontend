@@ -50,9 +50,23 @@ declare namespace API {
     message?: string;
   };
 
+  type TokenInfo = {
+    tokenName?: string;
+    tokenValue?: string;
+    isLogin?: boolean;
+    loginId?: string;
+    loginType?: string;
+    tokenTimeout?: string;
+    sessionTimeout?: string;
+    tokenSessionTimeout?: string;
+    tokenActiveTimeout?: string;
+    loginDeviceType?: string;
+    tag?: any;
+  };
+
   type BaseResponseString = {
     code?: number;
-    data?: string;
+    data?: string | TokenInfo;
     message?: string;
   };
 
