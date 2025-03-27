@@ -11,17 +11,18 @@ const service: AxiosInstance = axios.create({
 
 // 请求拦截器
 service.interceptors.request.use(
-  (config: AxiosRequestConfig) => {
+  (config) => {
     // 在发送请求之前做些什么
-    const token = localStorage.getItem('token')
+    const token = localStorage.getItem('token');
+    const tokenName = localStorage.getItem("tokenName");
     console.log("token  = " + token);
-    if (token) {
+    if (token && tokenName) {
       config.headers = {
         ...config.headers,
-        Authorization: `Bearer ${token}`,
-      }
+        [tokenName]: `Bearer ${token}`,
+      };
     }
-    return config
+    return config;
   },
   (error) => {
     // 对请求错误做些什么

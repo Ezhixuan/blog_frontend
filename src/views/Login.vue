@@ -31,6 +31,9 @@ const handleLogin = async () => {
         if (tokenData.tokenValue) {
           localStorage.setItem('token', tokenData.tokenValue);
         }
+        if (tokenData.tokenName) {
+          localStorage.setItem('tokenName', tokenData.tokenName);
+        }
         if (tokenData.loginId) {
           localStorage.setItem('loginId', tokenData.loginId);
         }

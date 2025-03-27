@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { HomeIcon, UserIcon, DocumentTextIcon, CodeBracketIcon, UserGroupIcon, EnvelopeIcon } from '@heroicons/vue/24/outline';
 import { RouterLink, useRouter } from 'vue-router';
 import { getLoginUserInfo } from '@/api/generated/api/sysUserController';
@@ -10,17 +10,39 @@ const isLoggedIn = ref(false);
 const showLoginDialog = ref(false);
 const isLoading = ref(true);
 const hideTimeout = ref<number | null>(null);
+const userInfo = ref<API.UserInfoVO | null>(null);
+const avatarError = ref(false);
+
+// 默认头像
+const defaultAvatar = "https://avatars.githubusercontent.com/u/46998172?v=4";
+
+// 用户头像
+const userAvatar = computed(() => {
+  if (!isLoggedIn.value || !userInfo.value?.avatar || avatarError.value) {
+    return defaultAvatar;
+  }
+  return userInfo.value.avatar;
+});
 
 // 检查登录状态
 const checkLoginStatus = async () => {
   try {
     const response = await getLoginUserInfo();
     isLoggedIn.value = response.data?.data != null;
+    if (isLoggedIn.value && response.data?.data) {
+      userInfo.value = response.data.data;
+    }
   } catch (error) {
     isLoggedIn.value = false;
+    userInfo.value = null;
   } finally {
     isLoading.value = false;
   }
+};
+
+// 处理头像加载错误
+const handleAvatarError = () => {
+  avatarError.value = true;
 };
 
 // 处理导航
@@ -35,7 +57,8 @@ const handleNavigation = (path: string) => {
 
 // 处理鼠标进入头像
 const handleMouseEnter = () => {
-  if (!isLoggedIn.value && !isLoading.value) {
+  checkLoginStatus()
+  if (!isLoading.value) {
     // 如果存在延时隐藏，取消它
     if (hideTimeout.value !== null) {
       clearTimeout(hideTimeout.value);
@@ -43,6 +66,22 @@ const handleMouseEnter = () => {
     }
     showLoginDialog.value = true;
   }
+};
+
+// 处理退出登录
+const handleLogout = () => {
+  // 清除本地存储的登录信息
+  localStorage.removeItem('token');
+  localStorage.removeItem('loginId');
+  localStorage.removeItem('isLogin');
+  
+  // 重置状态
+  isLoggedIn.value = false;
+  userInfo.value = null;
+  showLoginDialog.value = false;
+  
+  // 跳转到首页
+  router.push('/');
 };
 
 // 处理鼠标离开头像
@@ -116,14 +155,15 @@ console.log(token); // 打印 token
         class="relative inline-block"
       >
         <img
-          src="https://avatars.githubusercontent.com/u/46998172?v=4" 
+          :src="userAvatar" 
           alt="Profile" 
+          @error="handleAvatarError"
           class="w-32 h-32 rounded-full mx-auto mb-4 border-4 border-slate-100 hover:rotate-[360deg] transition-transform duration-500"
         >
         
-        <!-- Login Dialog -->
+        <!-- Login Dialog (when not logged in) -->
         <div
-          v-if="showLoginDialog"
+          v-if="showLoginDialog && !isLoggedIn"
           class="absolute left-1/2 transform -translate-x-1/2 mt-2 w-48 bg-white rounded-lg shadow-xl p-4 z-10
                  animate-fade-in-up border border-gray-200"
           @mouseenter="clearHideTimeout"
@@ -143,6 +183,69 @@ console.log(token); // 打印 token
             >
               注册
             </button>
+          </div>
+          
+          <!-- Arrow -->
+          <div class="absolute -top-2 left-1/2 transform -translate-x-1/2">
+            <div class="border-8 border-transparent border-b-white"></div>
+          </div>
+        </div>
+        
+        <!-- User Welcome Dialog (when logged in) -->
+        <div
+          v-if="showLoginDialog && isLoggedIn"
+          class="absolute left-1/2 transform -translate-x-1/2 mt-2 w-72 bg-white rounded-lg shadow-xl p-4 z-10
+                 animate-fade-in-up border border-gray-200"
+          @mouseenter="clearHideTimeout"
+          @mouseleave="handleDialogLeave"
+        >
+          <div class="space-y-4">
+            <!-- 用户基本信息 -->
+            <div class="flex items-start space-x-4">
+              <img 
+                :src="userAvatar"
+                alt="User Avatar"
+                class="w-16 h-16 rounded-full border-2 border-gray-200"
+                @error="handleAvatarError"
+              />
+              <div class="flex-1">
+                <h3 class="text-lg font-medium text-gray-900">
+                  {{ userInfo?.username || userInfo?.userAccount || '用户' }}
+                </h3>
+                <p class="text-sm text-gray-500">{{ userInfo?.role || '普通用户' }}</p>
+                <p class="text-sm text-gray-500 truncate" :title="userInfo?.email">
+                  {{ userInfo?.email || '未设置邮箱' }}
+                </p>
+              </div>
+            </div>
+            
+            <!-- 用户简介 -->
+            <div class="text-sm text-gray-600 border-t border-gray-100 pt-3">
+              <p class="line-clamp-2" :title="userInfo?.profile">
+                {{ userInfo?.profile || '这个人很懒，还没有填写简介' }}
+              </p>
+            </div>
+
+            <!-- 加入时间 -->
+            <div class="text-xs text-gray-500 border-t border-gray-100 pt-3">
+              加入时间：{{ userInfo?.createTime ? new Date(userInfo.createTime).toLocaleDateString() : '未知' }}
+            </div>
+            
+            <!-- 操作按钮 -->
+            <div class="flex space-x-2 pt-2">
+              <button
+                @click="handleNavigation('/about')"
+                class="flex-1 px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                个人主页
+              </button>
+              <button
+                @click="handleLogout"
+                class="flex-1 px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                退出登录
+              </button>
+            </div>
           </div>
           
           <!-- Arrow -->
