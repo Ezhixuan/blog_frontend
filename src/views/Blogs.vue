@@ -74,7 +74,7 @@ const loadArticles = async () => {
       current: current.value,
       pageSize: pageSize.value,
       sortField: 'createTime',
-      sortOrder: 'desc'
+      sortOrder: 'descend'
     };
     
     const res = await getArticlePageList(params);
