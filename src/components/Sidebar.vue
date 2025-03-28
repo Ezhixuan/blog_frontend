@@ -268,7 +268,7 @@ const tags = [
             <!-- 操作按钮 -->
             <div class="flex space-x-2 pt-2">
               <button
-                @click="showChangePasswordModal = userInfo?.role?.toLowerCase() !== 'admin'; showSubmitBlogModal = userInfo?.role?.toLowerCase() === 'admin'"
+                @click="userInfo?.role?.toLowerCase() === 'admin' ? router.push('/blog/edit') : showChangePasswordModal = true"
                 class="flex-1 px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
                 {{ userInfo?.role?.toLowerCase() === 'admin' ? '提交博客' : '修改密码' }}

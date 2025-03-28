@@ -7,6 +7,7 @@ import Friend from '../views/Friend.vue'
 import Contact from '../views/Contact.vue'
 import Login from '../views/Login.vue'
 import Register from '../views/Register.vue'
+import BlogEdit from '../views/BlogEdit.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -45,6 +46,11 @@ const router = createRouter({
       path: '/article/:id',
       name: 'ArticleDetail',
       component: () => import('../views/ArticleDetail.vue')
+    },
+    {
+      path: '/blog/edit',
+      name: 'BlogEdit',
+      component: BlogEdit
     },
     {
       path: '/login',

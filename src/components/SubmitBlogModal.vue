@@ -1,17 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue';
-import VueMarkdownEditor from '@kangc/v-md-editor';
-import '@kangc/v-md-editor/lib/style/base-editor.css';
-import vuepressTheme from '@kangc/v-md-editor/lib/theme/vuepress.js';
-import '@kangc/v-md-editor/lib/theme/style/vuepress.css';
-import Prism from 'prismjs';
 import message from '@/utils/message';
-
-// 配置v-md-editor
-VueMarkdownEditor.use(vuepressTheme, {
-  Prism,
-});
+import { doSubmitArticle } from '@/api/generated/api/articleController';
 
 const props = defineProps<{
   isOpen: boolean
@@ -41,11 +32,10 @@ const handleSubmit = async () => {
 
   try {
     isLoading.value = true;
-    // TODO: 调用提交博客的API
-    // await submitBlog({
-    //   title: title.value,
-    //   content: content.value
-    // });
+    await doSubmitArticle({
+      title: title.value,
+      content: content.value
+    });
     message.success('博客提交成功');
     emit('blogSubmitted');
     closeModal();
