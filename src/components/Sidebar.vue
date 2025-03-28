@@ -7,6 +7,7 @@ import { RouterLink, useRouter } from 'vue-router';
 import { doLogout, getLoginUserInfo } from '@/api/generated/api/sysUserController';
 import { on } from '@/utils/eventBus';
 import message from '@/utils/message';
+import { getPageState, clearPageState } from '@/utils/pageMemory';
 
 // 角色颜色映射
 const roleColorMap: Record<string, string> = {
@@ -158,7 +159,36 @@ const handleTocItemClick = (anchor: string) => {
 
 // 返回文章列表
 const backToArticleList = () => {
-  router.push('/blogs');
+  const pageState = getPageState();
+  
+  if (pageState) {
+    // 如果有保存的分页状态，使用它返回到指定页
+    console.log(`返回到文章列表第${pageState.current}页`);
+    router.push({
+      path: '/blogs',
+      query: {
+        page: pageState.current.toString(),
+        pageSize: pageState.pageSize.toString()
+      }
+    });
+    
+    // 如果记录了滚动位置，在下一个时间循环中恢复滚动位置
+    if (pageState.scrollPosition) {
+      setTimeout(() => {
+        window.scrollTo({
+          top: pageState.scrollPosition,
+          behavior: 'smooth'
+        });
+      }, 100);
+    }
+  } else {
+    // 如果没有保存的分页状态，直接返回文章列表首页
+    console.log('返回到文章列表首页');
+    router.push('/blogs');
+  }
+  
+  // 返回后清空分页状态缓存
+  clearPageState();
 };
 
 onMounted(() => {
@@ -228,16 +258,16 @@ const tags = [
 </script>
 
 <template>
-  <aside class="w-64 bg-white shadow-lg p-6 min-h-screen relative overflow-hidden">
+  <aside class="w-72 bg-white shadow-lg p-6 fixed top-0 left-0 bottom-0 overflow-y-auto z-30">
     <!-- 使用transition-group实现平滑过渡 -->
     <transition
       name="sidebar-transition"
       mode="out-in"
     >
-      <!-- 文章目录侧边栏 (仅在文章页面显示) -->
-      <div v-if="isArticlePage && tocItems.length > 0" key="article-toc" class="sidebar-content article-toc">
+      <!-- 文章侧边栏 (在文章页面显示，无论是否有目录) -->
+      <div v-if="isArticlePage" key="article-toc" class="sidebar-content article-toc">
         <div class="toc-header">
-          <h2 class="text-xl font-bold mb-2 truncate" :title="articleTitle">{{ articleTitle }}</h2>
+          <h2 class="text-xl font-bold mb-2 truncate" :title="articleTitle">{{ articleTitle || '文章' }}</h2>
           <button 
             @click="backToArticleList" 
             class="text-xs text-blue-600 flex items-center hover:text-blue-800 transition-colors"
@@ -249,7 +279,8 @@ const tags = [
           </button>
         </div>
         
-        <div class="mt-6 mb-4 border-t border-gray-100 pt-4">
+        <!-- 只有当确实有目录项时才显示目录内容 -->
+        <div v-if="tocItems.length > 0" class="mt-6 mb-4 border-t border-gray-100 pt-4">
           <h3 class="text-base font-medium mb-3">目录</h3>
           <div class="toc-content space-y-2">
             <transition-group name="toc-item">
@@ -265,6 +296,11 @@ const tags = [
               </div>
             </transition-group>
           </div>
+        </div>
+        
+        <!-- 无目录提示 -->
+        <div v-else class="mt-6 mb-4 border-t border-gray-100 pt-4 text-center text-gray-500 italic">
+          <p>该文章没有目录结构</p>
         </div>
       </div>
       

@@ -9,7 +9,7 @@ import Sidebar from './components/Sidebar.vue'
       <Sidebar />
       
       <!-- Main Content -->
-      <main class="flex-1 p-8">
+      <main class="flex-1 p-11 ml-72">
         <router-view></router-view>
         
         <!-- Footer -->

@@ -15,7 +15,7 @@
           @click="goToArticleDetail(article.id)"
         >
           <div class="flex items-start space-x-6">
-            <div class="w-64 h-48 rounded-lg overflow-hidden flex items-center justify-center shadow-sm group-hover:shadow transition-all duration-300 cursor-zoom-in" :class="{'bg-gradient-to-br from-blue-100 to-purple-100': !article.coverUrl}" @click.stop="openPreview(article.cover)">
+            <div class="w-64 h-48 rounded-lg overflow-hidden flex items-center justify-center shadow-sm group-hover:shadow transition-all duration-300 cursor-zoom-in" :class="{'bg-gradient-to-br from-blue-100 to-purple-100': !article.cover}" @click.stop="openPreview(article.cover)">
               <img v-if="article.cover" :src="article.cover" class="w-full h-full object-cover transform transition-transform duration-300 group-hover:scale-105" :alt="article.title" loading="lazy" />
               <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
@@ -76,6 +76,10 @@
       </div>
     </div>
   </div>
+  
+  <!-- 回到顶部按钮 -->
+  <BackToTop :visibility-height="300" :duration="500" />
+  
   <!-- 图片预览组件 -->
   <ImageViewer
     v-model:visible="previewVisible"
@@ -84,12 +88,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import ImageViewer from '../components/ImageViewer.vue';
-import { useRouter } from 'vue-router';
+import BackToTop from '../components/BackToTop.vue';
+import { useRouter, useRoute } from 'vue-router';
 import { getArticlePageList } from '../api/generated/api/articleController';
+import { savePageState } from '@/utils/pageMemory';
 
 const router = useRouter();
+const route = useRoute();
 const articles = ref<API.ArticlePageVO[]>([]);
 const total = ref(0);
 const current = ref(1);
@@ -100,6 +107,53 @@ const loading = ref(false);
 const totalPages = computed(() => {
   return Math.ceil(total.value / pageSize.value);
 });
+
+// 从URL参数中获取初始分页状态
+onMounted(() => {
+  // 检查URL中是否有页码参数
+  const pageParam = route.query.page;
+  const pageSizeParam = route.query.pageSize;
+  
+  if (pageParam && typeof pageParam === 'string') {
+    const pageNumber = parseInt(pageParam);
+    if (!isNaN(pageNumber) && pageNumber > 0) {
+      current.value = pageNumber;
+    }
+  }
+  
+  if (pageSizeParam && typeof pageSizeParam === 'string') {
+    const pageSizeNumber = parseInt(pageSizeParam);
+    if (!isNaN(pageSizeNumber) && pageSizeNumber > 0) {
+      pageSize.value = pageSizeNumber;
+    }
+  }
+  
+  loadArticles();
+});
+
+// 监听分页变化，更新URL参数
+watch([current, pageSize], () => {
+  // 更新URL，不触发路由变化
+  router.replace({
+    path: '/blogs',
+    query: {
+      page: current.value.toString(),
+      pageSize: pageSize.value.toString()
+    }
+  });
+  
+  // 保存当前分页状态和滚动位置
+  saveCurrentPageState();
+});
+
+// 保存当前分页状态
+const saveCurrentPageState = () => {
+  savePageState(
+    current.value,
+    pageSize.value,
+    window.scrollY
+  );
+};
 
 // 加载文章列表
 const loadArticles = async () => {
@@ -137,6 +191,12 @@ const loadArticles = async () => {
 const changePage = (page: number) => {
   current.value = page;
   loadArticles();
+  
+  // 回到顶部
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
 };
 
 // 格式化日期
@@ -157,14 +217,11 @@ const getReadTime = (wordCount?: number) => {
 // 跳转到文章详情页
 const goToArticleDetail = (id?: number) => {
   if (id) {
+    // 保存当前分页状态再跳转
+    saveCurrentPageState();
     router.push(`/article/${id}`);
   }
 };
-
-// 组件挂载时加载数据
-onMounted(() => {
-  loadArticles();
-});
 
 // 图片预览功能
 const previewVisible = ref(false);
