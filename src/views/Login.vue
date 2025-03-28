@@ -3,22 +3,21 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { doLogin, getLoginUserInfo } from '@/api/generated/api/sysUserController';
 import { emit } from '@/utils/eventBus';
+import message from '@/utils/message';
 
 const router = useRouter();
 const userAccount = ref('');
 const password = ref('');
 const isLoading = ref(false);
-const errorMessage = ref('');
 
 const handleLogin = async () => {
   if (!userAccount.value || !password.value) {
-    errorMessage.value = '请输入账号和密码';
+    message.warning('请输入账号和密码');
     return;
   }
 
   try {
     isLoading.value = true;
-    errorMessage.value = '';
     
     const response = await doLogin({
       userAccount: userAccount.value,
@@ -49,6 +48,8 @@ const handleLogin = async () => {
         if (userInfoResponse.data?.code === 0 && userInfoResponse.data?.data) {
           // 触发用户信息更新事件
           emit('user-login-success', userInfoResponse.data.data);
+          // 显示欢迎信息
+          message.success(`欢迎回来，${userInfoResponse.data.data.userName || userInfoResponse.data.data.userAccount}！`);
         }
       } catch (error) {
         console.error('Failed to fetch user info:', error);
@@ -56,10 +57,10 @@ const handleLogin = async () => {
       
       router.push('/');
     } else {
-      errorMessage.value = response.data.message || '登录失败，请检查账号密码';
+      message.error(response.data.message || '登录失败，请检查账号密码');
     }
   } catch (error) {
-    errorMessage.value = '登录失败，请稍后再试';
+    message.error('登录失败，请稍后再试');
     console.error('Login error:', error);
   } finally {
     isLoading.value = false;
@@ -105,10 +106,6 @@ const handleLogin = async () => {
               placeholder="密码"
             />
           </div>
-        </div>
-
-        <div class="text-red-500 text-sm" v-if="errorMessage">
-          {{ errorMessage }}
         </div>
 
         <div>
