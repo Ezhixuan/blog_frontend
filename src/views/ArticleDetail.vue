@@ -45,26 +45,26 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { getArticleDetail } from '../api/generated/api/articleController';
+import { getArticleInfo } from '../api/generated/api/articleController';
 
 const route = useRoute();
 const router = useRouter();
-const articleId = ref<number | null>(null);
-const article = ref<API.ArticlePageVO | null>(null);
+const articleId = ref<string | null>(null);
+const article = ref<API.ArticleInfoVO | null>(null);
 const loading = ref(true);
 
 // 获取文章详情
-const fetchArticleDetail = async (id: number) => {
+const fetchArticleDetail = async (id: string) => {
   loading.value = true;
   try {
-    const res = await getArticleDetail(id);
+    const res = await getArticleInfo({ id });
     console.log('文章详情响应:', res);
     
     // 根据实际返回数据结构进行处理
-    if (res.code === 0 && res.data) {
-      article.value = res.data;
+    if (res.data?.data) {
+      article.value = res.data.data;
     } else {
-      console.error('获取文章详情失败:', res.message);
+      console.error('获取文章详情失败:', res.data?.message);
       article.value = null;
     }
   } catch (error) {
@@ -89,8 +89,8 @@ const formatDate = (dateStr?: string) => {
 };
 
 onMounted(() => {
-  const id = Number(route.params.id);
-  if (!isNaN(id)) {
+  const id = route.params.id;
+  if (id) {
     articleId.value = id;
     fetchArticleDetail(id);
   } else {
@@ -155,4 +155,4 @@ onMounted(() => {
 .back-btn {
   @apply mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors;
 }
-</style> 
+</style>

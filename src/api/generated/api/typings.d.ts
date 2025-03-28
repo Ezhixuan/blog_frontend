@@ -1,4 +1,28 @@
 declare namespace API {
+  type ArticleCategoryVO = {
+    id?: number;
+    name?: string;
+  };
+
+  type ArticleInfoVO = {
+    id?: number;
+    title?: string;
+    userId?: number;
+    summary?: string;
+    cover?: string;
+    categoryId?: number;
+    categoryName?: string;
+    tagMap?: Record<string, any>;
+    wordCount?: number;
+    viewCount?: number;
+    likeCount?: number;
+    commentCount?: number;
+    status?: number;
+    createTime?: string;
+    updateTime?: string;
+    content?: string;
+  };
+
   type ArticlePageVO = {
     id?: number;
     title?: string;
@@ -39,6 +63,29 @@ declare namespace API {
     content?: string;
   };
 
+  type ArticleTagVO = {
+    id?: number;
+    name?: string;
+  };
+
+  type BaseResponseArticleInfoVO = {
+    code?: number;
+    data?: ArticleInfoVO;
+    message?: string;
+  };
+
+  type BaseResponseListArticleCategoryVO = {
+    code?: number;
+    data?: ArticleCategoryVO[];
+    message?: string;
+  };
+
+  type BaseResponseListArticleTagVO = {
+    code?: number;
+    data?: ArticleTagVO[];
+    message?: string;
+  };
+
   type BaseResponsePageResponseArticlePageVO = {
     code?: number;
     data?: PageResponseArticlePageVO;
@@ -63,6 +110,10 @@ declare namespace API {
     message?: string;
   };
 
+  type getArticleInfoParams = {
+    id: number;
+  };
+
   type PageResponseArticlePageVO = {
     data?: ArticlePageVO[];
     total?: number;
@@ -83,8 +134,8 @@ declare namespace API {
   };
 
   type UserEditDTO = {
-    id?: number;
     password?: string;
+    oldPassword?: string;
     username?: string;
     avatar?: string;
     profile?: string;
