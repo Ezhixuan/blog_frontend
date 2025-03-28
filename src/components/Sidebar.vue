@@ -4,6 +4,7 @@ import { HomeIcon, UserIcon, DocumentTextIcon, CodeBracketIcon, UserGroupIcon, E
 import { RouterLink, useRouter } from 'vue-router';
 import { doLogout, getLoginUserInfo } from '@/api/generated/api/sysUserController';
 import { on } from '@/utils/eventBus';
+import message from '@/utils/message';
 
 // 角色颜色映射
 const roleColorMap = {
@@ -81,19 +82,26 @@ const handleMouseEnter = () => {
 
 // 处理退出登录
 const handleLogout = async () => {
-  await doLogout();
-  // 清除本地存储的登录信息
+  try {
+    await doLogout();
+    message.info('退出登录成功, 期待您下次再来');
+  } catch (error: any) {
+    // 如果是token过期，静默处理
+    if (error?.response?.data?.code === 40100) {
+      console.log('Token已过期');
+    } else {
+      message.error('退出登录失败');
+      return;
+    }
+  }
+  // 无论是否成功都清除本地存储的登录信息
   localStorage.removeItem('token');
   localStorage.removeItem('tokenName');
   localStorage.removeItem('loginId');
   localStorage.removeItem('isLogin');
-  
-  // 重置状态
   isLoggedIn.value = false;
   userInfo.value = null;
   showLoginDialog.value = false;
-  
-  // 跳转到首页
   router.push('/');
 };
 

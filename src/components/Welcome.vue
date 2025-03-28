@@ -30,11 +30,11 @@ const latestProjects = [
 
 <template>
 
-  <div class="rounded-2xl overflow-hidden shadow-sm">
+  <div class="rounded-2xl overflow-hidden shadow-sm h-[25vh] relative mb-8">
     <img 
       src="/public/images/local-banner1.jpg"
       alt="Banner"
-      class="w-full h-64 object-cover"
+      class="w-full h-full object-cover object-center absolute inset-0"
     >
   </div>
 
@@ -81,4 +81,4 @@ const latestProjects = [
 
 <style scoped>
 /* 可以在这里添加自定义样式 */
-</style>    
+</style>
