@@ -214,10 +214,12 @@ const tags = [
         <!-- User Welcome Dialog (when logged in) -->
         <div
           v-if="showLoginDialog && isLoggedIn"
-          class="absolute left-1/2 transform -translate-x-1/2 mt-2 w-72 bg-white rounded-lg shadow-xl p-4 z-10
-                 animate-fade-in-up border border-gray-200"
+          class="absolute left-1/2 transform -translate-x-1/2 mt-2 w-72 backdrop-blur-lg bg-white/90 rounded-lg shadow-2xl p-4 z-10
+                 animate-float border border-transparent hover:border-blue-300/50 transition-all duration-500
+                 bg-gradient-to-br from-white/90 via-white/80 to-blue-50/30"
           @mouseenter="clearHideTimeout"
           @mouseleave="handleDialogLeave"
+          style="transform-style: preserve-3d; perspective: 1000px;"
         >
           <div class="space-y-4">
             <!-- 用户基本信息 -->
@@ -347,5 +349,72 @@ const tags = [
 </template>
 
 <style scoped>
-/* 暂无需要的样式 */
+.animate-float {
+  animation: float 0.6s cubic-bezier(0.16, 1, 0.3, 1), glow 3s ease-in-out infinite;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes float {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.1);
+  }
+  50% {
+    box-shadow: 0 15px 40px -5px rgba(59, 130, 246, 0.2);
+  }
+}
+
+/* 头像光晕效果 */
+img[alt="Profile"] {
+  transition: all 0.5s ease;
+}
+
+img[alt="Profile"]:hover {
+  box-shadow: 0 0 25px rgba(59, 130, 246, 0.3);
+  transform: rotate(360deg) scale(1.05);
+}
+
+/* 信息浮现动画 */
+.flex-1 h3,
+.flex-1 .text-sm,
+.text-xs,
+.flex.space-x-2 {
+  animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 0;
+}
+
+.flex-1 h3 { animation-delay: 0.1s; }
+.flex-1 .text-sm { animation-delay: 0.2s; }
+.text-xs { animation-delay: 0.3s; }
+.flex.space-x-2 { animation-delay: 0.4s; }
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 按钮悬浮效果 */
+button {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+button:hover {
+  transform: translateY(-2px);
+}
 </style>
