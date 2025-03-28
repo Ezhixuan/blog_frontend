@@ -131,29 +131,70 @@ const latestProjects = [
   </div>
 
   <!-- 热门文章推荐 -->
-  <div class="bg-white rounded-2xl shadow-md p-8 mb-8 mt-8 hover:shadow-lg transition-shadow">
-    <h2 class="text-2xl font-bold mb-4 border-b border-gray-300 pb-2">热门文章推荐</h2>
-    <ul>
-      <li v-for="article in popularArticles" :key="article.title" class="mb-4 p-4 border border-gray-200 rounded-md hover:bg-gray-100 transition-colors">
-        <a :href="article.link" class="text-blue-600 hover:text-blue-800 font-medium">
-          {{ article.title }}
-        </a>
-        <p class="text-gray-600 mt-2">{{ article.summary }}</p>
-      </li>
-    </ul>
+  <div class="bg-gradient-to-br from-white to-blue-50 rounded-2xl shadow-md p-8 mb-8 mt-8 transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl">
+    <h2 class="text-2xl font-bold mb-6 flex items-center">
+      <span class="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">热门文章推荐</span>
+      <div class="flex-grow border-b-2 border-gray-200 ml-4"></div>
+    </h2>
+    <div class="grid gap-6">
+      <div v-for="article in popularArticles" :key="article.title" 
+           class="group bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 hover:border-blue-200">
+        <div class="flex items-start space-x-4">
+          <div class="w-16 h-16 rounded-lg bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+          </div>
+          <div class="flex-grow">
+            <a :href="article.link" class="block group-hover:text-blue-600 transition-colors duration-300">
+              <h3 class="font-semibold text-lg mb-2">{{ article.title }}</h3>
+            </a>
+            <p class="text-gray-600 text-sm">{{ article.summary }}</p>
+            <div class="mt-4 flex items-center text-sm text-gray-500">
+              <span class="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                5分钟阅读
+              </span>
+              <span class="mx-2">•</span>
+              <span>2024-01-20</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- 最新项目展示 -->
-  <div class="bg-white rounded-2xl shadow-md p-8 mb-8 hover:shadow-lg transition-shadow">
-    <h2 class="text-2xl font-bold mb-4 border-b border-gray-300 pb-2">最新项目展示</h2>
-    <ul>
-      <li v-for="project in latestProjects" :key="project.name" class="mb-4 p-4 border border-gray-200 rounded-md hover:bg-gray-100 transition-colors">
-        <a :href="project.link" class="text-blue-600 hover:text-blue-800 font-medium">
-          {{ project.name }}
-        </a>
-        <p class="text-gray-600 mt-2">{{ project.desc }}</p>
-      </li>
-    </ul>
+  <div class="bg-gradient-to-br from-white to-green-50 rounded-2xl shadow-md p-8 mb-8 transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl">
+    <h2 class="text-2xl font-bold mb-6 flex items-center">
+      <span class="bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-teal-600">最新项目展示</span>
+      <div class="flex-grow border-b-2 border-gray-200 ml-4"></div>
+    </h2>
+    <div class="grid gap-6">
+      <div v-for="project in latestProjects" :key="project.name" 
+           class="group bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 hover:border-green-200">
+        <div class="flex items-start space-x-4">
+          <div class="w-16 h-16 rounded-lg bg-gradient-to-br from-green-100 to-teal-100 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <div class="flex-grow">
+            <a :href="project.link" class="block group-hover:text-green-600 transition-colors duration-300">
+              <h3 class="font-semibold text-lg mb-2">{{ project.name }}</h3>
+            </a>
+            <p class="text-gray-600 text-sm">{{ project.desc }}</p>
+            <div class="mt-4 flex flex-wrap gap-2">
+              <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">Vue 3</span>
+              <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">TypeScript</span>
+              <span class="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium">Tailwind CSS</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 

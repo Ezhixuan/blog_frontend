@@ -1,48 +1,77 @@
 <template>
   <div class="blogs-container">
-    <div class="blogs-card">
-      <h1 class="blogs-title">Blog Posts</h1>
+    <div class="bg-gradient-to-br from-white to-blue-50 rounded-2xl shadow-md p-8 transform transition-all duration-300 hover:scale-[1.01] hover:shadow-xl">
+      <h1 class="text-3xl font-bold mb-6 flex items-center">
+        <span class="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">Blog Posts</span>
+        <div class="flex-grow border-b-2 border-gray-200 ml-4"></div>
+      </h1>
       
       <!-- 文章列表 -->
-      <div class="blogs-grid">
+      <div class="grid gap-6">
         <article 
           v-for="article in articles" 
           :key="article.id" 
-          class="blog-item"
+          class="group bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 hover:border-blue-200 cursor-pointer"
           @click="goToArticleDetail(article.id)"
         >
-          <h2 class="blog-heading">
-            <a href="javascript:void(0)">{{ article.title }}</a>
-          </h2>
-          <p class="blog-summary">
-            {{ article.summary || '暂无摘要' }}
-          </p>
-          <div class="blog-meta">
-            <span>{{ formatDate(article.createTime) }}</span>
-            <span class="meta-separator">•</span>
-            <span>{{ getReadTime(article.wordCount) }} min read</span>
-            <span class="meta-separator">•</span>
-            <a href="javascript:void(0)" class="meta-tag">{{ article.categoryName }}</a>
+          <div class="flex items-start space-x-6">
+            <div class="w-64 h-48 rounded-lg overflow-hidden flex items-center justify-center shadow-sm group-hover:shadow transition-all duration-300 cursor-zoom-in" :class="{'bg-gradient-to-br from-blue-100 to-purple-100': !article.coverUrl}" @click.stop="openPreview(article.cover)">
+              <img v-if="article.cover" :src="article.cover" class="w-full h-full object-cover transform transition-transform duration-300 group-hover:scale-105" :alt="article.title" loading="lazy" />
+              <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+            </div>
+            <div class="flex-grow">
+              <h2 class="font-semibold text-xl mb-2 group-hover:text-blue-600 transition-colors">
+                {{ article.title }}
+              </h2>
+              <p class="text-gray-600 text-sm mb-4">
+                {{ article.summary || '暂无摘要' }}
+              </p>
+              <div class="flex items-center text-sm text-gray-500 space-x-4">
+                <span class="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  {{ formatDate(article.createTime) }}
+                </span>
+                <span class="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {{ getReadTime(article.wordCount) }} min read
+                </span>
+                <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                  {{ article.categoryName }}
+                </span>
+              </div>
+            </div>
           </div>
         </article>
       </div>
       
       <!-- 分页控件 -->
-      <div class="pagination" v-if="total > 0">
+      <div class="flex items-center justify-center mt-8 space-x-4" v-if="total > 0">
         <button 
-          class="pagination-btn" 
+          class="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all duration-300 shadow-sm hover:shadow flex items-center space-x-2" 
           :disabled="current === 1"
           @click="changePage(current - 1)"
         >
-          上一页
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+          <span>上一页</span>
         </button>
-        <span class="pagination-info">{{ current }} / {{ totalPages }}</span>
+        <span class="text-gray-600 font-medium">{{ current }} / {{ totalPages }}</span>
         <button 
-          class="pagination-btn" 
+          class="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all duration-300 shadow-sm hover:shadow flex items-center space-x-2" 
           :disabled="current === totalPages"
           @click="changePage(current + 1)"
         >
-          下一页
+          <span>下一页</span>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
         </button>
       </div>
     </div>
@@ -130,58 +159,16 @@ const goToArticleDetail = (id?: number) => {
 onMounted(() => {
   loadArticles();
 });
+
+// 图片预览功能
+const openPreview = (imageUrl?: string) => {
+  if (!imageUrl) return;
+  window.open(imageUrl, '_blank');
+};
 </script>
 
 <style scoped>
 .blogs-container {
   @apply space-y-8;
-}
-
-.blogs-card {
-  @apply bg-white rounded-2xl shadow-sm p-8;
-}
-
-.blogs-title {
-  @apply text-3xl font-bold mb-6;
-}
-
-.blogs-grid {
-  @apply grid gap-8;
-}
-
-.blog-item {
-  @apply border-b pb-8 last:border-0 last:pb-0 cursor-pointer transition-transform duration-300 hover:scale-[1.02];
-}
-
-.blog-heading {
-  @apply text-2xl font-semibold mb-4 text-gray-800 hover:text-blue-600 transition-colors;
-}
-
-.blog-summary {
-  @apply text-gray-600 mb-4;
-}
-
-.blog-meta {
-  @apply flex items-center text-sm text-gray-500;
-}
-
-.meta-separator {
-  @apply mx-2;
-}
-
-.meta-tag {
-  @apply text-blue-600 hover:text-blue-800;
-}
-
-.pagination {
-  @apply flex items-center justify-center mt-8 space-x-4;
-}
-
-.pagination-btn {
-  @apply px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition;
-}
-
-.pagination-info {
-  @apply text-gray-600;
 }
 </style>
