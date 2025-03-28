@@ -76,10 +76,16 @@
       </div>
     </div>
   </div>
+  <!-- 图片预览组件 -->
+  <ImageViewer
+    v-model:visible="previewVisible"
+    :image-url="previewImageUrl"
+  />
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import ImageViewer from '../components/ImageViewer.vue';
 import { useRouter } from 'vue-router';
 import { getArticlePageList } from '../api/generated/api/articleController';
 
@@ -161,9 +167,13 @@ onMounted(() => {
 });
 
 // 图片预览功能
+const previewVisible = ref(false);
+const previewImageUrl = ref('');
+
 const openPreview = (imageUrl?: string) => {
   if (!imageUrl) return;
-  window.open(imageUrl, '_blank');
+  previewImageUrl.value = imageUrl;
+  previewVisible.value = true;
 };
 </script>
 
