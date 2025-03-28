@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { doLogin } from '@/api/generated/api/sysUserController';
+import { doLogin, getLoginUserInfo } from '@/api/generated/api/sysUserController';
+import { emit } from '@/utils/eventBus';
 
 const router = useRouter();
 const userAccount = ref('');
@@ -40,6 +41,17 @@ const handleLogin = async () => {
         if (tokenData.isLogin !== undefined) {
           localStorage.setItem('isLogin', String(tokenData.isLogin));
         }
+      }
+      
+      // 登录成功后获取用户信息
+      try {
+        const userInfoResponse = await getLoginUserInfo();
+        if (userInfoResponse.data?.code === 0 && userInfoResponse.data?.data) {
+          // 触发用户信息更新事件
+          emit('user-login-success', userInfoResponse.data.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch user info:', error);
       }
       
       router.push('/');

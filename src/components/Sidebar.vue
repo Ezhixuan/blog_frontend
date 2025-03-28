@@ -2,8 +2,16 @@
 import { ref, onMounted, computed } from 'vue';
 import { HomeIcon, UserIcon, DocumentTextIcon, CodeBracketIcon, UserGroupIcon, EnvelopeIcon } from '@heroicons/vue/24/outline';
 import { RouterLink, useRouter } from 'vue-router';
-import { getLoginUserInfo } from '@/api/generated/api/sysUserController';
-import axios from 'axios';
+import { doLogout, getLoginUserInfo } from '@/api/generated/api/sysUserController';
+import { on } from '@/utils/eventBus';
+
+// 角色颜色映射
+const roleColorMap = {
+  'admin': 'bg-red-500',
+  'vip': 'bg-yellow-500',
+  'user': 'bg-green-500',
+  'default': 'bg-blue-500'
+};
 
 const router = useRouter();
 const isLoggedIn = ref(false);
@@ -26,6 +34,9 @@ const userAvatar = computed(() => {
 
 // 检查登录状态
 const checkLoginStatus = async () => {
+  if (userInfo.value !== null) {
+    return;
+  }
   try {
     const response = await getLoginUserInfo();
     isLoggedIn.value = response.data?.data != null;
@@ -69,9 +80,11 @@ const handleMouseEnter = () => {
 };
 
 // 处理退出登录
-const handleLogout = () => {
+const handleLogout = async () => {
+  await doLogout();
   // 清除本地存储的登录信息
   localStorage.removeItem('token');
+  localStorage.removeItem('tokenName');
   localStorage.removeItem('loginId');
   localStorage.removeItem('isLogin');
   
@@ -111,6 +124,13 @@ const handleDialogLeave = () => {
 
 onMounted(() => {
   checkLoginStatus();
+  
+  // 监听登录成功事件，更新用户信息
+  on('user-login-success', (userData: API.UserInfoVO) => {
+    userInfo.value = userData;
+    isLoggedIn.value = true;
+    isLoading.value = false;
+  });
 });
 
 const menuItems = [
@@ -135,14 +155,6 @@ const tags = [
   { name: 'Blog', count: 2 },
 ];
 
-function getCookie(name) {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop().split(';').shift();
-}
-
-const token = getCookie('xuanBlog');
-console.log(token); // 打印 token
 </script>
 
 <template>
@@ -212,7 +224,15 @@ console.log(token); // 打印 token
                 <h3 class="text-lg font-medium text-gray-900">
                   {{ userInfo?.username || userInfo?.userAccount || '用户' }}
                 </h3>
-                <p class="text-sm text-gray-500">{{ userInfo?.role || '普通用户' }}</p>
+                <!-- 角色标签 -->
+                <div class="flex items-center justify-center space-x-2 my-1">
+                  <span 
+                    :class="[`text-white text-xs px-2 py-0.5 rounded-full`, 
+                            roleColorMap[userInfo?.role?.toLowerCase()] || roleColorMap.default]"
+                  >
+                    {{ userInfo?.role || '普通用户' }}
+                  </span>
+                </div>
                 <p class="text-sm text-gray-500 truncate" :title="userInfo?.email">
                   {{ userInfo?.email || '未设置邮箱' }}
                 </p>
