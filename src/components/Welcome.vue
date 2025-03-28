@@ -32,7 +32,7 @@ const latestProjects = [
 
   <div class="rounded-2xl overflow-hidden shadow-sm">
     <img 
-      src="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?ixlib=rb-1.2.1&auto=format&fit=crop&w=1440&q=80"
+      src="/public/images/local-banner1.jpg"
       alt="Banner"
       class="w-full h-64 object-cover"
     >
