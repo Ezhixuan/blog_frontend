@@ -111,7 +111,7 @@ declare namespace API {
   };
 
   type getArticleInfoParams = {
-    id: number;
+    id: string;
   };
 
   type PageResponseArticlePageVO = {

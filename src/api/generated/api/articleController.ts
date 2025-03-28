@@ -17,16 +17,17 @@ export async function doSubmitArticle(
   });
 }
 
-/** 此处后端没有提供注释 GET /article/blogs/${param0} */
+/** 此处后端没有提供注释 POST /article/blogs */
 export async function getArticleInfo(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
   params: API.getArticleInfoParams,
   options?: { [key: string]: any }
 ) {
-  const { id: param0, ...queryParams } = params;
-  return request<API.BaseResponseArticleInfoVO>(`/article/blogs/${param0}`, {
-    method: "GET",
-    params: { ...queryParams },
+  return request<API.BaseResponseArticleInfoVO>("/article/blogs", {
+    method: "POST",
+    params: {
+      ...params,
+    },
     ...(options || {}),
   });
 }
