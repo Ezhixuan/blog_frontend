@@ -12,6 +12,7 @@
   "dependencies": {
     "@headlessui/vue": "^1.7.19",
     "@heroicons/vue": "^2.1.1",
+    "@kangc/v-md-editor": "^2.3.18",
     "ant-design-vue": "^4.2.6",
     "axios": "^1.8.4",
     "cosmiconfig": "^9.0.0",

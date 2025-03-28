@@ -36,12 +36,7 @@ declare namespace API {
     categoryId?: number;
     tagIds?: string;
     status?: number;
-  };
-
-  type BaseResponseArticlePageVO = {
-    code?: number;
-    data?: ArticlePageVO;
-    message?: string;
+    content?: string;
   };
 
   type BaseResponsePageResponseArticlePageVO = {
@@ -50,23 +45,15 @@ declare namespace API {
     message?: string;
   };
 
-  type TokenInfo = {
-    tokenName?: string;
-    tokenValue?: string;
-    isLogin?: boolean;
-    loginId?: string;
-    loginType?: string;
-    tokenTimeout?: string;
-    sessionTimeout?: string;
-    tokenSessionTimeout?: string;
-    tokenActiveTimeout?: string;
-    loginDeviceType?: string;
-    tag?: any;
+  type BaseResponseSaTokenInfo = {
+    code?: number;
+    data?: SaTokenInfo;
+    message?: string;
   };
 
   type BaseResponseString = {
     code?: number;
-    data?: string | TokenInfo;
+    data?: string;
     message?: string;
   };
 
@@ -79,6 +66,29 @@ declare namespace API {
   type PageResponseArticlePageVO = {
     data?: ArticlePageVO[];
     total?: number;
+  };
+
+  type SaTokenInfo = {
+    tokenName?: string;
+    tokenValue?: string;
+    isLogin?: boolean;
+    loginId?: Record<string, any>;
+    loginType?: string;
+    tokenTimeout?: number;
+    sessionTimeout?: number;
+    tokenSessionTimeout?: number;
+    tokenActiveTimeout?: number;
+    loginDeviceType?: string;
+    tag?: string;
+  };
+
+  type UserEditDTO = {
+    id?: number;
+    password?: string;
+    username?: string;
+    avatar?: string;
+    profile?: string;
+    email?: string;
   };
 
   type UserInfoVO = {

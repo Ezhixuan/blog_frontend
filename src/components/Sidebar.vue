@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
+import ChangePasswordModal from './ChangePasswordModal.vue';
+import SubmitBlogModal from './SubmitBlogModal.vue';
 import { HomeIcon, UserIcon, DocumentTextIcon, CodeBracketIcon, UserGroupIcon, EnvelopeIcon } from '@heroicons/vue/24/outline';
 import { RouterLink, useRouter } from 'vue-router';
 import { doLogout, getLoginUserInfo } from '@/api/generated/api/sysUserController';
@@ -21,6 +23,8 @@ const isLoading = ref(true);
 const hideTimeout = ref<number | null>(null);
 const userInfo = ref<API.UserInfoVO | null>(null);
 const avatarError = ref(false);
+const showChangePasswordModal = ref(false);
+const showSubmitBlogModal = ref(false);
 
 // 默认头像
 const defaultAvatar = "https://avatars.githubusercontent.com/u/46998172?v=4";
@@ -264,10 +268,10 @@ const tags = [
             <!-- 操作按钮 -->
             <div class="flex space-x-2 pt-2">
               <button
-                @click="handleNavigation('/about')"
+                @click="showChangePasswordModal = userInfo?.role?.toLowerCase() !== 'admin'; showSubmitBlogModal = userInfo?.role?.toLowerCase() === 'admin'"
                 class="flex-1 px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
-                个人主页
+                {{ userInfo?.role?.toLowerCase() === 'admin' ? '提交博客' : '修改密码' }}
               </button>
               <button
                 @click="handleLogout"
@@ -346,6 +350,18 @@ const tags = [
       </div>
     </div>
   </aside>
+
+  <!-- 修改密码模态框 -->
+  <ChangePasswordModal
+    v-model:isOpen="showChangePasswordModal"
+    @passwordChanged="checkLoginStatus"
+  />
+
+  <!-- 提交博客模态框 -->
+  <SubmitBlogModal
+    v-model:isOpen="showSubmitBlogModal"
+    @blogSubmitted="checkLoginStatus"
+  />
 </template>
 
 <style scoped>

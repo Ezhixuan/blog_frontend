@@ -49,10 +49,13 @@ service.interceptors.response.use(
     if (error.response) {
       switch (error.response.status) {
         case 40100:
-          // 未授权，清除token并跳转到登录页面
-          localStorage.removeItem('token')
-          // 可以在这里添加路由跳转逻辑
-          break
+          // 未授权，清除所有登录信息并跳转到首页
+          localStorage.removeItem('token');
+          localStorage.removeItem('tokenName');
+          localStorage.removeItem('loginId');
+          localStorage.removeItem('isLogin');
+          window.location.href = '/';
+          break;
         case 40300:
           // 权限不足
           console.error('No permission')
