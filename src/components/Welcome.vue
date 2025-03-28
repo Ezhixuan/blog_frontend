@@ -1,4 +1,46 @@
 <script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue';
+
+// 轮播图配置
+const banners = [
+  '/public/images/local-banner1.jpg',
+  '/public/images/local-banner2.jpg'
+];
+const currentIndex = ref(0);
+const timer = ref<number | null>(null);
+
+// 自动轮播
+const startAutoPlay = () => {
+  timer.value = window.setInterval(() => {
+    currentIndex.value = (currentIndex.value + 1) % banners.length;
+  }, 10000);
+};
+
+// 停止轮播
+const stopAutoPlay = () => {
+  if (timer.value) {
+    clearInterval(timer.value);
+    timer.value = null;
+  }
+};
+
+// 手动切换轮播图
+const switchBanner = (index: number) => {
+  currentIndex.value = index;
+  stopAutoPlay();
+  startAutoPlay();
+};
+
+// 组件挂载时启动轮播
+onMounted(() => {
+  startAutoPlay();
+});
+
+// 组件卸载时清除定时器
+onUnmounted(() => {
+  stopAutoPlay();
+});
+
 // 模拟热门文章数据
 const popularArticles = [
   {
@@ -30,12 +72,48 @@ const latestProjects = [
 
 <template>
 
-  <div class="rounded-2xl overflow-hidden shadow-sm h-[25vh] relative mb-8">
-    <img 
-      src="/public/images/local-banner1.jpg"
-      alt="Banner"
-      class="w-full h-full object-cover object-center absolute inset-0"
-    >
+  <div class="rounded-2xl overflow-hidden shadow-sm h-[25vh] relative mb-8 group">
+    <div class="relative w-full h-full">
+      <transition-group name="fade">
+        <img 
+          v-for="(banner, index) in banners" 
+          :key="banner"
+          :src="banner"
+          :alt="`Banner ${index + 1}`"
+          v-show="currentIndex === index"
+          class="w-full h-full object-cover object-center absolute inset-0 transition-opacity duration-500"
+        >
+      </transition-group>
+
+      <!-- 轮播指示器 -->
+      <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
+        <button 
+          v-for="(_, index) in banners" 
+          :key="index"
+          @click="switchBanner(index)"
+          class="w-2 h-2 rounded-full transition-all duration-300"
+          :class="currentIndex === index ? 'bg-white w-4' : 'bg-white/50 hover:bg-white/80'"
+        ></button>
+      </div>
+
+      <!-- 左右切换按钮 -->
+      <button 
+        @click="switchBanner((currentIndex - 1 + banners.length) % banners.length)"
+        class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/20 hover:bg-black/40 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+      <button 
+        @click="switchBanner((currentIndex + 1) % banners.length)"
+        class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/20 hover:bg-black/40 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+    </div>
   </div>
 
   <div></div>
@@ -80,5 +158,18 @@ const latestProjects = [
 </template>
 
 <style scoped>
-/* 可以在这里添加自定义样式 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.fade-enter-to,
+.fade-leave-from {
+  opacity: 1;
+}
 </style>
