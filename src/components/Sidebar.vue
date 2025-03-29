@@ -362,7 +362,7 @@ const filterByTag = (tagId?: number) => {
 </script>
 
 <template>
-  <aside class="w-72 bg-white shadow-lg p-6 fixed top-0 left-0 bottom-0 overflow-y-auto z-30 transition-colors duration-300 dark:bg-gray-900 dark:border-r dark:border-gray-800">
+  <aside class="w-72 bg-white shadow-lg p-6 fixed top-0 left-0 bottom-0 overflow-y-auto overflow-hidden z-30 transition-colors duration-300 dark:bg-gray-900 dark:border-r dark:border-gray-800">
     <!-- 使用transition-group实现平滑过渡 -->
     <transition
       name="sidebar-transition"
