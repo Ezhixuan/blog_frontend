@@ -177,6 +177,12 @@ const backToArticleList = () => {
       console.log(`恢复分类筛选: ${pageState.categoryId}`);
     }
     
+    // 如果有保存的标签ID，添加到查询参数
+    if (pageState.tagId) {
+      query.tagId = pageState.tagId;
+      console.log(`恢复标签筛选: ${pageState.tagId}`);
+    }
+    
     router.push({
       path: '/blogs',
       query
@@ -203,6 +209,8 @@ const backToArticleList = () => {
 
 onMounted(() => {
   checkLoginStatus();
+  loadTags(); // 加载标签列表
+  loadCategories(); // 加载分类列表
   
   // 监听登录成功事件，更新用户信息
   on('user-login-success', (userData: API.UserInfoVO) => {
@@ -252,14 +260,14 @@ const menuItems = [
   { name: 'Contact', icon: EnvelopeIcon, link: '/contact' },
 ];
 
-// 导入分类API
-import { getArticleCategoryList, getArticlePageList } from '@/api/generated/api/articleController';
+// 导入分类和标签API
+import { getArticleCategoryList, getArticlePageList, getCategoryCount, getTagCount } from '@/api/generated/api/articleController';
 
 // 子菜单展开状态
 const expandedMenu = ref<string | null>(null);
 
 // 分类数据
-const categories = ref<API.ArticleCategoryVO[]>([]);
+const categories = ref<API.ArticleCategoryCountVO[]>([]);
 const categoriesLoading = ref(false);
 
 // 切换子菜单展开/折叠状态
@@ -281,7 +289,7 @@ const loadCategories = async () => {
   
   categoriesLoading.value = true;
   try {
-    const res = await getArticleCategoryList();
+    const res = await getCategoryCount();
     if (res.data?.data) {
       categories.value = res.data.data;
     }
@@ -309,10 +317,43 @@ const filterByCategory = (categoryId?: number) => {
   });
 };
 
-const tags = [
-  { name: 'Frosti', count: 2 },
-  { name: 'Blog', count: 2 },
-];
+// 标签数据
+const tags = ref<API.ArticleTagCountVO[]>([]);
+const tagsLoading = ref(false);
+
+// 加载标签列表
+const loadTags = async () => {
+  if (tags.value.length > 0) return; // 已加载过，不重复加载
+  
+  tagsLoading.value = true;
+  try {
+    const res = await getTagCount();
+    if (res.data?.data) {
+      tags.value = res.data.data;
+    }
+  } catch (error) {
+    console.error('获取标签列表失败', error);
+  } finally {
+    tagsLoading.value = false;
+  }
+};
+
+// 按标签筛选文章
+const filterByTag = (tagId?: number) => {
+  // 构建查询参数
+  const query: Record<string, string> = {};
+  
+  // 如果有标签ID，添加到查询参数
+  if (tagId) {
+    query.tagId = String(tagId);
+  }
+  
+  // 跳转到博客列表页面，带上标签ID参数
+  router.push({
+    path: '/blogs',
+    query
+  });
+};
 
 </script>
 
@@ -566,13 +607,32 @@ const tags = [
         <div class="mb-8 animate-fade-slow" style="animation-delay: 0.1s;">
           <h3 class="text-lg font-semibold mb-4">Categories</h3>
           <div class="flex flex-wrap gap-2">
+            <!-- 加载中状态 -->
+            <div v-if="categoriesLoading" class="text-sm text-gray-500 italic">
+              <span class="flex items-center">
+                <svg class="animate-spin h-4 w-4 mr-2 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                加载中...
+              </span>
+            </div>
+            
+            <!-- 分类列表 -->
             <span v-for="category in categories" 
-                  :key="category.name"
-                  class="px-3 py-1 bg-slate-100 rounded-full text-sm flex items-center hover:bg-slate-200 transition-colors duration-300 transform hover:scale-105"
+                  :key="category.id"
+                  class="px-3 py-1 bg-slate-100 rounded-full text-sm flex items-center hover:bg-slate-200 transition-colors duration-300 transform hover:scale-105 cursor-pointer"
+                  :class="{ 'bg-blue-100 text-blue-800': $route.query.categoryId === String(category.id) }"
+                  @click="filterByCategory(category.id)"
             >
               {{ category.name }}
               <span class="ml-2 bg-slate-200 px-2 rounded-full text-xs">{{ category.count }}</span>
             </span>
+            
+            <!-- 无分类提示 -->
+            <div v-if="!categoriesLoading && categories.length === 0" class="text-sm text-gray-500 italic">
+              暂无分类
+            </div>
           </div>
         </div>
     
@@ -580,13 +640,32 @@ const tags = [
         <div class="animate-fade-slow" style="animation-delay: 0.2s;">
           <h3 class="text-lg font-semibold mb-4">Tags</h3>
           <div class="flex flex-wrap gap-2">
+            <!-- 加载中状态 -->
+            <div v-if="tagsLoading" class="text-sm text-gray-500 italic">
+              <span class="flex items-center">
+                <svg class="animate-spin h-4 w-4 mr-2 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                加载中...
+              </span>
+            </div>
+            
+            <!-- 标签列表 -->
             <span v-for="tag in tags" 
-                  :key="tag.name"
-                  class="px-3 py-1 bg-slate-100 rounded-full text-sm flex items-center hover:bg-slate-200 transition-colors duration-300 transform hover:scale-105"
+                  :key="tag.id"
+                  class="px-3 py-1 bg-slate-100 rounded-full text-sm flex items-center hover:bg-slate-200 transition-colors duration-300 transform hover:scale-105 cursor-pointer"
+                  :class="{ 'bg-blue-100 text-blue-800': $route.query.tagId === String(tag.id) }"
+                  @click="filterByTag(tag.id)"
             >
               {{ tag.name }}
               <span class="ml-2 bg-slate-200 px-2 rounded-full text-xs">{{ tag.count }}</span>
             </span>
+            
+            <!-- 无标签提示 -->
+            <div v-if="!tagsLoading && tags.length === 0" class="text-sm text-gray-500 italic">
+              暂无标签
+            </div>
           </div>
         </div>
       </div>

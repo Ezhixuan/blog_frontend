@@ -13,6 +13,7 @@ interface PageState {
   lastVisitTime: number; // 上次访问时间戳
   scrollPosition?: number; // 滚动位置
   categoryId?: string; // 分类ID
+  tagId?: string;
 }
 
 /**
@@ -22,13 +23,14 @@ interface PageState {
  * @param scrollPosition 可选的滚动位置
  * @param categoryId 可选的分类ID
  */
-export function savePageState(current: number, pageSize: number, scrollPosition?: number, categoryId?: string): void {
+export function savePageState(current: number, pageSize: number, scrollPosition?: number, categoryId?: string, tagId?: string): void {
   const pageState: PageState = {
     current,
     pageSize,
     lastVisitTime: Date.now(),
     scrollPosition,
-    categoryId
+    categoryId,
+    tagId
   };
   
   localStorage.setItem(BLOG_PAGE_STATE_KEY, JSON.stringify(pageState));

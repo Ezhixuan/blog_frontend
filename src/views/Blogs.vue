@@ -156,11 +156,11 @@ watch([current, pageSize], () => {
   saveCurrentPageState();
 });
 
-// 监听路由参数变化，当categoryId变化时重新加载文章
+// 监听路由参数变化，当categoryId或tagId变化时重新加载文章
 watch(
-  () => route.query.categoryId,
+  () => [route.query.categoryId, route.query.tagId],
   () => {
-    // 分类变化时，重置为第一页
+    // 分类或标签变化时，重置为第一页
     current.value = 1;
     loadArticles();
     // 回到顶部
@@ -173,14 +173,16 @@ watch(
 
 // 保存当前分页状态
 const saveCurrentPageState = () => {
-  // 获取当前的分类ID（如果有）
+  // 获取当前的分类ID和标签ID（如果有）
   const categoryId = route.query.categoryId as string | undefined;
+  const tagId = route.query.tagId as string | undefined;
   
   savePageState(
     current.value,
     pageSize.value,
     window.scrollY,
-    categoryId
+    categoryId,
+    tagId
   );
 };
 
@@ -199,6 +201,12 @@ const loadArticles = async () => {
     const categoryId = route.query.categoryId;
     if (categoryId && typeof categoryId === 'string') {
       params.categoryIds = [parseInt(categoryId)];
+    }
+    
+    // 如果URL中有tagId参数，添加到查询条件
+    const tagId = route.query.tagId;
+    if (tagId && typeof tagId === 'string') {
+      params.tagIds = [parseInt(tagId)];
     }
     
     const res = await getArticlePageList(params);
