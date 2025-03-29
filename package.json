@@ -17,6 +17,7 @@
     "axios": "^1.8.4",
     "copy-to-clipboard": "^3.3.3",
     "cosmiconfig": "^9.0.0",
+    "highlight.js": "^11.11.1",
     "node-fetch": "^2.7.0",
     "nunjucks": "^3.2.4",
     "openapi3-ts": "^4.4.0",

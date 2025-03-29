@@ -1,9 +1,9 @@
 <template>
   <div class="blogs-container">
-    <div class="bg-gradient-to-br from-white to-blue-50 rounded-2xl shadow-md p-8 transform transition-all duration-300 hover:scale-[1.01] hover:shadow-xl">
+    <div class="bg-gradient-to-br from-white to-blue-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-md p-8 transform transition-all duration-300 hover:scale-[1.01] hover:shadow-xl">
       <h1 class="text-3xl font-bold mb-6 flex items-center">
-        <span class="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">Blog Posts</span>
-        <div class="flex-grow border-b-2 border-gray-200 ml-4"></div>
+        <span class="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400">Blog Posts</span>
+        <div class="flex-grow border-b-2 border-gray-200 dark:border-gray-700 ml-4"></div>
       </h1>
       
       <!-- 文章列表 -->
@@ -11,24 +11,26 @@
         <article 
           v-for="article in articles" 
           :key="article.id" 
-          class="group bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 hover:border-blue-200 cursor-pointer"
+          class="group bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 dark:border-gray-700 hover:border-blue-200 dark:hover:border-blue-700 cursor-pointer"
           @click="goToArticleDetail(article.id)"
         >
           <div class="flex items-start space-x-6">
-            <div class="w-64 h-48 rounded-lg overflow-hidden flex items-center justify-center shadow-sm group-hover:shadow transition-all duration-300 cursor-zoom-in" :class="{'bg-gradient-to-br from-blue-100 to-purple-100': !article.cover}" @click.stop="openPreview(article.cover)">
+            <div class="w-64 h-48 rounded-lg overflow-hidden flex items-center justify-center shadow-sm group-hover:shadow transition-all duration-300 cursor-zoom-in" 
+                 :class="{'bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900': !article.cover}" 
+                 @click.stop="openPreview(article.cover)">
               <img v-if="article.cover" :src="article.cover" class="w-full h-full object-cover transform transition-transform duration-300 group-hover:scale-105" :alt="article.title" loading="lazy" />
-              <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
               </svg>
             </div>
             <div class="flex-grow">
-              <h2 class="font-semibold text-xl mb-2 group-hover:text-blue-600 transition-colors">
+              <h2 class="font-semibold text-xl mb-2 group-hover:text-blue-600 dark:text-white dark:group-hover:text-blue-400 transition-colors">
                 {{ article.title }}
               </h2>
-              <p class="text-gray-600 text-sm mb-4">
+              <p class="text-gray-600 dark:text-gray-300 text-sm mb-4">
                 {{ article.summary || '暂无摘要' }}
               </p>
-              <div class="flex items-center text-sm text-gray-500 space-x-4">
+              <div class="flex items-center text-sm text-gray-500 dark:text-gray-400 space-x-4">
                 <span class="flex items-center">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -41,7 +43,7 @@
                   </svg>
                   {{ getReadTime(article.wordCount) }} min read
                 </span>
-                <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                <span class="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-xs font-medium">
                   {{ article.categoryName }}
                 </span>
               </div>
@@ -53,7 +55,7 @@
       <!-- 分页控件 -->
       <div class="flex items-center justify-center mt-8 space-x-4" v-if="total > 0">
         <button 
-          class="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all duration-300 shadow-sm hover:shadow flex items-center space-x-2" 
+          class="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 disabled:from-gray-300 disabled:to-gray-400 dark:disabled:from-gray-700 dark:disabled:to-gray-800 disabled:cursor-not-allowed transition-all duration-300 shadow-sm hover:shadow flex items-center space-x-2" 
           :disabled="current === 1"
           @click="changePage(current - 1)"
         >
@@ -62,9 +64,9 @@
           </svg>
           <span>上一页</span>
         </button>
-        <span class="text-gray-600 font-medium">{{ current }} / {{ totalPages }}</span>
+        <span class="text-gray-600 dark:text-gray-300 font-medium">{{ current }} / {{ totalPages }}</span>
         <button 
-          class="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all duration-300 shadow-sm hover:shadow flex items-center space-x-2" 
+          class="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 disabled:from-gray-300 disabled:to-gray-400 dark:disabled:from-gray-700 dark:disabled:to-gray-800 disabled:cursor-not-allowed transition-all duration-300 shadow-sm hover:shadow flex items-center space-x-2" 
           :disabled="current === totalPages"
           @click="changePage(current + 1)"
         >

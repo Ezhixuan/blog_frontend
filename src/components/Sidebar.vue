@@ -8,6 +8,10 @@ import { doLogout, getLoginUserInfo } from '@/api/generated/api/sysUserControlle
 import { on } from '@/utils/eventBus';
 import message from '@/utils/message';
 import { getPageState, clearPageState } from '@/utils/pageMemory';
+import { useTheme } from '@/utils/theme';
+
+// 获取主题状态
+const { currentTheme, toggleTheme } = useTheme();
 
 // 角色颜色映射
 const roleColorMap: Record<string, string> = {
@@ -358,7 +362,7 @@ const filterByTag = (tagId?: number) => {
 </script>
 
 <template>
-  <aside class="w-72 bg-white shadow-lg p-6 fixed top-0 left-0 bottom-0 overflow-y-auto z-30">
+  <aside class="w-72 bg-white shadow-lg p-6 fixed top-0 left-0 bottom-0 overflow-y-auto z-30 transition-colors duration-300 dark:bg-gray-900 dark:border-r dark:border-gray-800">
     <!-- 使用transition-group实现平滑过渡 -->
     <transition
       name="sidebar-transition"
@@ -367,10 +371,10 @@ const filterByTag = (tagId?: number) => {
       <!-- 文章侧边栏 (在文章页面显示，无论是否有目录) -->
       <div v-if="isArticlePage" key="article-toc" class="sidebar-content article-toc">
         <div class="toc-header">
-          <h2 class="text-xl font-bold mb-2 truncate" :title="articleTitle">{{ articleTitle || '文章' }}</h2>
+          <h2 class="text-xl font-bold mb-2 truncate dark:text-white" :title="articleTitle">{{ articleTitle || '文章' }}</h2>
           <button 
             @click="backToArticleList" 
-            class="text-xs text-blue-600 flex items-center hover:text-blue-800 transition-colors"
+            class="text-xs text-blue-600 flex items-center hover:text-blue-800 transition-colors dark:text-blue-400 dark:hover:text-blue-300"
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
@@ -380,16 +384,16 @@ const filterByTag = (tagId?: number) => {
         </div>
         
         <!-- 只有当确实有目录项时才显示目录内容 -->
-        <div v-if="tocItems.length > 0" class="mt-6 mb-4 border-t border-gray-100 pt-4">
-          <h3 class="text-base font-medium mb-3">目录</h3>
+        <div v-if="tocItems.length > 0" class="mt-6 mb-4 border-t border-gray-100 pt-4 dark:border-gray-800">
+          <h3 class="text-base font-medium mb-3 dark:text-gray-300">目录</h3>
           <div class="toc-content space-y-2">
             <transition-group name="toc-item">
               <div 
                 v-for="(item, index) in tocItems" 
                 :key="item.id || index"
-                class="toc-item"
+                class="toc-item dark:text-gray-400 dark:hover:text-blue-300"
                 :style="{ 'padding-left': item.level * 8 + 'px' }"
-                :class="{ 'toc-active': item.active }"
+                :class="{ 'toc-active': item.active, 'dark:text-blue-300': item.active }"
                 @click="handleTocItemClick(item.anchor || item.id)"
               >
                 {{ item.text }}
@@ -399,7 +403,7 @@ const filterByTag = (tagId?: number) => {
         </div>
         
         <!-- 无目录提示 -->
-        <div v-else class="mt-6 mb-4 border-t border-gray-100 pt-4 text-center text-gray-500 italic">
+        <div v-else class="mt-6 mb-4 border-t border-gray-100 pt-4 text-center text-gray-500 italic dark:border-gray-800 dark:text-gray-400">
           <p>该文章没有目录结构</p>
         </div>
       </div>
@@ -417,19 +421,19 @@ const filterByTag = (tagId?: number) => {
               :src="userAvatar" 
               alt="Profile" 
               @error="handleAvatarError"
-              class="w-32 h-32 rounded-full mx-auto mb-4 border-4 border-slate-100 hover:rotate-[360deg] transition-transform duration-500"
+              class="w-32 h-32 rounded-full mx-auto mb-4 border-4 border-slate-100 hover:rotate-[360deg] transition-transform duration-500 dark:border-gray-700"
             >
             
             <!-- Login Dialog (when not logged in) -->
             <div
               v-if="showLoginDialog && !isLoggedIn"
               class="absolute left-1/2 transform -translate-x-1/2 mt-2 w-48 bg-white rounded-lg shadow-xl p-4 z-10
-                     animate-fade-in-up border border-gray-200"
+                     animate-fade-in-up border border-gray-200 dark:bg-gray-800 dark:border-gray-700"
               @mouseenter="clearHideTimeout"
               @mouseleave="handleDialogLeave"
             >
               <div class="text-center space-y-3">
-                <p class="text-gray-600 text-sm mb-2">登录后体验更多功能</p>
+                <p class="text-gray-600 text-sm mb-2 dark:text-gray-300">登录后体验更多功能</p>
                 <button
                   @click="handleNavigation('/login')"
                   class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -438,7 +442,7 @@ const filterByTag = (tagId?: number) => {
                 </button>
                 <button
                   @click="handleNavigation('/register')"
-                  class="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                  class="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
                 >
                   注册
                 </button>
@@ -446,7 +450,7 @@ const filterByTag = (tagId?: number) => {
               
               <!-- Arrow -->
               <div class="absolute -top-2 left-1/2 transform -translate-x-1/2">
-                <div class="border-8 border-transparent border-b-white"></div>
+                <div class="border-8 border-transparent border-b-white dark:border-b-gray-800"></div>
               </div>
             </div>
             
@@ -455,7 +459,8 @@ const filterByTag = (tagId?: number) => {
               v-if="showLoginDialog && isLoggedIn"
               class="absolute left-1/2 transform -translate-x-1/2 mt-2 w-72 backdrop-blur-lg bg-white/90 rounded-lg shadow-2xl p-4 z-10
                      animate-float border border-transparent hover:border-blue-300/50 transition-all duration-500
-                     bg-gradient-to-br from-white/90 via-white/80 to-blue-50/30"
+                     bg-gradient-to-br from-white/90 via-white/80 to-blue-50/30
+                     dark:from-gray-900/90 dark:via-gray-900/80 dark:to-blue-900/30 dark:hover:border-blue-500/30"
               @mouseenter="clearHideTimeout"
               @mouseleave="handleDialogLeave"
               style="transform-style: preserve-3d; perspective: 1000px;"
@@ -466,11 +471,11 @@ const filterByTag = (tagId?: number) => {
                   <img 
                     :src="userAvatar"
                     alt="User Avatar"
-                    class="w-16 h-16 rounded-full border-2 border-gray-200"
+                    class="w-16 h-16 rounded-full border-2 border-gray-200 dark:border-gray-700"
                     @error="handleAvatarError"
                   />
                   <div class="flex-1">
-                    <h3 class="text-lg font-medium text-gray-900">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white">
                       {{ userInfo?.username || userInfo?.userAccount || '用户' }}
                     </h3>
                     <!-- 角色标签 -->
@@ -482,21 +487,21 @@ const filterByTag = (tagId?: number) => {
                         {{ userInfo?.role || '普通用户' }}
                       </span>
                     </div>
-                    <p class="text-sm text-gray-500 truncate" :title="userInfo?.email">
+                    <p class="text-sm text-gray-500 truncate dark:text-gray-400" :title="userInfo?.email">
                       {{ userInfo?.email || '未设置邮箱' }}
                     </p>
                   </div>
                 </div>
                 
                 <!-- 用户简介 -->
-                <div class="text-sm text-gray-600 border-t border-gray-100 pt-3">
+                <div class="text-sm text-gray-600 border-t border-gray-100 pt-3 dark:text-gray-400 dark:border-gray-700">
                   <p class="line-clamp-2" :title="userInfo?.profile">
                     {{ userInfo?.profile || '这个人很懒，还没有填写简介' }}
                   </p>
                 </div>
     
                 <!-- 加入时间 -->
-                <div class="text-xs text-gray-500 border-t border-gray-100 pt-3">
+                <div class="text-xs text-gray-500 border-t border-gray-100 pt-3 dark:text-gray-400 dark:border-gray-700">
                   加入时间：{{ userInfo?.createTime ? new Date(userInfo.createTime).toLocaleDateString() : '未知' }}
                 </div>
                 
@@ -510,7 +515,7 @@ const filterByTag = (tagId?: number) => {
                   </button>
                   <button
                     @click="handleLogout"
-                    class="flex-1 px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                    class="flex-1 px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
                   >
                     退出登录
                   </button>
@@ -519,7 +524,7 @@ const filterByTag = (tagId?: number) => {
               
               <!-- Arrow -->
               <div class="absolute -top-2 left-1/2 transform -translate-x-1/2">
-                <div class="border-8 border-transparent border-b-white"></div>
+                <div class="border-8 border-transparent border-b-white dark:border-b-gray-900"></div>
               </div>
             </div>
           </div>
@@ -531,8 +536,8 @@ const filterByTag = (tagId?: number) => {
             <div v-for="item in menuItems" :key="item.name" class="nav-item-container">
               <!-- 主菜单项 -->
               <div 
-                class="nav-item flex items-center space-x-3 px-4 py-2 text-gray-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
-                :class="{ 'bg-slate-100 text-blue-600': $route.path === item.link || (item.hasSubmenu && expandedMenu === item.name) }"
+                class="nav-item flex items-center space-x-3 px-4 py-2 text-gray-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer dark:text-gray-300 dark:hover:bg-gray-800"
+                :class="{ 'bg-slate-100 text-blue-600 dark:bg-gray-800 dark:text-blue-400': $route.path === item.link || (item.hasSubmenu && expandedMenu === item.name) }"
                 @click="item.hasSubmenu ? toggleSubmenu(item.name) : router.push(item.link)"
               >
                 <component :is="item.icon" class="w-5 h-5" />
@@ -551,17 +556,17 @@ const filterByTag = (tagId?: number) => {
               >
                 <!-- 全部文章选项 -->
                 <div 
-                  class="submenu-item py-2 px-3 text-sm rounded-md cursor-pointer flex items-center justify-between hover:bg-slate-100 transition-colors"
-                  :class="{ 'text-blue-600 font-medium': $route.path === '/blogs' && !$route.query.categoryId }"
+                  class="submenu-item py-2 px-3 text-sm rounded-md cursor-pointer flex items-center justify-between hover:bg-slate-100 transition-colors dark:hover:bg-gray-800"
+                  :class="{ 'text-blue-600 font-medium dark:text-blue-400': $route.path === '/blogs' && !$route.query.categoryId }"
                   @click="filterByCategory()"
                 >
                   <span>全部文章</span>
                 </div>
                 
                 <!-- 加载中状态 -->
-                <div v-if="categoriesLoading" class="py-2 px-3 text-sm text-gray-500 italic">
+                <div v-if="categoriesLoading" class="py-2 px-3 text-sm text-gray-500 italic dark:text-gray-400">
                   <span class="flex items-center">
-                    <svg class="animate-spin h-4 w-4 mr-2 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <svg class="animate-spin h-4 w-4 mr-2 text-blue-600 dark:text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                       <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
@@ -573,15 +578,15 @@ const filterByTag = (tagId?: number) => {
                 <div 
                   v-for="category in categories" 
                   :key="category.id"
-                  class="submenu-item py-2 px-3 text-sm rounded-md cursor-pointer flex items-center justify-between hover:bg-slate-100 transition-colors"
-                  :class="{ 'text-blue-600 font-medium': $route.query.categoryId === String(category.id) }"
+                  class="submenu-item py-2 px-3 text-sm rounded-md cursor-pointer flex items-center justify-between hover:bg-slate-100 transition-colors dark:hover:bg-gray-800"
+                  :class="{ 'text-blue-600 font-medium dark:text-blue-400': $route.query.categoryId === String(category.id) }"
                   @click="filterByCategory(category.id)"
                 >
                   <span>{{ category.name }}</span>
                 </div>
                 
                 <!-- 无分类提示 -->
-                <div v-if="!categoriesLoading && categories.length === 0" class="py-2 px-3 text-sm text-gray-500 italic">
+                <div v-if="!categoriesLoading && categories.length === 0" class="py-2 px-3 text-sm text-gray-500 italic dark:text-gray-400">
                   暂无分类
                 </div>
               </div>
@@ -591,26 +596,61 @@ const filterByTag = (tagId?: number) => {
     
         <!-- Social Links -->
         <div class="flex justify-center space-x-4 mb-8 animate-fade-slow">
-          <a href="https://github.com" class="text-gray-600 hover:text-gray-900 transition-colors duration-300">
+          <a href="https://github.com" class="text-gray-600 hover:text-gray-900 transition-colors duration-300 dark:text-gray-400 dark:hover:text-white">
             <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
               <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd" />
             </svg>
           </a>
-          <a href="#" class="text-gray-600 hover:text-gray-900 transition-colors duration-300">
+          <a href="#" class="text-gray-600 hover:text-gray-900 transition-colors duration-300 dark:text-gray-400 dark:hover:text-white">
             <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
               <path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" />
             </svg>
           </a>
         </div>
+        
+        <!-- Theme Toggle -->
+        <div class="mb-8 flex justify-center">
+          <button 
+            @click="toggleTheme" 
+            class="theme-toggle-btn flex items-center space-x-2 px-4 py-2 rounded-full border border-gray-200 hover:bg-slate-100 dark:border-gray-700 dark:hover:bg-gray-800 transition-all duration-300"
+            :class="{'bg-blue-50 dark:bg-gray-800': currentTheme === 'dark'}"
+          >
+            <!-- 太阳图标 (亮色模式) -->
+            <svg 
+              v-show="currentTheme === 'light'" 
+              xmlns="http://www.w3.org/2000/svg" 
+              class="h-5 w-5 text-yellow-500" 
+              viewBox="0 0 20 20" 
+              fill="currentColor"
+            >
+              <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" />
+            </svg>
+            
+            <!-- 月亮图标 (暗色模式) -->
+            <svg 
+              v-show="currentTheme === 'dark'" 
+              xmlns="http://www.w3.org/2000/svg" 
+              class="h-5 w-5 text-blue-300" 
+              viewBox="0 0 20 20" 
+              fill="currentColor"
+            >
+              <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+            </svg>
+            
+            <span class="text-sm font-medium dark:text-gray-300">
+              {{ currentTheme === 'light' ? '亮色模式' : '暗色模式' }}
+            </span>
+          </button>
+        </div>
     
         <!-- Categories -->
         <div class="mb-8 animate-fade-slow" style="animation-delay: 0.1s;">
-          <h3 class="text-lg font-semibold mb-4">Categories</h3>
+          <h3 class="text-lg font-semibold mb-4 dark:text-white">Categories</h3>
           <div class="flex flex-wrap gap-2">
             <!-- 加载中状态 -->
-            <div v-if="categoriesLoading" class="text-sm text-gray-500 italic">
+            <div v-if="categoriesLoading" class="text-sm text-gray-500 italic dark:text-gray-400">
               <span class="flex items-center">
-                <svg class="animate-spin h-4 w-4 mr-2 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <svg class="animate-spin h-4 w-4 mr-2 text-blue-600 dark:text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
@@ -621,16 +661,16 @@ const filterByTag = (tagId?: number) => {
             <!-- 分类列表 -->
             <span v-for="category in categories" 
                   :key="category.id"
-                  class="px-3 py-1 bg-slate-100 rounded-full text-sm flex items-center hover:bg-slate-200 transition-colors duration-300 transform hover:scale-105 cursor-pointer"
-                  :class="{ 'bg-blue-100 text-blue-800': $route.query.categoryId === String(category.id) }"
+                  class="px-3 py-1 bg-slate-100 rounded-full text-sm flex items-center hover:bg-slate-200 transition-colors duration-300 transform hover:scale-105 cursor-pointer dark:bg-gray-800 dark:hover:bg-gray-700"
+                  :class="{ 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200': $route.query.categoryId === String(category.id) }"
                   @click="filterByCategory(category.id)"
             >
               {{ category.name }}
-              <span class="ml-2 bg-slate-200 px-2 rounded-full text-xs">{{ category.count }}</span>
+              <span class="ml-2 bg-slate-200 px-2 rounded-full text-xs dark:bg-gray-700">{{ category.count }}</span>
             </span>
             
             <!-- 无分类提示 -->
-            <div v-if="!categoriesLoading && categories.length === 0" class="text-sm text-gray-500 italic">
+            <div v-if="!categoriesLoading && categories.length === 0" class="text-sm text-gray-500 italic dark:text-gray-400">
               暂无分类
             </div>
           </div>
@@ -638,12 +678,12 @@ const filterByTag = (tagId?: number) => {
     
         <!-- Tags -->
         <div class="animate-fade-slow" style="animation-delay: 0.2s;">
-          <h3 class="text-lg font-semibold mb-4">Tags</h3>
+          <h3 class="text-lg font-semibold mb-4 dark:text-white">Tags</h3>
           <div class="flex flex-wrap gap-2">
             <!-- 加载中状态 -->
-            <div v-if="tagsLoading" class="text-sm text-gray-500 italic">
+            <div v-if="tagsLoading" class="text-sm text-gray-500 italic dark:text-gray-400">
               <span class="flex items-center">
-                <svg class="animate-spin h-4 w-4 mr-2 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <svg class="animate-spin h-4 w-4 mr-2 text-blue-600 dark:text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
@@ -654,16 +694,16 @@ const filterByTag = (tagId?: number) => {
             <!-- 标签列表 -->
             <span v-for="tag in tags" 
                   :key="tag.id"
-                  class="px-3 py-1 bg-slate-100 rounded-full text-sm flex items-center hover:bg-slate-200 transition-colors duration-300 transform hover:scale-105 cursor-pointer"
-                  :class="{ 'bg-blue-100 text-blue-800': $route.query.tagId === String(tag.id) }"
+                  class="px-3 py-1 bg-slate-100 rounded-full text-sm flex items-center hover:bg-slate-200 transition-colors duration-300 transform hover:scale-105 cursor-pointer dark:bg-gray-800 dark:hover:bg-gray-700"
+                  :class="{ 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200': $route.query.tagId === String(tag.id) }"
                   @click="filterByTag(tag.id)"
             >
               {{ tag.name }}
-              <span class="ml-2 bg-slate-200 px-2 rounded-full text-xs">{{ tag.count }}</span>
+              <span class="ml-2 bg-slate-200 px-2 rounded-full text-xs dark:bg-gray-700">{{ tag.count }}</span>
             </span>
             
             <!-- 无标签提示 -->
-            <div v-if="!tagsLoading && tags.length === 0" class="text-sm text-gray-500 italic">
+            <div v-if="!tagsLoading && tags.length === 0" class="text-sm text-gray-500 italic dark:text-gray-400">
               暂无标签
             </div>
           </div>

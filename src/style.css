@@ -3,9 +3,71 @@
 @tailwind utilities;
 
 :root {
-  --primary-blue: #1e40af;
-  --light-blue: #3b82f6;
-  --background-white: #f8fafc;
+  --background: 210 20% 98%;
+  --foreground: 210 40% 2%;
+  
+  --card: 0 0% 100%;
+  --card-foreground: 210 40% 2%;
+  
+  --popover: 0 0% 100%;
+  --popover-foreground: 210 40% 2%;
+  
+  --primary: 221 83% 40%;
+  --primary-foreground: 0 0% 100%;
+  
+  --secondary: 214 100% 67%;
+  --secondary-foreground: 0 0% 100%;
+  
+  --muted: 210 20% 96%;
+  --muted-foreground: 210 20% 60%;
+  
+  --accent: 214 93% 95%;
+  --accent-foreground: 221 83% 40%;
+  
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  
+  --border: 210 20% 88%;
+  --input: 210 20% 88%;
+  --ring: 214 100% 67%;
+  
+  --radius: 0.5rem;
+}
+
+.dark {
+  --background: 210 40% 8%;
+  --foreground: 210 20% 98%;
+  
+  --card: 210 40% 10%;
+  --card-foreground: 210 20% 98%;
+  
+  --popover: 210 40% 10%;
+  --popover-foreground: 210 20% 98%;
+  
+  --primary: 221 83% 65%;
+  --primary-foreground: 0 0% 100%;
+  
+  --secondary: 214 100% 67%;
+  --secondary-foreground: 0 0% 100%;
+  
+  --muted: 210 40% 16%;
+  --muted-foreground: 210 20% 60%;
+  
+  --accent: 214 93% 15%;
+  --accent-foreground: 221 83% 65%;
+  
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  
+  --border: 210 40% 18%;
+  --input: 210 40% 18%;
+  --ring: 214 100% 67%;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground;
+  }
 }
 
 body {
@@ -28,4 +90,291 @@ body {
 
 .blog-card {
   @apply bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200;
+}
+
+/* Markdown 编辑器暗色模式 */
+.dark .v-md-editor {
+  background-color: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+  border-color: hsl(var(--border));
+}
+
+.dark .v-md-editor .v-md-editor__toolbar {
+  background-color: hsl(var(--muted));
+  border-bottom-color: hsl(var(--border));
+}
+
+.dark .v-md-editor .v-md-editor__toolbar .v-md-editor__toolbar-item {
+  color: hsl(var(--muted-foreground));
+}
+
+.dark .v-md-editor .v-md-editor__toolbar .v-md-editor__toolbar-item:hover {
+  color: hsl(var(--foreground));
+}
+
+.dark .v-md-editor .v-md-editor__toolbar .v-md-editor__toolbar-item.active {
+  color: hsl(var(--primary));
+}
+
+.dark .v-md-editor .v-md-editor__editor-wrapper {
+  background-color: hsl(var(--card));
+}
+
+.dark .v-md-editor .v-md-editor__editor-wrapper textarea {
+  color: hsl(var(--card-foreground));
+}
+
+/* 预览模式 */
+.dark .v-md-editor.v-md-editor--preview {
+  background-color: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+  border-color: hsl(var(--border));
+}
+
+.dark .v-md-editor.v-md-editor--preview .v-md-editor__preview-wrapper {
+  background-color: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+}
+
+/* 代码块 */
+.dark .v-md-editor.v-md-editor--preview pre {
+  background-color: hsl(var(--muted));
+}
+
+.dark .v-md-editor.v-md-editor--preview code {
+  background-color: hsl(var(--muted));
+  color: #e06c75;
+}
+
+/* 引用块 */
+.dark .v-md-editor.v-md-editor--preview blockquote {
+  background-color: hsl(var(--muted));
+  border-left-color: hsl(var(--primary));
+}
+
+/* 表格 */
+.dark .v-md-editor.v-md-editor--preview table th {
+  background-color: hsl(var(--muted));
+  border-color: hsl(var(--border));
+}
+
+.dark .v-md-editor.v-md-editor--preview table td {
+  border-color: hsl(var(--border));
+}
+
+/* 链接 */
+.dark .v-md-editor.v-md-editor--preview a {
+  color: hsl(var(--primary));
+}
+
+/* 标题 */
+.dark .v-md-editor.v-md-editor--preview h1,
+.dark .v-md-editor.v-md-editor--preview h2,
+.dark .v-md-editor.v-md-editor--preview h3,
+.dark .v-md-editor.v-md-editor--preview h4,
+.dark .v-md-editor.v-md-editor--preview h5,
+.dark .v-md-editor.v-md-editor--preview h6 {
+  color: hsl(var(--card-foreground));
+}
+
+/* VuePress主题暗黑模式代码块样式增强 */
+.dark .v-md-editor.v-md-editor--preview .prism-editor-wrapper {
+  background-color: hsl(var(--muted));
+  border-radius: 6px;
+}
+
+.dark .v-md-editor.v-md-editor--preview .prism-editor__line-numbers {
+  background-color: hsl(var(--muted));
+  border-right: 1px solid hsl(var(--border));
+}
+
+.dark .v-md-editor.v-md-editor--preview .prism-editor__textarea:focus {
+  outline: none;
+}
+
+.dark .v-md-editor.v-md-editor--preview .token.comment,
+.dark .v-md-editor.v-md-editor--preview .token.prolog,
+.dark .v-md-editor.v-md-editor--preview .token.doctype,
+.dark .v-md-editor.v-md-editor--preview .token.cdata {
+  color: #8292a2;
+}
+
+.dark .v-md-editor.v-md-editor--preview .token.punctuation {
+  color: #f8f8f2;
+}
+
+.dark .v-md-editor.v-md-editor--preview .token.namespace {
+  opacity: 0.7;
+}
+
+.dark .v-md-editor.v-md-editor--preview .token.property,
+.dark .v-md-editor.v-md-editor--preview .token.tag,
+.dark .v-md-editor.v-md-editor--preview .token.constant,
+.dark .v-md-editor.v-md-editor--preview .token.symbol,
+.dark .v-md-editor.v-md-editor--preview .token.deleted {
+  color: #f92672;
+}
+
+.dark .v-md-editor.v-md-editor--preview .token.boolean,
+.dark .v-md-editor.v-md-editor--preview .token.number {
+  color: #ae81ff;
+}
+
+.dark .v-md-editor.v-md-editor--preview .token.selector,
+.dark .v-md-editor.v-md-editor--preview .token.attr-name,
+.dark .v-md-editor.v-md-editor--preview .token.string,
+.dark .v-md-editor.v-md-editor--preview .token.char,
+.dark .v-md-editor.v-md-editor--preview .token.builtin,
+.dark .v-md-editor.v-md-editor--preview .token.inserted {
+  color: #a6e22e;
+}
+
+.dark .v-md-editor.v-md-editor--preview .token.operator,
+.dark .v-md-editor.v-md-editor--preview .token.entity,
+.dark .v-md-editor.v-md-editor--preview .token.url,
+.dark .v-md-editor.v-md-editor--preview .language-css .token.string,
+.dark .v-md-editor.v-md-editor--preview .style .token.string {
+  color: #f8f8f2;
+}
+
+.dark .v-md-editor.v-md-editor--preview .token.atrule,
+.dark .v-md-editor.v-md-editor--preview .token.attr-value,
+.dark .v-md-editor.v-md-editor--preview .token.keyword {
+  color: #66d9ef;
+}
+
+.dark .v-md-editor.v-md-editor--preview .token.function,
+.dark .v-md-editor.v-md-editor--preview .token.class-name {
+  color: #e6db74;
+}
+
+.dark .v-md-editor.v-md-editor--preview .token.regex,
+.dark .v-md-editor.v-md-editor--preview .token.important,
+.dark .v-md-editor.v-md-editor--preview .token.variable {
+  color: #fd971f;
+}
+
+/* GitHub主题暗黑模式样式增强 */
+.dark .github-markdown-body {
+  background-color: transparent !important;
+  color: hsl(var(--card-foreground)) !important;
+}
+
+.dark .github-markdown-body pre {
+  background-color: hsl(var(--muted)) !important;
+  border-radius: 6px;
+}
+
+.dark .github-markdown-body code:not(.hljs) {
+  background-color: rgba(110, 118, 129, 0.4) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+.dark .github-markdown-body blockquote {
+  border-left-color: hsl(var(--primary)) !important;
+  background-color: hsl(var(--muted)) !important;
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+.dark .github-markdown-body table th,
+.dark .github-markdown-body table td {
+  border-color: hsl(var(--border)) !important;
+}
+
+.dark .github-markdown-body table tr {
+  background-color: transparent !important;
+}
+
+.dark .github-markdown-body table thead tr {
+  background-color: hsl(var(--muted)) !important;
+}
+
+.dark .github-markdown-body .highlight pre, 
+.dark .github-markdown-body pre {
+  background-color: hsl(var(--muted)) !important;
+}
+
+/* 确保使用GitHub Dark样式 */
+.dark .hljs {
+  display: block;
+  overflow-x: auto;
+  color: #c9d1d9 !important;
+  background: hsl(var(--muted)) !important;
+}
+
+.dark .hljs-doctag,
+.dark .hljs-keyword,
+.dark .hljs-meta .hljs-keyword,
+.dark .hljs-template-tag,
+.dark .hljs-template-variable,
+.dark .hljs-type,
+.dark .hljs-variable.language_ {
+  color: #ff7b72 !important;
+}
+
+.dark .hljs-title,
+.dark .hljs-title.class_,
+.dark .hljs-title.class_.inherited__,
+.dark .hljs-title.function_ {
+  color: #d2a8ff !important;
+}
+
+.dark .hljs-attr,
+.dark .hljs-attribute,
+.dark .hljs-literal,
+.dark .hljs-meta,
+.dark .hljs-number,
+.dark .hljs-operator,
+.dark .hljs-selector-attr,
+.dark .hljs-selector-class,
+.dark .hljs-selector-id,
+.dark .hljs-variable {
+  color: #79c0ff !important;
+}
+
+.dark .hljs-meta .hljs-string,
+.dark .hljs-regexp,
+.dark .hljs-string {
+  color: #a5d6ff !important;
+}
+
+.dark .hljs-built_in,
+.dark .hljs-symbol {
+  color: #ffa657 !important;
+}
+
+.dark .hljs-comment,
+.dark .hljs-code,
+.dark .hljs-formula {
+  color: #8b949e !important;
+}
+
+.dark .hljs-name,
+.dark .hljs-quote,
+.dark .hljs-selector-pseudo,
+.dark .hljs-selector-tag {
+  color: #7ee787 !important;
+}
+
+.dark .hljs-subst {
+  color: #c9d1d9 !important;
+}
+
+.dark .hljs-section {
+  color: #1f6feb !important;
+  font-weight: bold !important;
+}
+
+.dark .hljs-bullet {
+  color: #f2cc60 !important;
+}
+
+.dark .hljs-emphasis {
+  color: #c9d1d9 !important;
+  font-style: italic !important;
+}
+
+.dark .hljs-strong {
+  color: #c9d1d9 !important;
+  font-weight: bold !important;
 }

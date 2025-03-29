@@ -51,6 +51,7 @@
                 :text="article.content" 
                 :include-level="[1, 2, 3, 4]"
                 @rendered="onContentRendered"
+                class="article-markdown"
               />
               
               <!-- 无内容提示 -->
@@ -87,14 +88,19 @@ import createCopyCodePlugin from '@kangc/v-md-editor/lib/plugins/copy-code/index
 import '@kangc/v-md-editor/lib/plugins/copy-code/copy-code.css';
 import VMdPreview from '@kangc/v-md-editor/lib/preview';
 import message from '@/utils/message';
+import { useTheme } from '@/utils/theme';
+
+// 获取当前主题
+const { currentTheme } = useTheme();
+const isDarkMode = computed(() => currentTheme.value === 'dark');
 
 // 确保在组件内部也配置代码复制插件
 VMdPreview.use(createCopyCodePlugin({
-  beforeCopy: (text) => {
+  beforeCopy: (text: string) => {
     console.log('[代码复制] 准备复制代码:', text.substring(0, 50) + (text.length > 50 ? '...' : ''));
     return text;
   },
-  afterCopy: (text) => {
+  afterCopy: (text: string) => {
     console.log('[代码复制] 复制成功，复制内容长度:', text.length);
     console.log('[代码复制] 复制操作时间:', new Date().toLocaleTimeString());
     message.success('复制成功');
@@ -1164,7 +1170,7 @@ const defineCustomTocItem = () => {
 // 发送目录数据到侧边栏
 const sendTocDataToSidebar = () => {
   if (article.value && previewRef.value?.previewRef?.tocItems) {
-    const tocItems = previewRef.value.previewRef.tocItems.map(item => ({
+    const tocItems = previewRef.value.previewRef.tocItems.map((item: any) => ({
       level: item.level,
       text: item.text,
       id: item.id,
@@ -1393,37 +1399,35 @@ watch(tocItems, (newItems) => {
 
 <style scoped>
 .article-container {
-  @apply relative space-y-8;
+  @apply max-w-4xl mx-auto px-4 py-8;
 }
 
-/* 阅读进度条样式 */
 .reading-progress-container {
-  @apply fixed top-0 left-0 w-full h-1 bg-gray-200 z-50;
+  @apply fixed top-0 left-0 w-full h-1 z-50 bg-gray-200 dark:bg-gray-700;
 }
 
 .reading-progress-bar {
-  @apply h-full bg-blue-600 transition-all duration-200;
+  @apply h-full bg-blue-600 dark:bg-blue-500 transition-all duration-200;
 }
 
-/* 文章布局 */
 .article-layout {
-  @apply flex gap-8 max-w-6xl mx-auto;
+  @apply flex flex-col md:flex-row gap-6;
 }
 
 .article-main {
-  @apply flex-1;
+  @apply w-full;
 }
 
 .article-card {
-  @apply bg-white rounded-2xl shadow-sm p-8;
+  @apply bg-white dark:bg-gray-800 shadow-lg rounded-xl p-6 md:p-8 transition-all duration-300;
 }
 
 .article-title {
-  @apply text-3xl font-bold mb-4;
+  @apply text-3xl font-bold text-gray-900 dark:text-white mb-4;
 }
 
 .article-meta {
-  @apply flex items-center text-sm text-gray-500 mb-8;
+  @apply flex flex-wrap items-center text-sm text-gray-500 dark:text-gray-400 mb-6;
 }
 
 .meta-separator {
@@ -1431,295 +1435,108 @@ watch(tocItems, (newItems) => {
 }
 
 .meta-category {
-  @apply text-blue-600 hover:text-blue-800;
+  @apply text-blue-600 dark:text-blue-400 hover:underline;
 }
 
 .article-tags {
-  @apply flex flex-wrap gap-2 mt-4 mb-6;
+  @apply flex flex-wrap gap-2 mb-6;
 }
 
 .article-tag {
-  @apply px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-300 transform hover:scale-105 cursor-pointer;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  color: white;
-  box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.2), 0 2px 4px -1px rgba(99, 102, 241, 0.1);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-  position: relative;
-  overflow: hidden;
-}
-
-.article-tag::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: all 0.6s ease;
-}
-
-.article-tag:hover::before {
-  left: 100%;
+  @apply px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full text-xs font-medium;
 }
 
 .article-content {
-  @apply text-gray-700 leading-relaxed mb-8;
+  @apply text-gray-800 dark:text-gray-200 leading-relaxed;
 }
 
 .article-summary {
-  @apply text-gray-600 italic border-l-4 border-gray-300 pl-4 mb-6 py-2;
-}
-
-.no-content-tip {
-  @apply text-gray-500 italic text-center py-4;
-}
-
-/* 目录侧边栏样式 */
-.article-toc-container {
-  @apply hidden lg:block w-64 shrink-0;
-  position: relative;
-  height: 100%;
-}
-
-.article-toc {
-  width: 100%;
-  padding: 5px 0;
-  position: relative;
-  overflow-y: auto;
-  padding-top: 15px;
-  display: flex;
-  flex-direction: column;
-  transition: all 0.3s ease;
-  margin-top: 20px;
-}
-
-.article-toc.is-sticky {
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-  background-color: white;
-  border-radius: 8px;
-  padding: 15px;
-}
-
-.article-toc .toc-title {
-  position: sticky;
-  top: 0;
-  padding: 5px 15px;
-  margin-bottom: 10px;
-  background-color: #fff;
-  font-weight: bold;
-  z-index: 2;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.article-toc .markdown-toc {
-  margin: 0;
-  padding: 0 15px;
-  list-style: none;
-  flex-grow: 1;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  position: relative;
-}
-
-.article-toc .markdown-toc::-webkit-scrollbar {
-  width: 5px;
-}
-
-.article-toc .markdown-toc::-webkit-scrollbar-thumb {
-  background-color: rgba(0, 0, 0, 0.2);
-  border-radius: 3px;
-}
-
-.article-toc .toc-item {
-  margin: 5px 0;
-  padding: 0;
-  line-height: 1.5;
-  position: relative;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-}
-
-.article-toc .toc-item::before {
-  content: "";
-  position: absolute;
-  left: -15px;
-  top: 0;
-  height: 100%;
-  width: 3px;
-  background-color: transparent;
-}
-
-.article-toc .toc-item-indicator {
-  position: absolute;
-  left: -15px;
-  top: 0;
-  height: 100%;
-  width: 3px;
-  background-color: transparent;
-  transition: all 0.3s ease;
-}
-
-.article-toc .toc-item-text {
-  padding: 5px 0;
-  display: block;
-  transition: all 0.3s;
-}
-
-/* 不同数据状态的样式 */
-.article-toc .toc-item[data-read-status="read"] .toc-item-indicator {
-  background-color: #1890ff;
-  opacity: 0.7;
-}
-
-.article-toc .toc-item[data-read-status="reading"] {
-  color: #1890ff;
-  font-weight: 600;
-}
-
-.article-toc .toc-item[data-read-status="reading"] .toc-item-indicator {
-  background-color: #1890ff;
-  opacity: 1;
-  box-shadow: 0 0 3px rgba(24, 144, 255, 0.5);
-}
-
-.article-toc .toc-item[data-read-status="partial"] .toc-item-indicator {
-  background-color: #1890ff;
-  opacity: 0.4;
-}
-
-.article-toc .toc-item[data-read-status="unread"] .toc-item-indicator {
-  background-color: transparent;
-}
-
-.article-toc .toc-item.toc-active .toc-item-text {
-  color: #1890ff;
-  font-weight: 600;
-}
-
-.article-toc .toc-item .toc-item-indicator.active {
-  background-color: #1890ff;
-}
-
-.article-toc .toc-item:hover .toc-item-text {
-  color: #1890ff;
+  @apply p-4 bg-gray-50 dark:bg-gray-700 border-l-4 border-blue-500 dark:border-blue-600 rounded mb-6 text-gray-600 dark:text-gray-300 italic;
 }
 
 .article-actions {
-  @apply flex items-center justify-center border-t pt-6 mt-8;
+  @apply flex justify-center mt-12 pt-6 border-t border-gray-100 dark:border-gray-700;
 }
 
 .action-btn {
-  @apply flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors;
+  @apply flex items-center space-x-2 px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 transition-colors duration-200;
 }
 
 .like-btn {
-  @apply text-pink-600;
+  @apply bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-800/40 text-red-600 dark:text-red-400;
 }
 
 .loading-indicator {
-  @apply flex flex-col items-center justify-center py-12;
+  @apply flex flex-col items-center justify-center py-12 text-gray-500 dark:text-gray-400;
 }
 
 .loading-spinner {
-  @apply w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4;
+  @apply w-12 h-12 border-4 border-blue-200 dark:border-blue-900 border-t-blue-600 dark:border-t-blue-500 rounded-full animate-spin mb-4;
 }
 
 .article-not-found {
   @apply text-center py-12;
 }
 
+.article-not-found h2 {
+  @apply text-2xl font-semibold text-gray-700 dark:text-gray-300 mb-4;
+}
+
 .back-btn {
-  @apply mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors;
+  @apply px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors;
 }
 
-/* 响应式布局 */
-@media (max-width: 1023px) {
-  .article-layout {
-    @apply flex-col;
-  }
-  
-  .article-toc-container {
-    @apply w-full order-first;
-  }
-  
-  .article-toc {
-    @apply static p-4 mb-4 max-h-64;
-  }
+.no-content-tip {
+  @apply text-center py-8 text-gray-500 dark:text-gray-400 italic;
 }
 
-/* 悬浮目录样式 */
-.floating-toc-container {
-  position: fixed;
-  right: 20px;
-  top: 100px;
-  width: 250px;
-  z-index: 100;
-  display: none; /* 默认在小屏幕上隐藏 */
+/* 添加一个全局的暗模式样式类 */
+:global(.dark) .article-markdown {
+  @apply bg-gray-800 text-gray-200;
 }
 
-.floating-toc {
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  padding: 15px;
-  max-height: calc(100vh - 140px);
-  overflow-y: auto;
-  scrollbar-width: thin;
+:global(.dark) .article-markdown pre {
+  @apply bg-gray-900;
 }
 
-.floating-toc .toc-title {
-  position: sticky;
-  top: 0;
-  padding: 5px 0;
-  margin-bottom: 10px;
-  background-color: #fff;
-  font-weight: bold;
-  z-index: 2;
-  border-bottom: 1px solid #f0f0f0;
+:global(.dark) .article-markdown code {
+  @apply bg-gray-900 text-blue-300;
 }
 
-.floating-toc .markdown-toc {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  overflow-y: auto;
-  scrollbar-width: thin;
+:global(.dark) .article-markdown blockquote {
+  @apply bg-gray-700 border-l-blue-500;
 }
 
-/* 复用现有的目录项样式，但添加一些特定于悬浮目录的调整 */
-.floating-toc .toc-item {
-  margin: 5px 0;
-  padding: 0;
-  line-height: 1.4;
-  position: relative;
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  font-size: 0.9rem;
+:global(.dark) .article-markdown a {
+  @apply text-blue-400;
 }
 
-/* 响应式布局：在大屏幕上强制显示悬浮目录 */
-@media (min-width: 1280px) {
-  .floating-toc-container {
-    display: block !important; /* 使用!important确保显示 */
-  }
-  
-  /* 在特大屏幕上调整位置 */
-  @media (min-width: 1600px) {
-    .floating-toc-container {
-      right: calc((100vw - 1400px) / 2);
-    }
-  }
+:global(.dark) .article-markdown h1,
+:global(.dark) .article-markdown h2,
+:global(.dark) .article-markdown h3,
+:global(.dark) .article-markdown h4,
+:global(.dark) .article-markdown h5,
+:global(.dark) .article-markdown h6 {
+  @apply text-white border-b border-gray-700;
 }
 
-/* 添加CSS样式 */
-.empty-toc-message {
-  text-align: center;
-  padding: 20px 0;
-  color: #999;
-  font-style: italic;
+:global(.dark) .article-markdown table {
+  @apply border-gray-700;
+}
+
+:global(.dark) .article-markdown th {
+  @apply bg-gray-700 text-gray-200 border-gray-600;
+}
+
+:global(.dark) .article-markdown td {
+  @apply border-gray-700;
+}
+
+:global(.dark) .article-markdown hr {
+  @apply border-gray-700;
+}
+
+:global(.dark) .article-markdown img {
+  @apply bg-gray-800;
 }
 </style>
