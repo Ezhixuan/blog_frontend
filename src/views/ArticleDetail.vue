@@ -107,20 +107,26 @@ VMdPreview.use(createCopyCodePlugin({
   }
 }));
 
+// 全局监听剪贴板事件处理函数
+const copyEventHandler = (event: Event) => {
+  // 获取选中的文本
+  const selectedText = window.getSelection()?.toString() || '';
+  if (selectedText.trim()) {
+    console.log('[全局复制] 复制内容长度:', selectedText.length);
+    console.log('[全局复制] 复制操作时间:', new Date().toLocaleTimeString());
+    console.log('[全局复制] 复制内容预览:', selectedText.substring(0, 50) + (selectedText.length > 50 ? '...' : ''));
+    
+    // 显示复制成功提示
+    message.success('复制成功');
+  }
+};
+
 // 全局监听剪贴板事件
 const setupCopyListener = () => {
-  document.addEventListener('copy', (event) => {
-    // 获取选中的文本
-    const selectedText = window.getSelection()?.toString() || '';
-    if (selectedText.trim()) {
-      console.log('[全局复制] 复制内容长度:', selectedText.length);
-      console.log('[全局复制] 复制操作时间:', new Date().toLocaleTimeString());
-      console.log('[全局复制] 复制内容预览:', selectedText.substring(0, 50) + (selectedText.length > 50 ? '...' : ''));
-      
-      // 显示复制成功提示
-      message.success('复制成功');
-    }
-  });
+  // 先移除可能存在的监听器，避免重复添加
+  document.removeEventListener('copy', copyEventHandler);
+  // 添加监听器
+  document.addEventListener('copy', copyEventHandler);
 };
 
 // 定义目录项接口
@@ -1115,7 +1121,7 @@ onUnmounted(() => {
   window.removeEventListener('resize', handleResize);
   
   // 移除全局复制事件监听
-  document.removeEventListener('copy', (event) => {});
+  document.removeEventListener('copy', copyEventHandler);
   
   // 通知侧边栏我们已离开文章页面
   console.log('离开文章页面，发送事件');
