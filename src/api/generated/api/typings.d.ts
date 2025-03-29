@@ -51,6 +51,8 @@ declare namespace API {
     categoryName?: string;
     tagName?: string;
     ids?: number[];
+    tagIds?: number[];
+    categoryIds?: number[];
   };
 
   type ArticleSubmitDTO = {
@@ -68,9 +70,21 @@ declare namespace API {
     name?: string;
   };
 
+  type BaseResponseArticleCategoryVO = {
+    code?: number;
+    data?: ArticleCategoryVO;
+    message?: string;
+  };
+
   type BaseResponseArticleInfoVO = {
     code?: number;
     data?: ArticleInfoVO;
+    message?: string;
+  };
+
+  type BaseResponseArticleTagVO = {
+    code?: number;
+    data?: ArticleTagVO;
     message?: string;
   };
 

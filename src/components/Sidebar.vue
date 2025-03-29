@@ -242,13 +242,62 @@ const menuItems = [
   { name: 'Contact', icon: EnvelopeIcon, link: '/contact' },
 ];
 
-const categories = [
-  { name: 'tech', count: 14 },
-  { name: 'project', count: 1 },
-  { name: 'todo', count: 1 },
-  { name: 'Uncategorized', count: 1 },
-  { name: 'life', count: 1 },
-];
+// 导入分类API
+import { getArticleCategoryList, getArticlePageList } from '@/api/generated/api/articleController';
+
+// 子菜单展开状态
+const expandedMenu = ref<string | null>(null);
+
+// 分类数据
+const categories = ref<API.ArticleCategoryVO[]>([]);
+const categoriesLoading = ref(false);
+
+// 切换子菜单展开/折叠状态
+const toggleSubmenu = (menuName: string) => {
+  if (expandedMenu.value === menuName) {
+    expandedMenu.value = null;
+  } else {
+    expandedMenu.value = menuName;
+    // 如果是Blogs菜单，加载分类列表
+    if (menuName === 'Blogs') {
+      loadCategories();
+    }
+  }
+};
+
+// 加载分类列表
+const loadCategories = async () => {
+  if (categories.value.length > 0) return; // 已加载过，不重复加载
+  
+  categoriesLoading.value = true;
+  try {
+    const res = await getArticleCategoryList();
+    if (res.data?.data) {
+      categories.value = res.data.data;
+    }
+  } catch (error) {
+    console.error('获取分类列表失败', error);
+  } finally {
+    categoriesLoading.value = false;
+  }
+};
+
+// 按分类筛选文章
+const filterByCategory = (categoryId?: number) => {
+  // 构建查询参数
+  const query: Record<string, string> = {};
+  
+  // 如果有分类ID，添加到查询参数
+  if (categoryId) {
+    query.categoryId = String(categoryId);
+  }
+  
+  // 跳转到博客列表页面，带上分类ID参数
+  router.push({
+    path: '/blogs',
+    query
+  });
+};
 
 const tags = [
   { name: 'Frosti', count: 2 },
@@ -428,20 +477,64 @@ const tags = [
         <!-- Navigation -->
         <nav class="space-y-2 mb-8">
           <transition-group name="nav-item">
-            <RouterLink v-for="item in menuItems" 
-               :key="item.name"
-               :to="item.link"
-               class="nav-item flex items-center space-x-3 px-4 py-2 text-gray-700 hover:bg-slate-100 rounded-lg transition-colors"
-               active-class="bg-slate-100 text-blue-600"
-            >
-              <component :is="item.icon" class="w-5 h-5" />
-              <span>{{ item.name }}</span>
-              <span v-if="item.hasSubmenu" class="ml-auto">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </span>
-            </RouterLink>
+            <div v-for="item in menuItems" :key="item.name" class="nav-item-container">
+              <!-- 主菜单项 -->
+              <div 
+                class="nav-item flex items-center space-x-3 px-4 py-2 text-gray-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                :class="{ 'bg-slate-100 text-blue-600': $route.path === item.link || (item.hasSubmenu && expandedMenu === item.name) }"
+                @click="item.hasSubmenu ? toggleSubmenu(item.name) : router.push(item.link)"
+              >
+                <component :is="item.icon" class="w-5 h-5" />
+                <span>{{ item.name }}</span>
+                <span v-if="item.hasSubmenu" class="ml-auto transform transition-transform duration-300" :class="{ 'rotate-180': expandedMenu === item.name }">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </span>
+              </div>
+              
+              <!-- 子菜单 (仅用于Blogs) -->
+              <div 
+                v-if="item.name === 'Blogs' && expandedMenu === 'Blogs'"
+                class="submenu pl-9 mt-1 space-y-1 overflow-hidden transition-all duration-300"
+              >
+                <!-- 全部文章选项 -->
+                <div 
+                  class="submenu-item py-2 px-3 text-sm rounded-md cursor-pointer flex items-center justify-between hover:bg-slate-100 transition-colors"
+                  :class="{ 'text-blue-600 font-medium': $route.path === '/blogs' && !$route.query.categoryId }"
+                  @click="filterByCategory()"
+                >
+                  <span>全部文章</span>
+                </div>
+                
+                <!-- 加载中状态 -->
+                <div v-if="categoriesLoading" class="py-2 px-3 text-sm text-gray-500 italic">
+                  <span class="flex items-center">
+                    <svg class="animate-spin h-4 w-4 mr-2 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    加载中...
+                  </span>
+                </div>
+                
+                <!-- 分类列表 -->
+                <div 
+                  v-for="category in categories" 
+                  :key="category.id"
+                  class="submenu-item py-2 px-3 text-sm rounded-md cursor-pointer flex items-center justify-between hover:bg-slate-100 transition-colors"
+                  :class="{ 'text-blue-600 font-medium': $route.query.categoryId === String(category.id) }"
+                  @click="filterByCategory(category.id)"
+                >
+                  <span>{{ category.name }}</span>
+                </div>
+                
+                <!-- 无分类提示 -->
+                <div v-if="!categoriesLoading && categories.length === 0" class="py-2 px-3 text-sm text-gray-500 italic">
+                  暂无分类
+                </div>
+              </div>
+            </div>
           </transition-group>
         </nav>
     

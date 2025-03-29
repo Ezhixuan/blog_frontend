@@ -40,12 +40,42 @@ export async function getArticleCategoryList(options?: { [key: string]: any }) {
   });
 }
 
+/** 此处后端没有提供注释 POST /article/category/add */
+export async function submitCategory(
+  body: string,
+  options?: { [key: string]: any }
+) {
+  return request<API.BaseResponseArticleCategoryVO>("/article/category/add", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: body,
+    ...(options || {}),
+  });
+}
+
 /** 此处后端没有提供注释 POST /article/list */
 export async function getArticlePageList(
   body: API.ArticleQueryDTO,
   options?: { [key: string]: any }
 ) {
   return request<API.BaseResponsePageResponseArticlePageVO>("/article/list", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** 此处后端没有提供注释 POST /article/tag/add */
+export async function submitTag(
+  body: string,
+  options?: { [key: string]: any }
+) {
+  return request<API.BaseResponseArticleTagVO>("/article/tag/add", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

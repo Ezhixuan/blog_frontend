@@ -133,18 +133,43 @@ onMounted(() => {
 
 // 监听分页变化，更新URL参数
 watch([current, pageSize], () => {
+  // 获取当前的categoryId参数（如果有）
+  const categoryId = route.query.categoryId;
+  
   // 更新URL，不触发路由变化
+  const query: Record<string, string> = {
+    page: current.value.toString(),
+    pageSize: pageSize.value.toString()
+  };
+  
+  // 如果有分类ID，保留在URL中
+  if (categoryId) {
+    query.categoryId = categoryId as string;
+  }
+  
   router.replace({
     path: '/blogs',
-    query: {
-      page: current.value.toString(),
-      pageSize: pageSize.value.toString()
-    }
+    query
   });
   
   // 保存当前分页状态和滚动位置
   saveCurrentPageState();
 });
+
+// 监听路由参数变化，当categoryId变化时重新加载文章
+watch(
+  () => route.query.categoryId,
+  () => {
+    // 分类变化时，重置为第一页
+    current.value = 1;
+    loadArticles();
+    // 回到顶部
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  }
+);
 
 // 保存当前分页状态
 const saveCurrentPageState = () => {
@@ -165,6 +190,12 @@ const loadArticles = async () => {
       sortField: 'createTime',
       sortOrder: 'descend'
     };
+    
+    // 如果URL中有categoryId参数，添加到查询条件
+    const categoryId = route.query.categoryId;
+    if (categoryId && typeof categoryId === 'string') {
+      params.categoryIds = [parseInt(categoryId)];
+    }
     
     const res = await getArticlePageList(params);
     console.log('API响应数据:', res);
