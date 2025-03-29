@@ -28,11 +28,11 @@
 }
 
 .projects-card {
-  @apply bg-white rounded-2xl shadow-sm p-8;
+  @apply bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-8;
 }
 
 .projects-title {
-  @apply text-3xl font-bold mb-6;
+  @apply text-3xl font-bold mb-6 dark:text-white;
 }
 
 .projects-grid {
@@ -40,7 +40,7 @@
 }
 
 .project-item {
-  @apply bg-slate-50 rounded-xl p-6;
+  @apply bg-slate-50 dark:bg-gray-700 rounded-xl p-6;
 }
 
 .project-name {
@@ -48,7 +48,7 @@
 }
 
 .project-desc {
-  @apply text-gray-600 mb-4;
+  @apply text-gray-600 dark:text-gray-300 mb-4;
 }
 
 .project-tags {
@@ -60,6 +60,6 @@
 }
 
 .project-link {
-  @apply text-blue-600 hover:text-blue-800 font-medium;
+  @apply text-blue-600 hover:text-blue-800 font-medium dark:text-blue-400 dark:hover:text-blue-300;
 }
 </style>

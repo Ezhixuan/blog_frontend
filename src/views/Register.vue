@@ -46,13 +46,13 @@ const handleRegister = async () => {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+  <div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-md w-full space-y-8">
       <div>
-        <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">注册新账号</h2>
-        <p class="mt-2 text-center text-sm text-gray-600">
+        <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">注册新账号</h2>
+        <p class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
           或
-          <router-link to="/login" class="font-medium text-primary hover:text-secondary">
+          <router-link to="/login" class="font-medium text-primary hover:text-secondary dark:text-primary-light dark:hover:text-secondary-light">
             登录已有账号
           </router-link>
         </p>

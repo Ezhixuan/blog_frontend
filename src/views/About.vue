@@ -46,11 +46,11 @@
 
 <style scoped>
 .about-card {
-  @apply bg-white rounded-2xl shadow-sm p-8;
+  @apply bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-8;
 }
 
 .about-title {
-  @apply text-3xl font-bold mb-6;
+  @apply text-3xl font-bold mb-6 dark:text-white;
 }
 
 .about-content {
@@ -58,11 +58,11 @@
 }
 
 .about-paragraph {
-  @apply text-gray-600 mb-4;
+  @apply text-gray-600 dark:text-gray-300 mb-4;
 }
 
 .skills-title {
-  @apply text-2xl font-semibold mt-8 mb-4;
+  @apply text-2xl font-semibold mt-8 mb-4 dark:text-white;
 }
 
 .skills-grid {
@@ -70,14 +70,14 @@
 }
 
 .skill-card {
-  @apply bg-slate-50 p-4 rounded-lg;
+  @apply bg-slate-50 dark:bg-gray-700 p-4 rounded-lg;
 }
 
 .skill-heading {
-  @apply font-semibold mb-2;
+  @apply font-semibold mb-2 dark:text-white;
 }
 
 .skill-list {
-  @apply text-gray-600 space-y-1;
+  @apply text-gray-600 dark:text-gray-300 space-y-1;
 }
 </style>

@@ -28,11 +28,11 @@
 }
 
 .friends-card {
-  @apply bg-white rounded-2xl shadow-sm p-8;
+  @apply bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-8;
 }
 
 .friends-title {
-  @apply text-3xl font-bold mb-6;
+  @apply text-3xl font-bold mb-6 dark:text-white;
 }
 
 .friends-grid {
@@ -40,7 +40,7 @@
 }
 
 .friend-item {
-  @apply bg-slate-50 rounded-xl p-6;
+  @apply bg-slate-50 dark:bg-gray-700 rounded-xl p-6;
 }
 
 .friend-profile {
@@ -52,14 +52,14 @@
 }
 
 .friend-name {
-  @apply font-semibold;
+  @apply font-semibold dark:text-white;
 }
 
 .friend-desc {
-  @apply text-gray-600 text-sm;
+  @apply text-gray-600 dark:text-gray-300 text-sm;
 }
 
 .friend-link {
-  @apply mt-4 inline-block text-blue-600 hover:text-blue-800;
+  @apply mt-4 inline-block text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300;
 }
 </style>

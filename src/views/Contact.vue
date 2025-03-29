@@ -51,11 +51,11 @@
 }
 
 .contact-card {
-  @apply bg-white rounded-2xl shadow-sm p-8;
+  @apply bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-8;
 }
 
 .contact-title {
-  @apply text-3xl font-bold mb-6;
+  @apply text-3xl font-bold mb-6 dark:text-white;
 }
 
 .contact-form {
@@ -67,7 +67,7 @@
 }
 
 .form-label {
-  @apply block text-sm font-medium text-gray-700 mb-2;
+  @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2;
 }
 
 .form-input {
@@ -75,6 +75,6 @@
 }
 
 .submit-button {
-  @apply w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors;
+  @apply w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-colors;
 }
 </style>
