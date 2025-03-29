@@ -40,6 +40,17 @@ export async function getArticleCategoryList(options?: { [key: string]: any }) {
   });
 }
 
+/** 此处后端没有提供注释 GET /article/categories/count */
+export async function getCategoryCount(options?: { [key: string]: any }) {
+  return request<API.BaseResponseListArticleCategoryCountVO>(
+    "/article/categories/count",
+    {
+      method: "GET",
+      ...(options || {}),
+    }
+  );
+}
+
 /** 此处后端没有提供注释 POST /article/category/add */
 export async function submitCategory(
   body: string,
@@ -88,6 +99,14 @@ export async function submitTag(
 /** 此处后端没有提供注释 GET /article/tags */
 export async function getArticleTagList(options?: { [key: string]: any }) {
   return request<API.BaseResponseListArticleTagVO>("/article/tags", {
+    method: "GET",
+    ...(options || {}),
+  });
+}
+
+/** 此处后端没有提供注释 GET /article/tags/count */
+export async function getTagCount(options?: { [key: string]: any }) {
+  return request<API.BaseResponseListArticleTagCountVO>("/article/tags/count", {
     method: "GET",
     ...(options || {}),
   });

@@ -1,4 +1,10 @@
 declare namespace API {
+  type ArticleCategoryCountVO = {
+    id?: number;
+    name?: string;
+    count?: number;
+  };
+
   type ArticleCategoryVO = {
     id?: number;
     name?: string;
@@ -65,6 +71,12 @@ declare namespace API {
     content?: string;
   };
 
+  type ArticleTagCountVO = {
+    id?: number;
+    name?: string;
+    count?: number;
+  };
+
   type ArticleTagVO = {
     id?: number;
     name?: string;
@@ -88,9 +100,21 @@ declare namespace API {
     message?: string;
   };
 
+  type BaseResponseListArticleCategoryCountVO = {
+    code?: number;
+    data?: ArticleCategoryCountVO[];
+    message?: string;
+  };
+
   type BaseResponseListArticleCategoryVO = {
     code?: number;
     data?: ArticleCategoryVO[];
+    message?: string;
+  };
+
+  type BaseResponseListArticleTagCountVO = {
+    code?: number;
+    data?: ArticleTagCountVO[];
     message?: string;
   };
 
