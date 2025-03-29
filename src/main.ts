@@ -35,19 +35,30 @@ import 'prismjs/components/prism-json'
 import createCopyCodePlugin from '@kangc/v-md-editor/lib/plugins/copy-code/index'
 import '@kangc/v-md-editor/lib/plugins/copy-code/copy-code.css'
 
+// 导入消息提示组件
+import message from '@/utils/message'
+
 // 配置编辑器
 VueMarkdownEditor.use(vuepressTheme, {
   Prism,
 })
-// 使用代码复制插件
-VueMarkdownEditor.use(createCopyCodePlugin())
+// 使用代码复制插件，添加复制成功的反馈
+VueMarkdownEditor.use(createCopyCodePlugin({
+  afterCopy: () => {
+    message.success('复制成功')
+  }
+}))
 
 // 配置预览组件
 VMdPreview.use(vuepressTheme, {
   Prism,
 })
-// 预览组件也使用代码复制插件
-VMdPreview.use(createCopyCodePlugin())
+// 预览组件也使用代码复制插件，添加复制成功的反馈
+VMdPreview.use(createCopyCodePlugin({
+  afterCopy: () => {
+    message.success('复制成功')
+  }
+}))
 
 createApp(App)
   .use(router)

@@ -24,7 +24,18 @@
               <span class="meta-separator">•</span>
               <span>{{ article.viewCount || 0 }} 次阅读</span>
               <span class="meta-separator">•</span>
-              <a href="javascript:void(0)" class="meta-tag">{{ article.categoryName }}</a>
+              <a href="javascript:void(0)" class="meta-category">{{ article.categoryName }}</a>
+            </div>
+            
+            <!-- 文章标签 -->
+            <div v-if="article.tagMap && Object.keys(article.tagMap).length > 0" class="article-tags">
+              <div 
+                v-for="(value, key) in article.tagMap" 
+                :key="key"
+                class="article-tag"
+              >
+                {{ value }}
+              </div>
             </div>
             
             <div class="article-content">
@@ -72,6 +83,39 @@ import { useRoute, useRouter } from 'vue-router';
 import { getArticleInfo } from '../api/generated/api/articleController';
 import { emit } from '@/utils/eventBus';
 import BackToTop from '../components/BackToTop.vue';
+import createCopyCodePlugin from '@kangc/v-md-editor/lib/plugins/copy-code/index';
+import '@kangc/v-md-editor/lib/plugins/copy-code/copy-code.css';
+import VMdPreview from '@kangc/v-md-editor/lib/preview';
+import message from '@/utils/message';
+
+// 确保在组件内部也配置代码复制插件
+VMdPreview.use(createCopyCodePlugin({
+  beforeCopy: (text) => {
+    console.log('[代码复制] 准备复制代码:', text.substring(0, 50) + (text.length > 50 ? '...' : ''));
+    return text;
+  },
+  afterCopy: (text) => {
+    console.log('[代码复制] 复制成功，复制内容长度:', text.length);
+    console.log('[代码复制] 复制操作时间:', new Date().toLocaleTimeString());
+    message.success('复制成功');
+  }
+}));
+
+// 全局监听剪贴板事件
+const setupCopyListener = () => {
+  document.addEventListener('copy', (event) => {
+    // 获取选中的文本
+    const selectedText = window.getSelection()?.toString() || '';
+    if (selectedText.trim()) {
+      console.log('[全局复制] 复制内容长度:', selectedText.length);
+      console.log('[全局复制] 复制操作时间:', new Date().toLocaleTimeString());
+      console.log('[全局复制] 复制内容预览:', selectedText.substring(0, 50) + (selectedText.length > 50 ? '...' : ''));
+      
+      // 显示复制成功提示
+      message.success('复制成功');
+    }
+  });
+};
 
 // 定义目录项接口
 interface TocItem {
@@ -920,6 +964,9 @@ onMounted(() => {
   // 初始计算进度
   calculateReadingProgress();
   
+  // 设置全局复制事件监听
+  setupCopyListener();
+  
   // 发送进入文章页面事件
   emit('enter-article-page', true);
   
@@ -1060,6 +1107,9 @@ onUnmounted(() => {
   // 移除滚动事件监听
   window.removeEventListener('scroll', handleScroll);
   window.removeEventListener('resize', handleResize);
+  
+  // 移除全局复制事件监听
+  document.removeEventListener('copy', (event) => {});
   
   // 通知侧边栏我们已离开文章页面
   console.log('离开文章页面，发送事件');
@@ -1380,8 +1430,37 @@ watch(tocItems, (newItems) => {
   @apply mx-2;
 }
 
-.meta-tag {
+.meta-category {
   @apply text-blue-600 hover:text-blue-800;
+}
+
+.article-tags {
+  @apply flex flex-wrap gap-2 mt-4 mb-6;
+}
+
+.article-tag {
+  @apply px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-300 transform hover:scale-105 cursor-pointer;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: white;
+  box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.2), 0 2px 4px -1px rgba(99, 102, 241, 0.1);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.article-tag::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: all 0.6s ease;
+}
+
+.article-tag:hover::before {
+  left: 100%;
 }
 
 .article-content {
