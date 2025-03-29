@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted, reactive } from 'vue';
+import { ref, onMounted, reactive, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import message from '@/utils/message';
-import { doSubmitArticle, getArticleCategoryList, getArticleTagList } from '@/api/generated/api/articleController';
+import { doSubmitArticle, getArticleCategoryList, getArticleTagList, submitCategory, submitTag } from '@/api/generated/api/articleController';
 import { mockGenerateBlogContent } from '@/api/ai';
 
 const router = useRouter();
@@ -18,6 +18,31 @@ const categories = ref<API.ArticleCategoryVO[]>([]);
 const tags = ref<API.ArticleTagVO[]>([]);
 const isLoadingCategories = ref(false);
 const isLoadingTags = ref(false);
+
+// 搜索和新增相关状态
+const categorySearchText = ref('');
+const tagSearchText = ref('');
+const newCategoryName = ref('');
+const newTagName = ref('');
+const isAddingCategory = ref(false);
+const isAddingTag = ref(false);
+const showCategoryForm = ref(false);
+const showTagForm = ref(false);
+
+// 过滤后的分类和标签列表
+const filteredCategories = computed(() => {
+  if (!categorySearchText.value) return categories.value;
+  return categories.value.filter(category => 
+    category.name.toLowerCase().includes(categorySearchText.value.toLowerCase())
+  );
+});
+
+const filteredTags = computed(() => {
+  if (!tagSearchText.value) return tags.value;
+  return tags.value.filter(tag => 
+    tag.name.toLowerCase().includes(tagSearchText.value.toLowerCase())
+  );
+});
 
 // 动画相关状态
 const formVisible = ref(false);
@@ -46,6 +71,31 @@ const fetchCategories = async () => {
   }
 };
 
+// 添加新分类
+const addNewCategory = async () => {
+  if (!newCategoryName.value.trim()) {
+    message.warning('分类名称不能为空');
+    return;
+  }
+  
+  try {
+    isAddingCategory.value = true;
+    const res = await submitCategory(newCategoryName.value);
+    if (res.data?.code === 0 && res.data?.data) {
+      categories.value.push(res.data.data);
+      message.success('分类添加成功');
+      newCategoryName.value = '';
+      showCategoryForm.value = false;
+    } else {
+      message.error(res.data?.description || '添加分类失败');
+    }
+  } catch (error: any) {
+    message.error(error?.response?.data?.description || '添加分类失败');
+  } finally {
+    isAddingCategory.value = false;
+  }
+};
+
 // 获取标签列表
 const fetchTags = async () => {
   try {
@@ -58,6 +108,31 @@ const fetchTags = async () => {
     message.error(error?.response?.data?.description || '获取标签列表失败');
   } finally {
     isLoadingTags.value = false;
+  }
+};
+
+// 添加新标签
+const addNewTag = async () => {
+  if (!newTagName.value.trim()) {
+    message.warning('标签名称不能为空');
+    return;
+  }
+  
+  try {
+    isAddingTag.value = true;
+    const res = await submitTag(newTagName.value);
+    if (res.data?.code === 0 && res.data?.data) {
+      tags.value.push(res.data.data);
+      message.success('标签添加成功');
+      newTagName.value = '';
+      showTagForm.value = false;
+    } else {
+      message.error(res.data?.description || '添加标签失败');
+    }
+  } catch (error: any) {
+    message.error(error?.response?.data?.description || '添加标签失败');
+  } finally {
+    isAddingTag.value = false;
   }
 };
 
@@ -201,9 +276,58 @@ const handleSubmit = async () => {
             @mouseenter="activeSection = 'category'" 
             @mouseleave="activeSection = ''"
           >
-            <label for="category" class="block text-sm font-medium text-gray-700 mb-2 transition-all duration-300" :class="{'text-blue-600': activeSection === 'category'}">
-              分类
-            </label>
+            <div class="flex justify-between items-center mb-2">
+              <label for="category" class="block text-sm font-medium text-gray-700 transition-all duration-300" :class="{'text-blue-600': activeSection === 'category'}">
+                分类
+              </label>
+              <button
+                type="button"
+                class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-md text-blue-600 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-300 transform hover:scale-105"
+                @click="showCategoryForm = !showCategoryForm"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                新增分类
+              </button>
+            </div>
+            
+            <!-- 搜索框 -->
+            <div class="mb-2 relative">
+              <input
+                type="text"
+                v-model="categorySearchText"
+                placeholder="搜索分类..."
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border transition-all duration-300 pl-8"
+                :class="{'border-blue-300 shadow-sm': activeSection === 'category'}"
+              />
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 absolute left-2 top-2.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            
+            <!-- 新增分类表单 -->
+            <div v-if="showCategoryForm" class="mb-2 p-3 border border-blue-100 rounded-md bg-blue-50 transition-all duration-300 transform">
+              <div class="flex items-center space-x-2">
+                <input
+                  type="text"
+                  v-model="newCategoryName"
+                  placeholder="输入新分类名称"
+                  class="block flex-grow rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
+                />
+                <button
+                  type="button"
+                  :disabled="isAddingCategory || !newCategoryName.trim()"
+                  class="inline-flex items-center px-3 py-2 text-xs font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                  @click="addNewCategory"
+                >
+                  <span v-if="isAddingCategory">添加中...</span>
+                  <span v-else>添加</span>
+                </button>
+              </div>
+            </div>
+            
+            <!-- 分类选择 -->
             <select
               id="category"
               v-model="categoryId"
@@ -211,11 +335,12 @@ const handleSubmit = async () => {
               :class="{'border-blue-300 shadow-md': activeSection === 'category'}"
             >
               <option :value="undefined" disabled>请选择分类</option>
-              <option v-for="category in categories" :key="category.id" :value="category.id">
+              <option v-for="category in filteredCategories" :key="category.id" :value="category.id">
                 {{ category.name }}
               </option>
             </select>
             <div v-if="isLoadingCategories" class="mt-1 text-xs text-gray-500 animate-pulse">加载分类中...</div>
+            <div v-else-if="filteredCategories.length === 0 && categorySearchText" class="mt-1 text-xs text-gray-500">未找到匹配的分类</div>
           </div>
           
           <div 
@@ -224,9 +349,57 @@ const handleSubmit = async () => {
             @mouseenter="activeSection = 'tags'" 
             @mouseleave="activeSection = ''"
           >
-            <label class="block text-sm font-medium text-gray-700 mb-2 transition-all duration-300" :class="{'text-blue-600': activeSection === 'tags'}">
-              标签
-            </label>
+            <div class="flex justify-between items-center mb-2">
+              <label class="block text-sm font-medium text-gray-700 transition-all duration-300" :class="{'text-blue-600': activeSection === 'tags'}">
+                标签
+              </label>
+              <button
+                type="button"
+                class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-md text-green-600 bg-green-50 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-300 transform hover:scale-105"
+                @click="showTagForm = !showTagForm"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                新增标签
+              </button>
+            </div>
+            
+            <!-- 搜索框 -->
+            <div class="mb-2 relative">
+              <input
+                type="text"
+                v-model="tagSearchText"
+                placeholder="搜索标签..."
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm p-2 border transition-all duration-300 pl-8"
+                :class="{'border-blue-300 shadow-sm': activeSection === 'tags'}"
+              />
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 absolute left-2 top-2.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            
+            <!-- 新增标签表单 -->
+            <div v-if="showTagForm" class="mb-2 p-3 border border-green-100 rounded-md bg-green-50 transition-all duration-300 transform">
+              <div class="flex items-center space-x-2">
+                <input
+                  type="text"
+                  v-model="newTagName"
+                  placeholder="输入新标签名称"
+                  class="block flex-grow rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm p-2 border"
+                />
+                <button
+                  type="button"
+                  :disabled="isAddingTag || !newTagName.trim()"
+                  class="inline-flex items-center px-3 py-2 text-xs font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                  @click="addNewTag"
+                >
+                  <span v-if="isAddingTag">添加中...</span>
+                  <span v-else>添加</span>
+                </button>
+              </div>
+            </div>
+            
             <div class="mt-1 space-y-2">
               <div v-if="isLoadingTags" class="text-xs text-gray-500 animate-pulse">加载标签中...</div>
               <div 
@@ -234,7 +407,7 @@ const handleSubmit = async () => {
                 :class="{'border-blue-300 shadow-md': activeSection === 'tags'}"
               >
                 <label 
-                  v-for="(tag, index) in tags" 
+                  v-for="(tag, index) in filteredTags" 
                   :key="tag.id" 
                   class="inline-flex items-center mr-3 mb-2 transition-all duration-300 transform hover:scale-105"
                   :style="{'transition-delay': index * 30 + 'ms'}"
@@ -247,6 +420,7 @@ const handleSubmit = async () => {
                   />
                   <span class="ml-2 text-sm text-gray-700">{{ tag.name }}</span>
                 </label>
+                <div v-if="filteredTags.length === 0 && tagSearchText" class="text-xs text-gray-500 w-full text-center py-2">未找到匹配的标签</div>
               </div>
             </div>
           </div>
