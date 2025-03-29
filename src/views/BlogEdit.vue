@@ -19,30 +19,13 @@ const tags = ref<API.ArticleTagVO[]>([]);
 const isLoadingCategories = ref(false);
 const isLoadingTags = ref(false);
 
-// 搜索和新增相关状态
-const categorySearchText = ref('');
-const tagSearchText = ref('');
+// 新增相关状态
 const newCategoryName = ref('');
 const newTagName = ref('');
 const isAddingCategory = ref(false);
 const isAddingTag = ref(false);
 const showCategoryForm = ref(false);
 const showTagForm = ref(false);
-
-// 过滤后的分类和标签列表
-const filteredCategories = computed(() => {
-  if (!categorySearchText.value) return categories.value;
-  return categories.value.filter(category => 
-    category.name.toLowerCase().includes(categorySearchText.value.toLowerCase())
-  );
-});
-
-const filteredTags = computed(() => {
-  if (!tagSearchText.value) return tags.value;
-  return tags.value.filter(tag => 
-    tag.name.toLowerCase().includes(tagSearchText.value.toLowerCase())
-  );
-});
 
 // 动画相关状态
 const formVisible = ref(false);
@@ -292,20 +275,6 @@ const handleSubmit = async () => {
               </button>
             </div>
             
-            <!-- 搜索框 -->
-            <div class="mb-2 relative">
-              <input
-                type="text"
-                v-model="categorySearchText"
-                placeholder="搜索分类..."
-                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border transition-all duration-300 pl-8"
-                :class="{'border-blue-300 shadow-sm': activeSection === 'category'}"
-              />
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 absolute left-2 top-2.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
-            
             <!-- 新增分类表单 -->
             <div v-if="showCategoryForm" class="mb-2 p-3 border border-blue-100 rounded-md bg-blue-50 transition-all duration-300 transform">
               <div class="flex items-center space-x-2">
@@ -327,20 +296,22 @@ const handleSubmit = async () => {
               </div>
             </div>
             
-            <!-- 分类选择 -->
-            <select
+            <!-- 分类选择 - 使用可搜索的下拉选择框 -->
+            <a-select
               id="category"
-              v-model="categoryId"
-              class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3 border transition-all duration-300"
-              :class="{'border-blue-300 shadow-md': activeSection === 'category'}"
+              v-model:value="categoryId"
+              :loading="isLoadingCategories"
+              show-search
+              placeholder="请选择或搜索分类"
+              :filter-option="(input, option) => option.label.toLowerCase().includes(input.toLowerCase())"
+              class="w-full transition-all duration-300"
+              :class="{'ant-select-focused': activeSection === 'category'}"
             >
-              <option :value="undefined" disabled>请选择分类</option>
-              <option v-for="category in filteredCategories" :key="category.id" :value="category.id">
+              <a-select-option v-for="category in categories" :key="category.id" :value="category.id" :label="category.name">
                 {{ category.name }}
-              </option>
-            </select>
+              </a-select-option>
+            </a-select>
             <div v-if="isLoadingCategories" class="mt-1 text-xs text-gray-500 animate-pulse">加载分类中...</div>
-            <div v-else-if="filteredCategories.length === 0 && categorySearchText" class="mt-1 text-xs text-gray-500">未找到匹配的分类</div>
           </div>
           
           <div 
@@ -363,20 +334,6 @@ const handleSubmit = async () => {
                 </svg>
                 新增标签
               </button>
-            </div>
-            
-            <!-- 搜索框 -->
-            <div class="mb-2 relative">
-              <input
-                type="text"
-                v-model="tagSearchText"
-                placeholder="搜索标签..."
-                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm p-2 border transition-all duration-300 pl-8"
-                :class="{'border-blue-300 shadow-sm': activeSection === 'tags'}"
-              />
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 absolute left-2 top-2.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
             </div>
             
             <!-- 新增标签表单 -->
@@ -402,26 +359,23 @@ const handleSubmit = async () => {
             
             <div class="mt-1 space-y-2">
               <div v-if="isLoadingTags" class="text-xs text-gray-500 animate-pulse">加载标签中...</div>
-              <div 
-                class="flex flex-wrap gap-2 p-3 border border-gray-300 rounded-md max-h-40 overflow-y-auto transition-all duration-300"
-                :class="{'border-blue-300 shadow-md': activeSection === 'tags'}"
+              
+              <!-- 标签选择 - 使用可搜索的多选下拉选择框 -->
+              <a-select
+                v-model:value="tagIds"
+                mode="multiple"
+                :loading="isLoadingTags"
+                show-search
+                placeholder="请选择或搜索标签"
+                :filter-option="(input, option) => option.label.toLowerCase().includes(input.toLowerCase())"
+                class="w-full transition-all duration-300"
+                :class="{'ant-select-focused': activeSection === 'tags'}"
+                style="min-height: 38px;"
               >
-                <label 
-                  v-for="(tag, index) in filteredTags" 
-                  :key="tag.id" 
-                  class="inline-flex items-center mr-3 mb-2 transition-all duration-300 transform hover:scale-105"
-                  :style="{'transition-delay': index * 30 + 'ms'}"
-                >
-                  <input
-                    type="checkbox"
-                    :value="tag.id"
-                    v-model="tagIds"
-                    class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span class="ml-2 text-sm text-gray-700">{{ tag.name }}</span>
-                </label>
-                <div v-if="filteredTags.length === 0 && tagSearchText" class="text-xs text-gray-500 w-full text-center py-2">未找到匹配的标签</div>
-              </div>
+                <a-select-option v-for="tag in tags" :key="tag.id" :value="tag.id" :label="tag.name">
+                  {{ tag.name }}
+                </a-select-option>
+              </a-select>
             </div>
           </div>
         </div>

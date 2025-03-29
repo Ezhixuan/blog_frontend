@@ -19,17 +19,35 @@ import '@kangc/v-md-editor/lib/style/preview.css'
 // import VMdPreviewToc from '@kangc/v-md-editor/lib/preview-toc'
 // import '@kangc/v-md-editor/lib/style/preview-toc.css'
 
+// 导入代码高亮和复制功能
 import Prism from 'prismjs'
+// 导入更多语言包
+import 'prismjs/components/prism-java'
+import 'prismjs/components/prism-python'
+import 'prismjs/components/prism-javascript'
+import 'prismjs/components/prism-typescript'
+import 'prismjs/components/prism-css'
+import 'prismjs/components/prism-sql'
+import 'prismjs/components/prism-bash'
+import 'prismjs/components/prism-json'
+
+// 导入代码复制插件
+import createCopyCodePlugin from '@kangc/v-md-editor/lib/plugins/copy-code/index'
+import '@kangc/v-md-editor/lib/plugins/copy-code/copy-code.css'
 
 // 配置编辑器
 VueMarkdownEditor.use(vuepressTheme, {
   Prism,
 })
+// 使用代码复制插件
+VueMarkdownEditor.use(createCopyCodePlugin())
 
 // 配置预览组件
 VMdPreview.use(vuepressTheme, {
   Prism,
 })
+// 预览组件也使用代码复制插件
+VMdPreview.use(createCopyCodePlugin())
 
 createApp(App)
   .use(router)
