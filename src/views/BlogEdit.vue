@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import message from '@/utils/message';
 import { doSubmitArticle, getArticleCategoryList, getArticleTagList } from '@/api/generated/api/articleController';
@@ -18,6 +18,18 @@ const categories = ref<API.ArticleCategoryVO[]>([]);
 const tags = ref<API.ArticleTagVO[]>([]);
 const isLoadingCategories = ref(false);
 const isLoadingTags = ref(false);
+
+// 动画相关状态
+const formVisible = ref(false);
+const activeSection = ref('');
+const animations = reactive({
+  title: false,
+  summary: false,
+  category: false,
+  tags: false,
+  status: false,
+  content: false
+});
 
 // 获取分类列表
 const fetchCategories = async () => {
@@ -49,10 +61,23 @@ const fetchTags = async () => {
   }
 };
 
-// 页面加载时获取分类和标签数据
+// 页面加载时获取分类和标签数据并触发动画
 onMounted(() => {
   fetchCategories();
   fetchTags();
+  
+  // 页面加载动画
+  setTimeout(() => {
+    formVisible.value = true;
+    
+    // 依次触发各个表单项的动画
+    const sections = ['title', 'summary', 'category', 'tags', 'status', 'content'];
+    sections.forEach((section, index) => {
+      setTimeout(() => {
+        animations[section] = true;
+      }, index * 150);
+    });
+  }, 100);
 });
 
 const handleCancel = () => {
@@ -115,65 +140,105 @@ const handleSubmit = async () => {
 
 <template>
   <div class="blog-edit-container max-w-5xl mx-auto py-8 px-4">
-    <div class="bg-white rounded-2xl shadow-md p-8 transform transition-all duration-300 hover:shadow-lg">
-      <h1 class="text-3xl font-bold mb-6 flex items-center">
-        <span class="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">编辑博客</span>
-        <div class="flex-grow border-b-2 border-gray-200 ml-4"></div>
+    <div 
+      class="bg-white rounded-2xl shadow-md p-8 transform transition-all duration-500 hover:shadow-lg"
+      :class="{'scale-100 opacity-100': formVisible, 'scale-95 opacity-0': !formVisible}"
+    >
+      <h1 class="text-3xl font-bold mb-6 flex items-center overflow-hidden">
+        <span 
+          class="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600 transform transition-all duration-700 ease-out"
+          :class="{'translate-x-0 opacity-100': formVisible, '-translate-x-full opacity-0': !formVisible}"
+        >编辑博客</span>
+        <div 
+          class="flex-grow border-b-2 border-gray-200 ml-4 transform transition-all duration-1000 ease-out"
+          :class="{'scale-x-100': formVisible, 'scale-x-0': !formVisible}"
+        ></div>
       </h1>
 
       <div class="space-y-6">
-        <div>
-          <label for="title" class="block text-sm font-medium text-gray-700 mb-2">
+        <div 
+          class="transform transition-all duration-500 ease-out"
+          :class="{'translate-y-0 opacity-100': animations.title, 'translate-y-4 opacity-0': !animations.title}"
+          @mouseenter="activeSection = 'title'" 
+          @mouseleave="activeSection = ''"
+        >
+          <label for="title" class="block text-sm font-medium text-gray-700 mb-2 transition-all duration-300" :class="{'text-blue-600': activeSection === 'title'}">
             标题
           </label>
           <input
             id="title"
             type="text"
             v-model="title"
-            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3 border"
+            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3 border transition-all duration-300"
+            :class="{'border-blue-300 shadow-md': activeSection === 'title'}"
             placeholder="请输入博客标题"
           />
         </div>
 
-        <div>
-          <label for="summary" class="block text-sm font-medium text-gray-700 mb-2">
+        <div 
+          class="transform transition-all duration-500 ease-out"
+          :class="{'translate-y-0 opacity-100': animations.summary, 'translate-y-4 opacity-0': !animations.summary}"
+          @mouseenter="activeSection = 'summary'" 
+          @mouseleave="activeSection = ''"
+        >
+          <label for="summary" class="block text-sm font-medium text-gray-700 mb-2 transition-all duration-300" :class="{'text-blue-600': activeSection === 'summary'}">
             摘要
           </label>
           <textarea
             id="summary"
             v-model="summary"
             rows="3"
-            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3 border"
+            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3 border transition-all duration-300"
+            :class="{'border-blue-300 shadow-md': activeSection === 'summary'}"
             placeholder="请输入博客摘要"
           ></textarea>
         </div>
 
         <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label for="category" class="block text-sm font-medium text-gray-700 mb-2">
+          <div 
+            class="transform transition-all duration-500 ease-out"
+            :class="{'translate-y-0 opacity-100': animations.category, 'translate-y-4 opacity-0': !animations.category}"
+            @mouseenter="activeSection = 'category'" 
+            @mouseleave="activeSection = ''"
+          >
+            <label for="category" class="block text-sm font-medium text-gray-700 mb-2 transition-all duration-300" :class="{'text-blue-600': activeSection === 'category'}">
               分类
             </label>
             <select
               id="category"
               v-model="categoryId"
-              class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3 border"
+              class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3 border transition-all duration-300"
+              :class="{'border-blue-300 shadow-md': activeSection === 'category'}"
             >
               <option :value="undefined" disabled>请选择分类</option>
               <option v-for="category in categories" :key="category.id" :value="category.id">
                 {{ category.name }}
               </option>
             </select>
-            <div v-if="isLoadingCategories" class="mt-1 text-xs text-gray-500">加载分类中...</div>
+            <div v-if="isLoadingCategories" class="mt-1 text-xs text-gray-500 animate-pulse">加载分类中...</div>
           </div>
           
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
+          <div 
+            class="transform transition-all duration-500 ease-out"
+            :class="{'translate-y-0 opacity-100': animations.tags, 'translate-y-4 opacity-0': !animations.tags}"
+            @mouseenter="activeSection = 'tags'" 
+            @mouseleave="activeSection = ''"
+          >
+            <label class="block text-sm font-medium text-gray-700 mb-2 transition-all duration-300" :class="{'text-blue-600': activeSection === 'tags'}">
               标签
             </label>
             <div class="mt-1 space-y-2">
-              <div v-if="isLoadingTags" class="text-xs text-gray-500">加载标签中...</div>
-              <div class="flex flex-wrap gap-2 p-3 border border-gray-300 rounded-md max-h-40 overflow-y-auto">
-                <label v-for="tag in tags" :key="tag.id" class="inline-flex items-center mr-3 mb-2">
+              <div v-if="isLoadingTags" class="text-xs text-gray-500 animate-pulse">加载标签中...</div>
+              <div 
+                class="flex flex-wrap gap-2 p-3 border border-gray-300 rounded-md max-h-40 overflow-y-auto transition-all duration-300"
+                :class="{'border-blue-300 shadow-md': activeSection === 'tags'}"
+              >
+                <label 
+                  v-for="(tag, index) in tags" 
+                  :key="tag.id" 
+                  class="inline-flex items-center mr-3 mb-2 transition-all duration-300 transform hover:scale-105"
+                  :style="{'transition-delay': index * 30 + 'ms'}"
+                >
                   <input
                     type="checkbox"
                     :value="tag.id"
@@ -187,49 +252,64 @@ const handleSubmit = async () => {
           </div>
         </div>
 
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">
+        <div 
+          class="transform transition-all duration-500 ease-out"
+          :class="{'translate-y-0 opacity-100': animations.status, 'translate-y-4 opacity-0': !animations.status}"
+          @mouseenter="activeSection = 'status'" 
+          @mouseleave="activeSection = ''"
+        >
+          <label class="block text-sm font-medium text-gray-700 mb-2 transition-all duration-300" :class="{'text-blue-600': activeSection === 'status'}">
             发布状态
           </label>
           <div class="mt-2 flex items-center space-x-4">
-            <label class="inline-flex items-center">
+            <label class="inline-flex items-center transition-all duration-300 transform hover:scale-105">
               <input type="radio" v-model="status" :value="1" class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500" />
               <span class="ml-2 text-sm text-gray-700">立即发布</span>
             </label>
-            <label class="inline-flex items-center">
+            <label class="inline-flex items-center transition-all duration-300 transform hover:scale-105">
               <input type="radio" v-model="status" :value="0" class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500" />
               <span class="ml-2 text-sm text-gray-700">保存为草稿</span>
             </label>
           </div>
         </div>
 
-        <div>
+        <div 
+          class="transform transition-all duration-500 ease-out"
+          :class="{'translate-y-0 opacity-100': animations.content, 'translate-y-4 opacity-0': !animations.content}"
+          @mouseenter="activeSection = 'content'" 
+          @mouseleave="activeSection = ''"
+        >
           <div class="flex justify-between items-center mb-2">
-            <label class="block text-sm font-medium text-gray-700">
+            <label class="block text-sm font-medium text-gray-700 transition-all duration-300" :class="{'text-blue-600': activeSection === 'content'}">
               内容
             </label>
             <button
               type="button"
               :disabled="isGenerating || !title"
-              class="inline-flex items-center px-3 py-1 text-xs font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              class="inline-flex items-center px-3 py-1 text-xs font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 hover:shadow-md"
               @click="generateContent"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 transition-transform duration-500 ease-in-out" :class="{'animate-pulse': isGenerating}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
-              {{ isGenerating ? '生成中...' : 'AI生成内容' }}
+              <span class="relative overflow-hidden">
+                {{ isGenerating ? '生成中...' : 'AI生成内容' }}
+                <span v-if="isGenerating" class="absolute bottom-0 left-0 h-0.5 bg-white animate-loading-bar"></span>
+              </span>
             </button>
           </div>
-          <v-md-editor
-            v-model="content"
-            height="500px"
-          />
+          <div class="transition-all duration-300 rounded-md" :class="{'ring-2 ring-blue-200 shadow-md': activeSection === 'content'}">
+            <v-md-editor
+              v-model="content"
+              height="500px"
+            />
+          </div>
         </div>
 
-        <div class="flex justify-end space-x-4 pt-4">
+        <div class="flex justify-end space-x-4 pt-4 transform transition-all duration-700 ease-out" :class="{'translate-y-0 opacity-100': formVisible, 'translate-y-8 opacity-0': !formVisible}">
           <button
             type="button"
-            class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+            class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transform hover:scale-105 hover:shadow-md"
             @click="handleCancel"
           >
             取消
@@ -237,10 +317,11 @@ const handleSubmit = async () => {
           <button
             type="button"
             :disabled="isLoading"
-            class="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="relative px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 hover:shadow-md overflow-hidden"
             @click="handleSubmit"
           >
-            {{ isLoading ? '提交中...' : '提交' }}
+            <span class="relative z-10">{{ isLoading ? '提交中...' : '提交' }}</span>
+            <span v-if="isLoading" class="absolute bottom-0 left-0 h-1 bg-white animate-loading-bar"></span>
           </button>
         </div>
       </div>
@@ -251,5 +332,65 @@ const handleSubmit = async () => {
 <style>
 .v-md-editor {
   border-radius: 0.375rem;
+}
+
+@keyframes loading {
+  0% { width: 0; }
+  50% { width: 100%; }
+  100% { width: 0; }
+}
+
+.animate-loading-bar {
+  animation: loading 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* 添加页面过渡动画 */
+.scale-95 {
+  transform: scale(0.95);
+}
+
+.scale-100 {
+  transform: scale(1);
+}
+
+.scale-105 {
+  transform: scale(1.05);
+}
+
+.scale-x-0 {
+  transform: scaleX(0);
+}
+
+.scale-x-100 {
+  transform: scaleX(1);
+}
+
+.-translate-x-full {
+  transform: translateX(-100%);
+}
+
+.translate-x-0 {
+  transform: translateX(0);
+}
+
+.translate-y-4 {
+  transform: translateY(1rem);
+}
+
+.translate-y-8 {
+  transform: translateY(2rem);
+}
+
+.translate-y-0 {
+  transform: translateY(0);
 }
 </style>
