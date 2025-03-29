@@ -173,10 +173,14 @@ watch(
 
 // 保存当前分页状态
 const saveCurrentPageState = () => {
+  // 获取当前的分类ID（如果有）
+  const categoryId = route.query.categoryId as string | undefined;
+  
   savePageState(
     current.value,
     pageSize.value,
-    window.scrollY
+    window.scrollY,
+    categoryId
   );
 };
 

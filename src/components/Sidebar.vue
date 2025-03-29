@@ -164,12 +164,22 @@ const backToArticleList = () => {
   if (pageState) {
     // 如果有保存的分页状态，使用它返回到指定页
     console.log(`返回到文章列表第${pageState.current}页`);
+    
+    // 构建查询参数
+    const query: Record<string, string> = {
+      page: pageState.current.toString(),
+      pageSize: pageState.pageSize.toString()
+    };
+    
+    // 如果有保存的分类ID，添加到查询参数
+    if (pageState.categoryId) {
+      query.categoryId = pageState.categoryId;
+      console.log(`恢复分类筛选: ${pageState.categoryId}`);
+    }
+    
     router.push({
       path: '/blogs',
-      query: {
-        page: pageState.current.toString(),
-        pageSize: pageState.pageSize.toString()
-      }
+      query
     });
     
     // 如果记录了滚动位置，在下一个时间循环中恢复滚动位置

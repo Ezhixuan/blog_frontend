@@ -12,6 +12,7 @@ interface PageState {
   pageSize: number;
   lastVisitTime: number; // 上次访问时间戳
   scrollPosition?: number; // 滚动位置
+  categoryId?: string; // 分类ID
 }
 
 /**
@@ -19,13 +20,15 @@ interface PageState {
  * @param current 当前页码
  * @param pageSize 每页大小
  * @param scrollPosition 可选的滚动位置
+ * @param categoryId 可选的分类ID
  */
-export function savePageState(current: number, pageSize: number, scrollPosition?: number): void {
+export function savePageState(current: number, pageSize: number, scrollPosition?: number, categoryId?: string): void {
   const pageState: PageState = {
     current,
     pageSize,
     lastVisitTime: Date.now(),
-    scrollPosition
+    scrollPosition,
+    categoryId
   };
   
   localStorage.setItem(BLOG_PAGE_STATE_KEY, JSON.stringify(pageState));
@@ -70,4 +73,4 @@ export function getPageState(maxAge: number = 30 * 60 * 1000): PageState | undef
 export function clearPageState(): void {
   localStorage.removeItem(BLOG_PAGE_STATE_KEY);
   console.log('清除分页状态');
-} 
+}
