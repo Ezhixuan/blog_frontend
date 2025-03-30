@@ -51,7 +51,7 @@ const fetchCategories = async () => {
       categories.value = res.data.data;
     }
   } catch (error: any) {
-    message.error(error?.response?.data?.description || '获取分类列表失败');
+    message.error(error?.response?.data?.message || '获取分类列表失败');
   } finally {
     isLoadingCategories.value = false;
   }
@@ -73,10 +73,10 @@ const addNewCategory = async () => {
       newCategoryName.value = '';
       showCategoryForm.value = false;
     } else {
-      message.error(res.data?.description || '添加分类失败');
+      message.error(res.data?.message || '添加分类失败');
     }
   } catch (error: any) {
-    message.error(error?.response?.data?.description || '添加分类失败');
+    message.error(error?.response?.data?.message || '添加分类失败');
   } finally {
     isAddingCategory.value = false;
   }
@@ -91,7 +91,7 @@ const fetchTags = async () => {
       tags.value = res.data.data;
     }
   } catch (error: any) {
-    message.error(error?.response?.data?.description || '获取标签列表失败');
+    message.error(error?.response?.data?.message || '获取标签列表失败');
   } finally {
     isLoadingTags.value = false;
   }
@@ -113,10 +113,10 @@ const addNewTag = async () => {
       newTagName.value = '';
       showTagForm.value = false;
     } else {
-      message.error(res.data?.description || '添加标签失败');
+      message.error(res.data?.message || '添加标签失败');
     }
   } catch (error: any) {
-    message.error(error?.response?.data?.description || '添加标签失败');
+    message.error(error?.response?.data?.message || '添加标签失败');
   } finally {
     isAddingTag.value = false;
   }
@@ -192,7 +192,7 @@ const handleSubmit = async () => {
     message.success('博客提交成功');
     router.push('/blogs');
   } catch (error: any) {
-    message.error(error?.response?.data?.description || '博客提交失败');
+    message.error(error?.response?.data?.message || '博客提交失败');
   } finally {
     isLoading.value = false;
   }
