@@ -48,7 +48,7 @@
             </div>
             
             <!-- 右侧图片 -->
-            <div class="md:w-1/2 h-48 md:h-full md:max-h-80 overflow-hidden" @click.stop="openPreview(article.cover)">
+            <div class="md:w-1/2 h-48 md:h-full md:max-h-80 overflow-hidden" @click.stop="article.cover ? openPreview(article.cover) : goToArticleDetail(article.id)">
               <div v-if="article.cover" class="h-full w-full bg-gray-50 dark:bg-gray-900">
                 <img :src="article.cover" class="w-full h-full object-contain transform transition-transform duration-300 group-hover:scale-105" :alt="article.title" loading="lazy" />
               </div>
@@ -143,45 +143,47 @@ onMounted(() => {
   loadArticles();
 });
 
-// 监听分页变化，更新URL参数
-watch([current, pageSize], () => {
-  // 获取当前的categoryId参数（如果有）
+// 监听分页、分类ID和标签ID的变化
+watch([current, pageSize, () => route.query.categoryId, () => route.query.tagId], ([newCurrent, newPageSize, newCategoryId, newTagId], [oldCurrent, oldPageSize, oldCategoryId, oldTagId]) => {
+  // 获取当前的categoryId和tagId参数
   const categoryId = route.query.categoryId;
-  
+  const tagId = route.query.tagId;
+
   // 更新URL，不触发路由变化
   const query: Record<string, string> = {
-    page: current.value.toString(),
-    pageSize: pageSize.value.toString()
+    page: newCurrent.toString(),
+    pageSize: newPageSize.toString()
   };
-  
+
   // 如果有分类ID，保留在URL中
   if (categoryId) {
     query.categoryId = categoryId as string;
   }
-  
+  // 如果有标签ID，保留在URL中
+  if (tagId) {
+    query.tagId = tagId as string;
+  }
+
   router.replace({
     path: '/blogs',
     query
   });
-  
+
   // 保存当前分页状态和滚动位置
   saveCurrentPageState();
-});
 
-// 监听路由参数变化，当categoryId或tagId变化时重新加载文章
-watch(
-  () => [route.query.categoryId, route.query.tagId],
-  () => {
-    // 分类或标签变化时，重置为第一页
+  // 当分类ID或标签ID变化时，重置为第一页并回到顶部
+  if (newCategoryId!== oldCategoryId || newTagId!== oldTagId) {
     current.value = 1;
-    loadArticles();
-    // 回到顶部
     window.scrollTo({
       top: 0,
       behavior: 'smooth'
     });
   }
-);
+
+  // 加载文章数据
+  loadArticles();
+}, { flush: 'sync' }); // 使用sync模式，确保在DOM更新前执行
 
 // 保存当前分页状态
 const saveCurrentPageState = () => {
@@ -244,8 +246,13 @@ const loadArticles = async () => {
 
 // 切换页面
 const changePage = (page: number) => {
+  // 防止重复加载，如果页码相同则不处理
+  if (current.value === page) return;
+  
+  // 设置加载状态，防止重复点击
+  if (loading.value) return;
+  
   current.value = page;
-  loadArticles();
   
   // 回到顶部
   window.scrollTo({

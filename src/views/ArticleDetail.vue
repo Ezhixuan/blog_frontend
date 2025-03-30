@@ -463,6 +463,7 @@ const onContentRendered = () => {
     let tocData: any[] = [];
     
     // 首先检查预览组件是否已经生成了目录
+    console.log("test ",previewRef.value.previewRef?.tocItems)
     if (previewRef.value?.previewRef?.tocItems && previewRef.value.previewRef.tocItems.length > 0) {
       console.log('[LOG_POINT_21] 使用预览组件内置的目录数据:', previewRef.value.previewRef.tocItems.length);
       

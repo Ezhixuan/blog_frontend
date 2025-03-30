@@ -79,21 +79,41 @@ initTheme();
 if (isDarkMode()) {
   // 暗色模式使用 GitHub 主题，并且使用highlight.js
   VueMarkdownEditor.use(githubTheme, {
+    config: {
+      toc: {
+        includeLevel: [1, 2, 3,4],
+      }
+    },
     Hljs: hljs,
   });
   VMdPreview.use(githubTheme, {
+    config: {
+      toc: {
+        includeLevel: [1, 2, 3,4],
+      }
+    },
     Hljs: hljs,
   });
 } else {
   // 亮色模式使用 VuePress 主题
   VueMarkdownEditor.use(vuepressTheme, {
     Prism,
+    config: {
+      toc: {
+        includeLevel: [1, 2, 3,4],
+      }
+    },
     codeHighlightExtensionMap: {
       vue: 'html',
     }
   });
   VMdPreview.use(vuepressTheme, {
     Prism,
+    config: {
+      toc: {
+        includeLevel: [1, 2, 3,4],
+      }
+    },
     codeHighlightExtensionMap: {
       vue: 'html',
     }

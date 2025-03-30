@@ -199,7 +199,7 @@ const handleSubmit = async () => {
 <template>
   <div class="blog-edit-container max-w-5xl mx-auto py-8 px-4">
     <div 
-      class="bg-white rounded-2xl shadow-md p-8 transform transition-all duration-500 hover:shadow-lg"
+      class="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-8 transform transition-all duration-500 hover:shadow-lg"
       :class="{'scale-100 opacity-100': formVisible, 'scale-95 opacity-0': !formVisible}"
     >
       <h1 class="text-3xl font-bold mb-6 flex items-center overflow-hidden">
@@ -208,7 +208,7 @@ const handleSubmit = async () => {
           :class="{'translate-x-0 opacity-100': formVisible, '-translate-x-full opacity-0': !formVisible}"
         >编辑博客</span>
         <div 
-          class="flex-grow border-b-2 border-gray-200 ml-4 transform transition-all duration-1000 ease-out"
+          class="flex-grow border-b-2 border-gray-200 dark:border-gray-700 ml-4 transform transition-all duration-1000 ease-out"
           :class="{'scale-x-100': formVisible, 'scale-x-0': !formVisible}"
         ></div>
       </h1>
@@ -220,15 +220,15 @@ const handleSubmit = async () => {
           @mouseenter="activeSection = 'title'" 
           @mouseleave="activeSection = ''"
         >
-          <label for="title" class="block text-sm font-medium text-gray-700 mb-2 transition-all duration-300" :class="{'text-blue-600': activeSection === 'title'}">
+          <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-all duration-300" :class="{'text-blue-600 dark:text-blue-400': activeSection === 'title'}">
             标题
           </label>
           <input
             id="title"
             type="text"
             v-model="title"
-            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3 border transition-all duration-300"
-            :class="{'border-blue-300 shadow-md': activeSection === 'title'}"
+            class="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3 border transition-all duration-300 dark:bg-gray-700 dark:text-gray-200 dark:placeholder-gray-400"
+            :class="{'border-blue-300 dark:border-blue-500 shadow-md': activeSection === 'title'}"
             placeholder="请输入博客标题"
           />
         </div>
@@ -239,15 +239,15 @@ const handleSubmit = async () => {
           @mouseenter="activeSection = 'summary'" 
           @mouseleave="activeSection = ''"
         >
-          <label for="summary" class="block text-sm font-medium text-gray-700 mb-2 transition-all duration-300" :class="{'text-blue-600': activeSection === 'summary'}">
+          <label for="summary" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-all duration-300" :class="{'text-blue-600 dark:text-blue-400': activeSection === 'summary'}">
             摘要
           </label>
           <textarea
             id="summary"
             v-model="summary"
             rows="3"
-            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3 border transition-all duration-300"
-            :class="{'border-blue-300 shadow-md': activeSection === 'summary'}"
+            class="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3 border transition-all duration-300 dark:bg-gray-700 dark:text-gray-200 dark:placeholder-gray-400"
+            :class="{'border-blue-300 dark:border-blue-500 shadow-md': activeSection === 'summary'}"
             placeholder="请输入博客摘要"
           ></textarea>
         </div>
@@ -260,12 +260,12 @@ const handleSubmit = async () => {
             @mouseleave="activeSection = ''"
           >
             <div class="flex justify-between items-center mb-2">
-              <label for="category" class="block text-sm font-medium text-gray-700 transition-all duration-300" :class="{'text-blue-600': activeSection === 'category'}">
+              <label for="category" class="block text-sm font-medium text-gray-700 dark:text-gray-300 transition-all duration-300" :class="{'text-blue-600 dark:text-blue-400': activeSection === 'category'}">
                 分类
               </label>
               <button
                 type="button"
-                class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-md text-blue-600 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-300 transform hover:scale-105"
+                class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-md text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-800/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-all duration-300 transform hover:scale-105"
                 @click="showCategoryForm = !showCategoryForm"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -276,18 +276,18 @@ const handleSubmit = async () => {
             </div>
             
             <!-- 新增分类表单 -->
-            <div v-if="showCategoryForm" class="mb-2 p-3 border border-blue-100 rounded-md bg-blue-50 transition-all duration-300 transform">
+            <div v-if="showCategoryForm" class="mb-2 p-3 border border-blue-100 dark:border-blue-800 rounded-md bg-blue-50 dark:bg-blue-900/30 transition-all duration-300 transform">
               <div class="flex items-center space-x-2">
                 <input
                   type="text"
                   v-model="newCategoryName"
                   placeholder="输入新分类名称"
-                  class="block flex-grow rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
+                  class="block flex-grow rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border dark:bg-gray-700 dark:text-gray-200 dark:placeholder-gray-400"
                 />
                 <button
                   type="button"
                   :disabled="isAddingCategory || !newCategoryName.trim()"
-                  class="inline-flex items-center px-3 py-2 text-xs font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                  class="inline-flex items-center px-3 py-2 text-xs font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
                   @click="addNewCategory"
                 >
                   <span v-if="isAddingCategory">添加中...</span>
@@ -311,7 +311,7 @@ const handleSubmit = async () => {
                 {{ category.name }}
               </a-select-option>
             </a-select>
-            <div v-if="isLoadingCategories" class="mt-1 text-xs text-gray-500 animate-pulse">加载分类中...</div>
+            <div v-if="isLoadingCategories" class="mt-1 text-xs text-gray-500 dark:text-gray-400 animate-pulse">加载分类中...</div>
           </div>
           
           <div 
@@ -321,12 +321,12 @@ const handleSubmit = async () => {
             @mouseleave="activeSection = ''"
           >
             <div class="flex justify-between items-center mb-2">
-              <label class="block text-sm font-medium text-gray-700 transition-all duration-300" :class="{'text-blue-600': activeSection === 'tags'}">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 transition-all duration-300" :class="{'text-blue-600 dark:text-blue-400': activeSection === 'tags'}">
                 标签
               </label>
               <button
                 type="button"
-                class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-md text-green-600 bg-green-50 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-300 transform hover:scale-105"
+                class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-md text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 hover:bg-green-100 dark:hover:bg-green-800/50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-all duration-300 transform hover:scale-105"
                 @click="showTagForm = !showTagForm"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -337,18 +337,18 @@ const handleSubmit = async () => {
             </div>
             
             <!-- 新增标签表单 -->
-            <div v-if="showTagForm" class="mb-2 p-3 border border-green-100 rounded-md bg-green-50 transition-all duration-300 transform">
+            <div v-if="showTagForm" class="mb-2 p-3 border border-green-100 dark:border-green-800 rounded-md bg-green-50 dark:bg-green-900/30 transition-all duration-300 transform">
               <div class="flex items-center space-x-2">
                 <input
                   type="text"
                   v-model="newTagName"
                   placeholder="输入新标签名称"
-                  class="block flex-grow rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm p-2 border"
+                  class="block flex-grow rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm p-2 border dark:bg-gray-700 dark:text-gray-200 dark:placeholder-gray-400"
                 />
                 <button
                   type="button"
                   :disabled="isAddingTag || !newTagName.trim()"
-                  class="inline-flex items-center px-3 py-2 text-xs font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                  class="inline-flex items-center px-3 py-2 text-xs font-medium rounded-md text-white bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
                   @click="addNewTag"
                 >
                   <span v-if="isAddingTag">添加中...</span>
@@ -358,7 +358,7 @@ const handleSubmit = async () => {
             </div>
             
             <div class="mt-1 space-y-2">
-              <div v-if="isLoadingTags" class="text-xs text-gray-500 animate-pulse">加载标签中...</div>
+              <div v-if="isLoadingTags" class="text-xs text-gray-500 dark:text-gray-400 animate-pulse">加载标签中...</div>
               
               <!-- 标签选择 - 使用可搜索的多选下拉选择框 -->
               <a-select
@@ -386,17 +386,17 @@ const handleSubmit = async () => {
           @mouseenter="activeSection = 'status'" 
           @mouseleave="activeSection = ''"
         >
-          <label class="block text-sm font-medium text-gray-700 mb-2 transition-all duration-300" :class="{'text-blue-600': activeSection === 'status'}">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-all duration-300" :class="{'text-blue-600 dark:text-blue-400': activeSection === 'status'}">
             发布状态
           </label>
           <div class="mt-2 flex items-center space-x-4">
             <label class="inline-flex items-center transition-all duration-300 transform hover:scale-105">
               <input type="radio" v-model="status" :value="1" class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500" />
-              <span class="ml-2 text-sm text-gray-700">立即发布</span>
+              <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">立即发布</span>
             </label>
             <label class="inline-flex items-center transition-all duration-300 transform hover:scale-105">
               <input type="radio" v-model="status" :value="0" class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500" />
-              <span class="ml-2 text-sm text-gray-700">保存为草稿</span>
+              <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">保存为草稿</span>
             </label>
           </div>
         </div>
@@ -408,13 +408,13 @@ const handleSubmit = async () => {
           @mouseleave="activeSection = ''"
         >
           <div class="flex justify-between items-center mb-2">
-            <label class="block text-sm font-medium text-gray-700 transition-all duration-300" :class="{'text-blue-600': activeSection === 'content'}">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 transition-all duration-300" :class="{'text-blue-600 dark:text-blue-400': activeSection === 'content'}">
               内容
             </label>
             <button
               type="button"
               :disabled="isGenerating || !title"
-              class="inline-flex items-center px-3 py-1 text-xs font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 hover:shadow-md"
+              class="inline-flex items-center px-3 py-1 text-xs font-medium rounded-md text-white bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 hover:shadow-md"
               @click="generateContent"
             >
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 transition-transform duration-500 ease-in-out" :class="{'animate-pulse': isGenerating}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -426,7 +426,7 @@ const handleSubmit = async () => {
               </span>
             </button>
           </div>
-          <div class="transition-all duration-300 rounded-md" :class="{'ring-2 ring-blue-200 shadow-md': activeSection === 'content'}">
+          <div class="transition-all duration-300 rounded-md" :class="{'ring-2 ring-blue-200 dark:ring-blue-500 shadow-md': activeSection === 'content'}">
             <v-md-editor
               v-model="content"
               height="500px"
@@ -437,7 +437,7 @@ const handleSubmit = async () => {
         <div class="flex justify-end space-x-4 pt-4 transform transition-all duration-700 ease-out" :class="{'translate-y-0 opacity-100': formVisible, 'translate-y-8 opacity-0': !formVisible}">
           <button
             type="button"
-            class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transform hover:scale-105 hover:shadow-md"
+            class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transform hover:scale-105 hover:shadow-md"
             @click="handleCancel"
           >
             取消
@@ -445,7 +445,7 @@ const handleSubmit = async () => {
           <button
             type="button"
             :disabled="isLoading"
-            class="relative px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 hover:shadow-md overflow-hidden"
+            class="relative px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 dark:hover:from-blue-500 dark:hover:to-blue-600 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 hover:shadow-md overflow-hidden"
             @click="handleSubmit"
           >
             <span class="relative z-10">{{ isLoading ? '提交中...' : '提交' }}</span>
@@ -460,6 +460,243 @@ const handleSubmit = async () => {
 <style>
 .v-md-editor {
   border-radius: 0.375rem;
+}
+
+/* 添加暗黑模式的编辑器样式覆盖 */
+.dark .v-md-editor {
+  background-color: #1f2937 !important;
+  color: #e5e7eb !important;
+  border-color: #374151 !important;
+}
+
+.dark .v-md-editor .v-md-editor__toolbar {
+  background-color: #111827 !important;
+  border-bottom-color: #374151 !important;
+}
+
+.dark .v-md-editor .v-md-editor__toolbar .v-md-editor__toolbar-item {
+  color: #9ca3af !important;
+}
+
+.dark .v-md-editor .v-md-editor__toolbar .v-md-editor__toolbar-item:hover {
+  color: #e5e7eb !important;
+}
+
+.dark .v-md-editor .v-md-editor__toolbar .v-md-editor__toolbar-item.active {
+  color: #60a5fa !important;
+}
+
+.dark .v-md-editor .v-md-editor__editor-wrapper {
+  background-color: #1f2937 !important;
+}
+
+.dark .v-md-editor .v-md-editor__editor-wrapper textarea {
+  color: #e5e7eb !important;
+}
+
+/* 特别针对内容区域白色背景的修复 */
+.dark .v-md-editor .auto-textarea {
+  background-color: #1f2937 !important;
+}
+
+.dark .v-md-editor .auto-textarea__inner {
+  background-color: #1f2937 !important;
+  color: #e5e7eb !important;
+}
+
+.dark .v-md-editor .v-md-editor__area {
+  background-color: #1f2937 !important;
+}
+
+/* 修复全屏按钮 */
+.dark .v-md-editor .v-md-editor__toolbar-item .v-md-editor__toolbar-item--fullscreen {
+  color: #9ca3af !important;
+}
+
+.dark .v-md-editor .v-md-editor__toolbar-item .v-md-editor__toolbar-item--fullscreen:hover {
+  color: #e5e7eb !important;
+}
+
+/* 修复全屏模式 */
+.dark .v-md-editor.fullscreen {
+  background-color: #1f2937 !important;
+  z-index: 1300 !important;
+}
+
+/* 针对屏幕截图中的特定DOM结构 */
+.dark .v-md-editor .v-md-editor__left-area {
+  background-color: #1f2937 !important;
+}
+
+.dark .v-md-editor .v-md-editor__right-area {
+  background-color: #1f2937 !important;
+}
+
+.dark .v-md-editor .v-md-editor__main {
+  background-color: #1f2937 !important;
+}
+
+.dark .v-md-editor .v-md-editor__editor-wrapper {
+  background-color: #1f2937 !important;
+}
+
+.dark .v-md-editor .scrollbar {
+  background-color: #1f2937 !important;
+}
+
+.dark .v-md-editor .scrollbar__wrap {
+  background-color: #1f2937 !important;
+}
+
+.dark .v-md-editor .scrollbar__view {
+  background-color: #1f2937 !important;
+}
+
+.dark .v-md-editor .v-md-textarea-editor {
+  background-color: #1f2937 !important;
+}
+
+.dark .v-md-editor .v-md-textarea-editor pre {
+  background-color: #1f2937 !important;
+  color: #e5e7eb !important;
+}
+
+.dark .v-md-editor .v-md-textarea-editor textarea {
+  background-color: #1f2937 !important;
+  color: #e5e7eb !important;
+  caret-color: #e5e7eb !important;
+}
+
+/* 滚动条样式 */
+.dark .v-md-editor .scrollbar__bar {
+  background-color: #374151 !important;
+}
+
+.dark .v-md-editor .scrollbar__bar.is-horizontal {
+  background-color: #374151 !important;
+}
+
+.dark .v-md-editor .scrollbar__bar.is-vertical {
+  background-color: #374151 !important;
+}
+
+.dark .v-md-editor .scrollbar__thumb {
+  background-color: #6b7280 !important;
+}
+
+/* 为Ant Design组件添加暗黑模式样式 */
+.dark .ant-select:not(.ant-select-customize-input) .ant-select-selector {
+  background-color: #1f2937 !important;
+  border-color: #374151 !important;
+  color: #e5e7eb !important;
+}
+
+.dark .ant-select-dropdown {
+  background-color: #1f2937 !important;
+  border-color: #374151 !important;
+}
+
+.dark .ant-select-item {
+  color: #e5e7eb !important;
+}
+
+.dark .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+  background-color: #374151 !important;
+}
+
+.dark .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+  background-color: #4b5563 !important;
+}
+
+.dark .ant-select-selection-placeholder {
+  color: #9ca3af !important;
+}
+
+.dark .ant-select-arrow {
+  color: #9ca3af !important;
+}
+
+.dark .ant-select-clear {
+  background-color: #374151 !important;
+  color: #9ca3af !important;
+}
+
+.dark .ant-select-multiple .ant-select-selection-item {
+  background-color: #374151 !important;
+  border-color: #4b5563 !important;
+  color: #e5e7eb !important;
+}
+
+/* 加强markdown编辑器暗黑模式效果 */
+.dark .v-md-editor .v-md-editor__editor-wrapper .CodeMirror {
+  background-color: #1f2937 !important;
+  color: #e5e7eb !important;
+}
+
+.dark .v-md-editor .v-md-editor__editor-wrapper .CodeMirror-gutters {
+  background-color: #111827 !important;
+  border-right-color: #374151 !important;
+}
+
+.dark .v-md-editor .v-md-editor__editor-wrapper .CodeMirror-cursor {
+  border-left-color: #e5e7eb !important;
+}
+
+.dark .v-md-editor .v-md-editor__editor-wrapper .CodeMirror-selected {
+  background-color: rgba(101, 116, 139, 0.3) !important;
+}
+
+.dark .v-md-editor .v-md-editor__preview {
+  background-color: #1f2937 !important;
+  color: #e5e7eb !important;
+}
+
+/* 确保所有弹出菜单也使用暗色主题 */
+.dark .ant-dropdown-menu {
+  background-color: #1f2937 !important;
+  box-shadow: 0 3px 6px -4px rgba(0, 0, 0, 0.48), 0 6px 16px 0 rgba(0, 0, 0, 0.32), 0 9px 28px 8px rgba(0, 0, 0, 0.2) !important;
+}
+
+.dark .ant-dropdown-menu-item,
+.dark .ant-dropdown-menu-submenu-title {
+  color: #e5e7eb !important;
+}
+
+.dark .ant-dropdown-menu-item:hover,
+.dark .ant-dropdown-menu-submenu-title:hover {
+  background-color: #374151 !important;
+}
+
+/* 修复编辑器的内部区域 */
+.dark .v-md-editor .v-md-editor__editor-wrapper .CodeMirror-scroll {
+  background-color: #1f2937 !important;
+}
+
+.dark .v-md-editor .v-md-editor__editor-wrapper .auto-textarea-input {
+  background-color: #1f2937 !important;
+  color: #e5e7eb !important;
+}
+
+/* 直接解决白色文本区域问题 */
+.dark .v-md-editor .auto-textarea {
+  background-color: #1f2937 !important;
+}
+
+.dark .v-md-editor .auto-textarea textarea,
+.dark .v-md-editor .auto-textarea-block textarea {
+  background-color: #1f2937 !important;
+  color: #e5e7eb !important;
+}
+
+/* 解决预览区域样式 */
+.dark .v-md-editor .v-md-editor__preview-wrapper {
+  background-color: #1f2937 !important;
+  color: #e5e7eb !important;
+}
+
+/* 修复编辑器中使用的iframe */
+.dark .v-md-editor iframe {
+  background-color: #1f2937 !important;
 }
 
 @keyframes loading {
