@@ -58,81 +58,93 @@ import '@kangc/v-md-editor/lib/plugins/copy-code/copy-code.css'
 // 导入消息提示组件
 import message from '@/utils/message'
 
+// 初始化主题
+initTheme();
+
 // 获取当前主题状态
 const { currentTheme } = useTheme();
 const isDarkMode = () => currentTheme.value === 'dark';
 
-// 代码复制插件配置
+// 添加代码复制插件
 const copyCodePlugin = createCopyCodePlugin({
-  afterCopy: () => {
-    message.success('复制成功')
+  buttonText: '复制代码',
+  successText: '复制成功',
+  failText: '复制失败',
+});
+
+// 配置编辑器(使用函数确保重新渲染时应用正确的主题)
+const configureEditor = () => {
+  // 暂时移除之前的主题配置
+  VueMarkdownEditor.vueMarkdownOptions = {};
+  VMdPreview.vueMarkdownOptions = {};
+
+  if (isDarkMode()) {
+    // 暗色模式使用 GitHub 主题，并且使用highlight.js
+    VueMarkdownEditor.use(githubTheme, {
+      config: {
+        toc: {
+          includeLevel: [1, 2, 3,4],
+        }
+      },
+      Hljs: hljs,
+    });
+    VMdPreview.use(githubTheme, {
+      config: {
+        toc: {
+          includeLevel: [1, 2, 3,4],
+        }
+      },
+      Hljs: hljs,
+    });
+  } else {
+    // 亮色模式使用 VuePress 主题
+    VueMarkdownEditor.use(vuepressTheme, {
+      Prism,
+      config: {
+        toc: {
+          includeLevel: [1, 2, 3,4],
+        }
+      },
+      codeHighlightExtensionMap: {
+        vue: 'html',
+      }
+    });
+    VMdPreview.use(vuepressTheme, {
+      Prism,
+      config: {
+        toc: {
+          includeLevel: [1, 2, 3,4],
+        }
+      },
+      codeHighlightExtensionMap: {
+        vue: 'html',
+      }
+    });
   }
+
+  // 添加代码复制插件
+  VueMarkdownEditor.use(copyCodePlugin);
+  VMdPreview.use(copyCodePlugin);
+};
+
+// 初始配置
+configureEditor();
+
+// 监听主题变化，重新配置编辑器
+watch(currentTheme, () => {
+  configureEditor();
+  // 添加data-theme属性，确保DOM能够正确反映当前主题
+  document.documentElement.setAttribute('data-theme', currentTheme.value);
 });
 
 // 创建应用
 const app = createApp(App);
 
-// 初始化主题
-initTheme();
+// 使用插件
+app.use(router);
+app.use(Antd);
+app.use(VueMarkdownEditor);
+app.use(VMdPreview);
 
-// 配置编辑器
-if (isDarkMode()) {
-  // 暗色模式使用 GitHub 主题，并且使用highlight.js
-  VueMarkdownEditor.use(githubTheme, {
-    config: {
-      toc: {
-        includeLevel: [1, 2, 3,4],
-      }
-    },
-    Hljs: hljs,
-  });
-  VMdPreview.use(githubTheme, {
-    config: {
-      toc: {
-        includeLevel: [1, 2, 3,4],
-      }
-    },
-    Hljs: hljs,
-  });
-} else {
-  // 亮色模式使用 VuePress 主题
-  VueMarkdownEditor.use(vuepressTheme, {
-    Prism,
-    config: {
-      toc: {
-        includeLevel: [1, 2, 3,4],
-      }
-    },
-    codeHighlightExtensionMap: {
-      vue: 'html',
-    }
-  });
-  VMdPreview.use(vuepressTheme, {
-    Prism,
-    config: {
-      toc: {
-        includeLevel: [1, 2, 3,4],
-      }
-    },
-    codeHighlightExtensionMap: {
-      vue: 'html',
-    }
-  });
-}
-
-// 添加代码复制插件
-VueMarkdownEditor.use(copyCodePlugin);
-VMdPreview.use(copyCodePlugin);
-
-// 注册到应用
-app.use(router)
-  .use(Antd)
-  .use(VueMarkdownEditor)
-  .use(VMdPreview)
-  .mount('#app');
-
-// 监听主题变化，重新加载页面以应用新主题
-watch(currentTheme, () => {
-  // 当主题变化时，刷新页面以重新加载编辑器主题
-  window.location.reload();
-});
+// 挂载应用
+app.mount('#app');

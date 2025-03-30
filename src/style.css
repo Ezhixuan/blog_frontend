@@ -378,3 +378,293 @@ body {
   color: #c9d1d9 !important;
   font-weight: bold !important;
 }
+
+/* Ant Design Vue 暗色模式样式 */
+
+/* Select 选择器暗色模式样式 */
+.dark .ant-select:not(.ant-select-customize-input) .ant-select-selector {
+  background-color: hsl(var(--card));
+  border-color: hsl(var(--border));
+  color: hsl(var(--card-foreground));
+}
+
+.dark .ant-select-dropdown {
+  background-color: hsl(var(--card));
+  border-color: hsl(var(--border));
+}
+
+.dark .ant-select-item {
+  color: hsl(var(--card-foreground));
+}
+
+.dark .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+  background-color: hsl(var(--primary) / 30%);
+}
+
+.dark .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+  background-color: hsl(var(--muted));
+}
+
+.dark .ant-select-selection-placeholder {
+  color: hsl(var(--muted-foreground));
+}
+
+.dark .ant-select-arrow {
+  color: hsl(var(--muted-foreground));
+}
+
+.dark .ant-select-clear {
+  background-color: hsl(var(--card));
+  color: hsl(var(--muted-foreground));
+}
+
+.dark .ant-select-selection-item {
+  color: hsl(var(--card-foreground));
+}
+
+/* 多选模式下的标签样式 */
+.dark .ant-select-selection-item-content {
+  color: hsl(var(--card-foreground));
+}
+
+.dark .ant-select-multiple .ant-select-selection-item {
+  background-color: hsl(var(--muted));
+  border-color: hsl(var(--border));
+}
+
+/* 搜索输入框样式 */
+.dark .ant-select-selection-search-input {
+  color: hsl(var(--card-foreground));
+}
+
+/* 下拉菜单没有内容时的样式 */
+.dark .ant-empty-description {
+  color: hsl(var(--muted-foreground));
+}
+
+/* 当编辑器是白色背景时的暗色模式修复 */
+.dark .v-md-editor__main .CodeMirror {
+  background-color: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
+}
+
+.dark .v-md-editor__main .CodeMirror-gutters {
+  background-color: hsl(var(--muted)) !important;
+  border-right-color: hsl(var(--border)) !important;
+}
+
+.dark .v-md-editor__main .CodeMirror-cursor {
+  border-left-color: hsl(var(--card-foreground)) !important;
+}
+
+.dark .v-md-editor__main .CodeMirror-selected {
+  background-color: hsl(var(--primary) / 30%) !important;
+}
+
+.dark .v-md-editor__main .cm-s-default .cm-header {
+  color: hsl(var(--primary)) !important;
+}
+
+.dark .v-md-editor__main .cm-s-default .cm-link {
+  color: hsl(var(--primary)) !important;
+}
+
+.dark .v-md-editor__main .cm-s-default .cm-url {
+  color: hsl(var(--secondary)) !important;
+}
+
+.dark .v-md-editor__main .cm-s-default .cm-quote {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+.dark .v-md-editor__main .cm-s-default .cm-comment {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+/* 编辑器的预览窗口样式 */
+.dark .v-md-editor__editor-preview {
+  background-color: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
+}
+
+/* 完善v-md-editor编辑器暗色模式样式 */
+
+/* 主编辑区域样式 */
+.dark .v-md-editor_editor-wrapper {
+  background-color: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
+}
+
+/* 编辑器主体和textareas */
+.dark .v-md-editor_main {
+  background-color: hsl(var(--card)) !important;
+}
+
+.dark .v-md-textarea-editor {
+  background-color: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
+}
+
+/* 滚动条相关样式 */
+.dark .scrollbar_wrap,
+.dark .scrollbar_view {
+  background-color: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
+}
+
+/* 特定目标元素 - 根据截图DOM结构添加 */
+.dark .v-md-editor_editor-wrapper pre,
+.dark textarea[spellcheck="false"] {
+  background-color: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
+}
+
+/* 滚动条样式 */
+.dark .scrollbar_bar {
+  background-color: hsla(var(--muted) / 0.4) !important;
+}
+
+.dark .scrollbar_bar.is-horizontal,
+.dark .scrollbar_bar.is-vertical {
+  background-color: hsla(var(--muted) / 0.4) !important;
+}
+
+/* 针对具体类名修复 - 使用破折号而非下划线 */
+.dark .v-md-editor__main {
+  background-color: hsl(var(--card)) !important;
+}
+
+.dark .v-md-editor__editor-wrapper {
+  background-color: hsl(var(--card)) !important;
+}
+
+.dark .v-md-editor__toolbar {
+  background-color: hsl(var(--muted)) !important;
+  border-bottom-color: hsl(var(--border)) !important;
+}
+
+.dark .v-md-textarea-editor {
+  background-color: hsl(var(--card)) !important;
+}
+
+/* 编辑器内容区域 */
+.dark .v-md-editor__editor-content {
+  background-color: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
+}
+
+/* 特定修正 - 使用图片中看到的确切类名 */
+.dark div[class^="v-md-editor__"] {
+  background-color: hsl(var(--card)) !important;
+}
+
+.dark div[class*="scrollbar"] {
+  background-color: hsl(var(--card)) !important;
+}
+
+.dark div[class*="v-md-editor_main"] {
+  background-color: hsl(var(--card)) !important;
+}
+
+/* 编辑器工具栏按钮 */
+.dark .v-md-editor__toolbar-item {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+.dark .v-md-editor__toolbar-item:hover {
+  color: hsl(var(--foreground)) !important;
+}
+
+.dark .v-md-editor__toolbar-item.active {
+  color: hsl(var(--primary)) !important;
+}
+
+/* 根据截图DOM中的具体类名添加样式 */
+.dark div[class="v-md-editor__editor-wrapper"] {
+  background-color: hsl(var(--card)) !important;
+}
+
+.dark div[class="scroller"] {
+  background-color: hsl(var(--card)) !important;
+}
+
+.dark div[class="scroller__wrap"] {
+  background-color: hsl(var(--card)) !important;
+}
+
+.dark div[class="scroller__view"] {
+  background-color: hsl(var(--card)) !important;
+}
+
+.dark div[class="v-md-textarea-editor"] {
+  background-color: hsl(var(--card)) !important;
+}
+
+.dark div[class="v-md-editor__editor-wrapper"] pre,
+.dark div[class="v-md-editor__editor-wrapper"] textarea {
+  background-color: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
+}
+
+/* 修正使用下划线和连字符的混合情况 */
+.dark [class*="v-md-editor"] {
+  background-color: hsl(var(--card)) !important;
+}
+
+.dark [class*="scroller"] {
+  background-color: hsl(var(--card)) !important;
+}
+
+/* 应用到所有可能的编辑器内元素 */
+.dark .v-md-editor__editor-wrapper *:not(.token):not(.hljs):not(.prism) {
+  background-color: hsl(var(--card)) !important;
+}
+
+/* 确保文本颜色正确 */
+.dark .v-md-editor__editor-wrapper textarea,
+.dark .v-md-editor__editor-wrapper pre,
+.dark .v-md-editor__editor-wrapper [contenteditable="true"] {
+  color: hsl(var(--card-foreground)) !important;
+}
+
+/* 针对截图中具体显示的类名 */
+.dark .scrollbar__wrap {
+  background-color: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
+}
+
+.dark .scrollbar__view {
+  background-color: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
+}
+
+.dark .v-md-editor__textarea-editor {
+  background-color: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
+}
+
+.dark pre[style="min-height: 450px;"] {
+  background-color: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
+}
+
+/* 应用到所有可能的编辑器内部元素 */
+.dark .v-md-editor textarea, 
+.dark .v-md-editor pre,
+.dark .v-md-editor [contenteditable] {
+  background-color: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
+}
+
+/* 应用到编辑器内的所有div */
+.dark .v-md-editor div:not(.token):not(.hljs):not(.prism) {
+  background-color: hsl(var(--card)) !important;
+}
+
+/* 直接使用属性选择器覆盖所有编辑区域 */
+.dark [data-v-dc6c510] textarea,
+.dark [style*="height: 500px"] textarea,
+.dark [spellcheck="false"] {
+  background-color: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
+}

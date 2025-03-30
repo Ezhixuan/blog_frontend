@@ -48,9 +48,26 @@ function saveTheme(theme: Theme) {
 function applyTheme(theme: Theme) {
   if (theme === 'dark') {
     document.documentElement.classList.add('dark');
+    document.documentElement.setAttribute('data-theme', 'dark');
+    
+    // 确保Ant Design组件能够识别到主题变化
+    const styleElements = document.querySelectorAll('.ant-select, .ant-dropdown, .v-md-editor');
+    styleElements.forEach(el => {
+      (el as HTMLElement).dataset.theme = 'dark';
+    });
   } else {
     document.documentElement.classList.remove('dark');
+    document.documentElement.setAttribute('data-theme', 'light');
+    
+    // 确保Ant Design组件能够识别到主题变化
+    const styleElements = document.querySelectorAll('.ant-select, .ant-dropdown, .v-md-editor');
+    styleElements.forEach(el => {
+      (el as HTMLElement).dataset.theme = 'light';
+    });
   }
+  
+  // 触发自定义事件，通知组件主题已变更
+  window.dispatchEvent(new CustomEvent('themechange', { detail: { theme } }));
 }
 
 // 初始化主题

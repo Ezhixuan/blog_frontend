@@ -1,202 +1,57 @@
 <script setup lang="ts">
-import { ref, onMounted, reactive, computed } from 'vue';
-import { useRouter } from 'vue-router';
-import message from '@/utils/message';
-import { doSubmitArticle, getArticleCategoryList, getArticleTagList, submitCategory, submitTag } from '@/api/generated/api/articleController';
-import { mockGenerateBlogContent } from '@/api/ai';
+import { useArticleForm } from '@/composables/useArticleForm';
 
-const router = useRouter();
-const title = ref('');
-const content = ref('');
-const summary = ref('');
-const categoryId = ref<number | undefined>(undefined);
-const tagIds = ref<number[]>([]);
-const status = ref(1); // 默认发布状态: 1-发布, 0-草稿
-const isLoading = ref(false);
-const isGenerating = ref(false);
-const categories = ref<API.ArticleCategoryVO[]>([]);
-const tags = ref<API.ArticleTagVO[]>([]);
-const isLoadingCategories = ref(false);
-const isLoadingTags = ref(false);
-
-// 新增相关状态
-const newCategoryName = ref('');
-const newTagName = ref('');
-const isAddingCategory = ref(false);
-const isAddingTag = ref(false);
-const showCategoryForm = ref(false);
-const showTagForm = ref(false);
-
-// 内容区域展开/折叠状态
-const contentExpanded = ref(false);
-
-// 动画相关状态
-const formVisible = ref(false);
-const activeSection = ref('');
-const animations = reactive({
-  title: false,
-  summary: false,
-  category: false,
-  tags: false,
-  status: false,
-  content: false
-});
-
-// 获取分类列表
-const fetchCategories = async () => {
-  try {
-    isLoadingCategories.value = true;
-    const res = await getArticleCategoryList();
-    if (res.data?.code === 0 && res.data?.data) {
-      categories.value = res.data.data;
-    }
-  } catch (error: any) {
-    message.error(error?.response?.data?.message || '获取分类列表失败');
-  } finally {
-    isLoadingCategories.value = false;
-  }
+// 定义类型
+interface SelectOption {
+  label: string;
+  value: any;
+  [key: string]: any;
+}
+// 过滤选项的方法
+const filterOption = (input: string, option: SelectOption) => {
+  return option.label.toLowerCase().includes(input.toLowerCase());
 };
 
-// 添加新分类
-const addNewCategory = async () => {
-  if (!newCategoryName.value.trim()) {
-    message.warning('分类名称不能为空');
-    return;
-  }
-
-  try {
-    isAddingCategory.value = true;
-    const res = await submitCategory(newCategoryName.value);
-    if (res.data?.code === 0 && res.data?.data) {
-      categories.value.push(res.data.data);
-      message.success('分类添加成功');
-      newCategoryName.value = '';
-      showCategoryForm.value = false;
-    } else {
-      message.error(res.data?.message || '添加分类失败');
-    }
-  } catch (error: any) {
-    message.error(error?.response?.data?.message || '添加分类失败');
-  } finally {
-    isAddingCategory.value = false;
-  }
-};
-
-// 获取标签列表
-const fetchTags = async () => {
-  try {
-    isLoadingTags.value = true;
-    const res = await getArticleTagList();
-    if (res.data?.code === 0 && res.data?.data) {
-      tags.value = res.data.data;
-    }
-  } catch (error: any) {
-    message.error(error?.response?.data?.message || '获取标签列表失败');
-  } finally {
-    isLoadingTags.value = false;
-  }
-};
-
-// 添加新标签
-const addNewTag = async () => {
-  if (!newTagName.value.trim()) {
-    message.warning('标签名称不能为空');
-    return;
-  }
-
-  try {
-    isAddingTag.value = true;
-    const res = await submitTag(newTagName.value);
-    if (res.data?.code === 0 && res.data?.data) {
-      tags.value.push(res.data.data);
-      message.success('标签添加成功');
-      newTagName.value = '';
-      showTagForm.value = false;
-    } else {
-      message.error(res.data?.message || '添加标签失败');
-    }
-  } catch (error: any) {
-    message.error(error?.response?.data?.message || '添加标签失败');
-  } finally {
-    isAddingTag.value = false;
-  }
-};
-
-// 页面加载时获取分类和标签数据并触发动画
-onMounted(() => {
-  fetchCategories();
-  fetchTags();
-
-  // 页面加载动画
-  setTimeout(() => {
-    formVisible.value = true;
-
-    // 依次触发各个表单项的动画
-    const sections = ['title', 'summary', 'category', 'tags', 'status', 'content'];
-    sections.forEach((section, index) => {
-      setTimeout(() => {
-        animations[section] = true;
-      }, index * 150);
-    });
-  }, 100);
-});
-
-const handleCancel = () => {
-  router.back();
-};
-
-// 使用AI生成博客内容简述
-const generateContent = async () => {
-  if (!title.value) {
-    message.warning('请先填写博客标题');
-    return;
-  }
-
-  try {
-    isGenerating.value = true;
-    const response = await mockGenerateBlogContent(title.value);
-    if (response.data.code === 0) {
-      content.value = response.data.data;
-      message.success('内容生成成功，请根据需要修改完善');
-    } else {
-      message.error(response.data.description || 'AI生成内容失败');
-    }
-  } catch (error: any) {
-    message.error(error?.response?.data?.description || 'AI生成内容失败');
-  } finally {
-    isGenerating.value = false;
-  }
-};
-
-const handleSubmit = async () => {
-  if (!title.value || !content.value) {
-    message.warning('请填写完整信息');
-    return;
-  }
-
-  if (!categoryId.value) {
-    message.warning('请选择博客分类');
-    return;
-  }
-
-  try {
-    isLoading.value = true;
-    await doSubmitArticle({
-      title: title.value,
-      content: content.value,
-      summary: summary.value,
-      categoryId: categoryId.value,
-      tagIds: tagIds.value.join(','),
-      status: status.value
-    });
-    message.success('博客提交成功');
-    router.push('/blogs');
-  } catch (error: any) {
-    message.error(error?.response?.data?.message || '博客提交失败');
-  } finally {
-    isLoading.value = false;
-  }
-};
+const {
+  // 表单数据
+  title,
+  content,
+  summary,
+  categoryId,
+  tagIds,
+  status,
+  
+  // 分类相关
+  categories,
+  newCategoryName,
+  showCategoryForm,
+  isLoadingCategories,
+  isAddingCategory,
+  addNewCategory,
+  
+  // 标签相关
+  tags,
+  newTagName,
+  showTagForm,
+  isLoadingTags,
+  isAddingTag,
+  addNewTag,
+  
+  // UI状态
+  contentExpanded,
+  formVisible,
+  activeSection,
+  animations,
+  
+  // 操作状态
+  isLoading,
+  isGenerating,
+  
+  // 方法
+  handleGenerateContent,
+  handleSubmit,
+  handleCancel
+} = useArticleForm();
 </script>
 
 <template>
@@ -281,7 +136,7 @@ const handleSubmit = async () => {
             <!-- 分类选择 - 使用可搜索的下拉选择框 -->
             <a-select id="category" v-model:value="categoryId" :loading="isLoadingCategories" show-search
               placeholder="请选择或搜索分类"
-              :filter-option="(input, option) => option.label.toLowerCase().includes(input.toLowerCase())"
+              :filter-option="filterOption"
               class="w-full transition-all duration-300" :class="{ 'ant-select-focused': activeSection === 'category' }">
               <a-select-option v-for="category in categories" :key="category.id" :value="category.id"
                 :label="category.name">
@@ -332,7 +187,7 @@ const handleSubmit = async () => {
               <!-- 标签选择 - 使用可搜索的多选下拉选择框 -->
               <a-select v-model:value="tagIds" mode="multiple" :loading="isLoadingTags" show-search
                 placeholder="请选择或搜索标签"
-                :filter-option="(input, option) => option.label.toLowerCase().includes(input.toLowerCase())"
+                :filter-option="filterOption"
                 class="w-full transition-all duration-300" :class="{ 'ant-select-focused': activeSection === 'tags' }"
                 style="min-height: 38px;">
                 <a-select-option v-for="tag in tags" :key="tag.id" :value="tag.id" :label="tag.name">
@@ -390,15 +245,19 @@ const handleSubmit = async () => {
         <div class="flex justify-end mb-2">
           <button type="button" 
             class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-md text-white bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 dark:from-indigo-600 dark:to-purple-700 dark:hover:from-indigo-500 dark:hover:to-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-all duration-300 transform hover:scale-105 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-            @click="generateContent"
+            @click="handleGenerateContent"
             :disabled="isGenerating || !title">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" </svg>
+              stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+              <path d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
             <span>{{ isGenerating ? '生成中...' : 'AI生成内容' }}</span>
           </button>
         </div>
-          <v-md-editor v-model="content" height="500px" />
-        </div>
+        <v-md-editor 
+          v-model="content" 
+          height="500px" />
+      </div>
     </transition>
     <div class="flex justify-end space-x-4 pt-4 transform transition-all duration-700 ease-out"
       :class="{ 'translate-y-0 opacity-100': formVisible, 'translate-y-8 opacity-0': !formVisible }">
@@ -410,327 +269,8 @@ const handleSubmit = async () => {
       <button type="button" :disabled="isLoading"
         class="relative px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 dark:hover:from-blue-500 dark:hover:to-blue-600 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 hover:shadow-md overflow-hidden"
         @click="handleSubmit">
-        <span class="relative z-10">{{ isLoading ? '提交中...' : '提交' }}</span>
-        <span v-if="isLoading" class="absolute bottom-0 left-0 h-1 bg-white animate-loading-bar"></span>
+        <span>{{ isLoading ? '提交中...' : '提交博客' }}</span>
       </button>
     </div>
   </div>
 </template>
-
-<style>
-.v-md-editor {
-  border-radius: 0.375rem;
-}
-
-/* 添加暗黑模式的编辑器样式覆盖 */
-.dark .v-md-editor {
-  background-color: #1f2937 !important;
-  color: #e5e7eb !important;
-  border-color: #374151 !important;
-}
-
-.dark .v-md-editor .v-md-editor__toolbar {
-  background-color: #111827 !important;
-  border-bottom-color: #374151 !important;
-}
-
-.dark .v-md-editor .v-md-editor__toolbar .v-md-editor__toolbar-item {
-  color: #9ca3af !important;
-}
-
-.dark .v-md-editor .v-md-editor__toolbar .v-md-editor__toolbar-item:hover {
-  color: #e5e7eb !important;
-}
-
-.dark .v-md-editor .v-md-editor__toolbar .v-md-editor__toolbar-item.active {
-  color: #60a5fa !important;
-}
-
-.dark .v-md-editor .v-md-editor__editor-wrapper {
-  background-color: #1f2937 !important;
-}
-
-.dark .v-md-editor .v-md-editor__editor-wrapper textarea {
-  color: #e5e7eb !important;
-}
-
-/* 特别针对内容区域白色背景的修复 */
-.dark .v-md-editor .auto-textarea {
-  background-color: #1f2937 !important;
-}
-
-.dark .v-md-editor .auto-textarea__inner {
-  background-color: #1f2937 !important;
-  color: #e5e7eb !important;
-}
-
-.dark .v-md-editor .v-md-editor__area {
-  background-color: #1f2937 !important;
-}
-
-/* 修复全屏按钮 */
-.dark .v-md-editor .v-md-editor__toolbar-item .v-md-editor__toolbar-item--fullscreen {
-  color: #9ca3af !important;
-}
-
-.dark .v-md-editor .v-md-editor__toolbar-item .v-md-editor__toolbar-item--fullscreen:hover {
-  color: #e5e7eb !important;
-}
-
-/* 修复全屏模式 */
-.dark .v-md-editor.fullscreen {
-  background-color: #1f2937 !important;
-  z-index: 1300 !important;
-}
-
-/* 针对屏幕截图中的特定DOM结构 */
-.dark .v-md-editor .v-md-editor__left-area {
-  background-color: #1f2937 !important;
-}
-
-.dark .v-md-editor .v-md-editor__right-area {
-  background-color: #1f2937 !important;
-}
-
-.dark .v-md-editor .v-md-editor__main {
-  background-color: #1f2937 !important;
-}
-
-.dark .v-md-editor .v-md-editor__editor-wrapper {
-  background-color: #1f2937 !important;
-}
-
-.dark .v-md-editor .scrollbar {
-  background-color: #1f2937 !important;
-}
-
-.dark .v-md-editor .scrollbar__wrap {
-  background-color: #1f2937 !important;
-}
-
-.dark .v-md-editor .scrollbar__view {
-  background-color: #1f2937 !important;
-}
-
-.dark .v-md-editor .v-md-textarea-editor {
-  background-color: #1f2937 !important;
-}
-
-.dark .v-md-editor .v-md-textarea-editor pre {
-  background-color: #1f2937 !important;
-  color: #e5e7eb !important;
-}
-
-.dark .v-md-editor .v-md-textarea-editor textarea {
-  background-color: #1f2937 !important;
-  color: #e5e7eb !important;
-  caret-color: #e5e7eb !important;
-}
-
-/* 滚动条样式 */
-.dark .v-md-editor .scrollbar__bar {
-  background-color: #374151 !important;
-}
-
-.dark .v-md-editor .scrollbar__bar.is-horizontal {
-  background-color: #374151 !important;
-}
-
-.dark .v-md-editor .scrollbar__bar.is-vertical {
-  background-color: #374151 !important;
-}
-
-.dark .v-md-editor .scrollbar__thumb {
-  background-color: #6b7280 !important;
-}
-
-/* 为Ant Design组件添加暗黑模式样式 */
-.dark .ant-select:not(.ant-select-customize-input) .ant-select-selector {
-  background-color: #1f2937 !important;
-  border-color: #374151 !important;
-  color: #e5e7eb !important;
-}
-
-.dark .ant-select-dropdown {
-  background-color: #1f2937 !important;
-  border-color: #374151 !important;
-}
-
-.dark .ant-select-item {
-  color: #e5e7eb !important;
-}
-
-.dark .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
-  background-color: #374151 !important;
-}
-
-.dark .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
-  background-color: #4b5563 !important;
-}
-
-.dark .ant-select-selection-placeholder {
-  color: #9ca3af !important;
-}
-
-.dark .ant-select-arrow {
-  color: #9ca3af !important;
-}
-
-.dark .ant-select-clear {
-  background-color: #374151 !important;
-  color: #9ca3af !important;
-}
-
-.dark .ant-select-multiple .ant-select-selection-item {
-  background-color: #374151 !important;
-  border-color: #4b5563 !important;
-  color: #e5e7eb !important;
-}
-
-/* 加强markdown编辑器暗黑模式效果 */
-.dark .v-md-editor .v-md-editor__editor-wrapper .CodeMirror {
-  background-color: #1f2937 !important;
-  color: #e5e7eb !important;
-}
-
-.dark .v-md-editor .v-md-editor__editor-wrapper .CodeMirror-gutters {
-  background-color: #111827 !important;
-  border-right-color: #374151 !important;
-}
-
-.dark .v-md-editor .v-md-editor__editor-wrapper .CodeMirror-cursor {
-  border-left-color: #e5e7eb !important;
-}
-
-.dark .v-md-editor .v-md-editor__editor-wrapper .CodeMirror-selected {
-  background-color: rgba(101, 116, 139, 0.3) !important;
-}
-
-.dark .v-md-editor .v-md-editor__preview {
-  background-color: #1f2937 !important;
-  color: #e5e7eb !important;
-}
-
-/* 确保所有弹出菜单也使用暗色主题 */
-.dark .ant-dropdown-menu {
-  background-color: #1f2937 !important;
-  box-shadow: 0 3px 6px -4px rgba(0, 0, 0, 0.48), 0 6px 16px 0 rgba(0, 0, 0, 0.32), 0 9px 28px 8px rgba(0, 0, 0, 0.2) !important;
-}
-
-.dark .ant-dropdown-menu-item,
-.dark .ant-dropdown-menu-submenu-title {
-  color: #e5e7eb !important;
-}
-
-.dark .ant-dropdown-menu-item:hover,
-.dark .ant-dropdown-menu-submenu-title:hover {
-  background-color: #374151 !important;
-}
-
-/* 修复编辑器的内部区域 */
-.dark .v-md-editor .v-md-editor__editor-wrapper .CodeMirror-scroll {
-  background-color: #1f2937 !important;
-}
-
-.dark .v-md-editor .v-md-editor__editor-wrapper .auto-textarea-input {
-  background-color: #1f2937 !important;
-  color: #e5e7eb !important;
-}
-
-/* 直接解决白色文本区域问题 */
-.dark .v-md-editor .auto-textarea {
-  background-color: #1f2937 !important;
-}
-
-.dark .v-md-editor .auto-textarea textarea,
-.dark .v-md-editor .auto-textarea-block textarea {
-  background-color: #1f2937 !important;
-  color: #e5e7eb !important;
-}
-
-/* 解决预览区域样式 */
-.dark .v-md-editor .v-md-editor__preview-wrapper {
-  background-color: #1f2937 !important;
-  color: #e5e7eb !important;
-}
-
-/* 修复编辑器中使用的iframe */
-.dark .v-md-editor iframe {
-  background-color: #1f2937 !important;
-}
-
-@keyframes loading {
-  0% {
-    width: 0;
-  }
-
-  50% {
-    width: 100%;
-  }
-
-  100% {
-    width: 0;
-  }
-}
-
-.animate-loading-bar {
-  animation: loading 2s ease-in-out infinite;
-}
-
-@keyframes pulse {
-
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.5;
-  }
-}
-
-.animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-/* 添加页面过渡动画 */
-.scale-95 {
-  transform: scale(0.95);
-}
-
-.scale-100 {
-  transform: scale(1);
-}
-
-.scale-105 {
-  transform: scale(1.05);
-}
-
-.scale-x-0 {
-  transform: scaleX(0);
-}
-
-.scale-x-100 {
-  transform: scaleX(1);
-}
-
-.-translate-x-full {
-  transform: translateX(-100%);
-}
-
-.translate-x-0 {
-  transform: translateX(0);
-}
-
-.translate-y-4 {
-  transform: translateY(1rem);
-}
-
-.translate-y-8 {
-  transform: translateY(2rem);
-}
-
-.translate-y-0 {
-  transform: translateY(0);
-}
-</style>
