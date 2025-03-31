@@ -104,7 +104,7 @@ import { ref, computed, onMounted, watch } from 'vue';
 import ImageViewer from '../components/ImageViewer.vue';
 import BackToTop from '../components/BackToTop.vue';
 import { useRouter, useRoute } from 'vue-router';
-import { getArticlePageList } from '../api/generated/api/articleController';
+import { getArticlePageList } from '../api/articleController';
 import { savePageState } from '@/utils/pageMemory';
 
 const router = useRouter();

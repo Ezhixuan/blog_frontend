@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { doRegister } from '@/api/generated/api/sysUserController';
+import { doRegister } from '@/api/sysUserController';
 
 const router = useRouter();
 const userAccount = ref('');

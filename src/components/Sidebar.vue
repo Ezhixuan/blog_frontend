@@ -4,7 +4,7 @@ import ChangePasswordModal from './ChangePasswordModal.vue';
 import SubmitBlogModal from './SubmitBlogModal.vue';
 import { HomeIcon, UserIcon, DocumentTextIcon, CodeBracketIcon, UserGroupIcon, EnvelopeIcon } from '@heroicons/vue/24/outline';
 import { RouterLink, useRouter } from 'vue-router';
-import { doLogout, getLoginUserInfo } from '@/api/generated/api/sysUserController';
+import { doLogout, getLoginUserInfo } from '@/api/sysUserController';
 import { on } from '@/utils/eventBus';
 import message from '@/utils/message';
 import { getPageState, clearPageState } from '@/utils/pageMemory';
@@ -265,7 +265,7 @@ const menuItems = [
 ];
 
 // 导入分类和标签API
-import { getArticleCategoryList, getArticlePageList, getCategoryCount, getTagCount } from '@/api/generated/api/articleController';
+import { getArticleCategoryList, getArticlePageList, getCategoryCount, getTagCount } from '@/api/articleController';
 
 // 子菜单展开状态
 const expandedMenu = ref<string | null>(null);

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { doLogin, getLoginUserInfo } from '@/api/generated/api/sysUserController';
+import { doLogin, getLoginUserInfo } from '@/api/sysUserController';
 import { emit } from '@/utils/eventBus';
 import message from '@/utils/message';
 

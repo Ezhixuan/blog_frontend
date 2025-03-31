@@ -7,7 +7,7 @@ import {
   getArticleTagList, 
   submitCategory, 
   submitTag 
-} from '@/api/generated/api/articleController';
+} from '@/api/articleController';
 import { mockGenerateBlogContent } from '@/api/ai';
 import { useAsyncOperation } from './useAsyncOperation';
 

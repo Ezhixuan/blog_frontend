@@ -81,7 +81,7 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick, onUnmounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { getArticleInfo } from '../api/generated/api/articleController';
+import { getArticleInfo } from '../api/articleController';
 import { emit } from '@/utils/eventBus';
 import BackToTop from '../components/BackToTop.vue';
 import createCopyCodePlugin from '@kangc/v-md-editor/lib/plugins/copy-code/index';

@@ -2,7 +2,7 @@
 import { ref, onMounted, watch } from 'vue';
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue';
 import message from '@/utils/message';
-import { doSubmitArticle, getArticleCategoryList, getArticleTagList } from '@/api/generated/api/articleController';
+import { doSubmitArticle, getArticleCategoryList, getArticleTagList } from '@/api/articleController';
 import { mockGenerateBlogContent } from '@/api/ai';
 
 const props = defineProps<{
