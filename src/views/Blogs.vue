@@ -50,7 +50,7 @@
             <!-- 右侧图片 -->
             <div class="md:w-1/2 h-48 md:h-full md:max-h-80 overflow-hidden" @click.stop="article.cover ? openPreview(article.cover) : goToArticleDetail(article.id)">
               <div v-if="article.cover" class="h-full w-full bg-gray-50 dark:bg-gray-900">
-                <img :src="article.cover" class="w-full h-full object-contain transform transition-transform duration-300 group-hover:scale-105" :alt="article.title" loading="lazy" />
+                <img :src="article.cover" class="w-full h-full object-cover transform transition-transform duration-300 group-hover:scale-105" :alt="article.title" loading="lazy" />
               </div>
               <div v-else class="h-full w-full bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">

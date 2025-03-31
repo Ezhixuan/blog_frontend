@@ -256,7 +256,7 @@ body {
 
 /* GitHub主题暗黑模式样式增强 */
 .dark .github-markdown-body {
-  background-color: transparent !important;
+  background-color: hsl(var(--card)) !important;
   color: hsl(var(--card-foreground)) !important;
 }
 
@@ -266,14 +266,17 @@ body {
 }
 
 .dark .github-markdown-body code:not(.hljs) {
-  background-color: rgba(110, 118, 129, 0.4) !important;
-  color: hsl(var(--foreground)) !important;
+  background-color: hsla(var(--muted) / 0.6) !important;
+  color: hsl(var(--primary)) !important;
+  border-radius: 4px;
+  padding: 2px 4px;
 }
 
 .dark .github-markdown-body blockquote {
   border-left-color: hsl(var(--primary)) !important;
-  background-color: hsl(var(--muted)) !important;
-  color: hsl(var(--muted-foreground)) !important;
+  background-color: hsla(var(--muted) / 0.7) !important;
+  color: hsl(var(--card-foreground)) !important;
+  border-radius: 4px;
 }
 
 .dark .github-markdown-body table th,
@@ -292,6 +295,7 @@ body {
 .dark .github-markdown-body .highlight pre, 
 .dark .github-markdown-body pre {
   background-color: hsl(var(--muted)) !important;
+  border-radius: 6px;
 }
 
 /* 确保使用GitHub Dark样式 */
@@ -667,4 +671,232 @@ body {
 .dark [spellcheck="false"] {
   background-color: hsl(var(--card)) !important;
   color: hsl(var(--card-foreground)) !important;
+}
+
+/* 确保文章内容区域的背景色与网站整体暗色主题一致 */
+.dark [class*="v-md-editor"] {
+  background-color: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+/* 修改Markdown视图区域的背景色 */
+.dark .v-md-editor.v-md-editor--preview .v-md-editor__preview-wrapper,
+.dark .v-md-editor .v-md-editor__editor-wrapper {
+  background-color: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
+}
+
+/* 确保分隔线颜色一致 */
+.dark .v-md-editor hr {
+  border-color: hsl(var(--border)) !important;
+  opacity: 0.5;
+}
+
+/* 标题样式调整 */
+.dark .v-md-editor h1,
+.dark .v-md-editor h2,
+.dark .v-md-editor h3,
+.dark .v-md-editor h4,
+.dark .v-md-editor h5,
+.dark .v-md-editor h6 {
+  color: hsl(var(--card-foreground)) !important;
+  border-bottom-color: hsl(var(--border)) !important;
+}
+
+.dark .v-md-editor h1,
+.dark .v-md-editor h2 {
+  border-bottom: 1px solid hsl(var(--border)) !important;
+  padding-bottom: 0.25em;
+}
+
+/* 链接样式 */
+.dark .v-md-editor a {
+  color: hsl(var(--primary)) !important;
+  text-decoration: none;
+}
+
+.dark .v-md-editor a:hover {
+  text-decoration: underline;
+}
+
+/* 列表样式 */
+.dark .v-md-editor ul li,
+.dark .v-md-editor ol li {
+  color: hsl(var(--card-foreground)) !important;
+}
+
+/* 确保滚动条样式也一致 */
+.dark .v-md-editor__preview-wrapper::-webkit-scrollbar,
+.dark .v-md-editor__editor-wrapper::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.dark .v-md-editor__preview-wrapper::-webkit-scrollbar-thumb,
+.dark .v-md-editor__editor-wrapper::-webkit-scrollbar-thumb {
+  background-color: hsla(var(--muted-foreground) / 0.5) !important;
+  border-radius: 4px;
+}
+
+.dark .v-md-editor__preview-wrapper::-webkit-scrollbar-track,
+.dark .v-md-editor__editor-wrapper::-webkit-scrollbar-track {
+  background-color: hsla(var(--muted) / 0.3) !important;
+}
+
+/* 确保文章预览中的内容和网站整体风格一致 */
+.dark .v-md-preview-content,
+.dark .markdown-body {
+  background-color: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
+  padding: 1.5rem !important;
+  border-radius: 8px !important;
+}
+
+/* 文章详情页的暗色模式样式 */
+.dark .article-content {
+  background-color: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.dark .article-content h1,
+.dark .article-content h2,
+.dark .article-content h3,
+.dark .article-content h4,
+.dark .article-content h5,
+.dark .article-content h6 {
+  color: hsl(var(--card-foreground)) !important;
+  border-bottom-color: hsl(var(--border)) !important;
+}
+
+.dark .article-content h1,
+.dark .article-content h2 {
+  border-bottom: 1px solid hsl(var(--border));
+  padding-bottom: 0.25em;
+  margin-bottom: 1em;
+}
+
+.dark .article-content blockquote {
+  border-left: 4px solid hsl(var(--primary));
+  padding: 0.5em 1em;
+  background-color: hsla(var(--muted) / 0.7);
+  border-radius: 4px;
+  margin: 1.5em 0;
+}
+
+.dark .article-content code:not(.hljs) {
+  background-color: hsla(var(--muted) / 0.6);
+  color: hsl(var(--primary));
+  border-radius: 4px;
+  padding: 2px 4px;
+}
+
+.dark .article-content pre {
+  background-color: hsl(var(--muted));
+  border-radius: 6px;
+  padding: 1em;
+  overflow-x: auto;
+}
+
+.dark .article-content a {
+  color: hsl(var(--primary));
+  text-decoration: none;
+}
+
+.dark .article-content a:hover {
+  text-decoration: underline;
+}
+
+.dark .article-content hr {
+  border-color: hsl(var(--border));
+  opacity: 0.5;
+  margin: 2em 0;
+}
+
+.dark .article-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1.5em 0;
+}
+
+.dark .article-content table th {
+  background-color: hsl(var(--muted));
+  border: 1px solid hsl(var(--border));
+  padding: 0.75em;
+  text-align: left;
+}
+
+.dark .article-content table td {
+  border: 1px solid hsl(var(--border));
+  padding: 0.75em;
+}
+
+/* 修复任何额外的暗色模式样式问题 */
+.dark .v-md-editor-preview,
+.dark .v-md-editor.github-markdown-body,
+.dark .v-md-editor .github-markdown-body {
+  background-color: hsl(var(--card)) !important;
+}
+
+/* 为博客详情页修复在预览时的Markdown预览样式 */
+.dark .v-md-editor--preview .v-md-editor__preview-wrapper .github-markdown-body {
+  background-color: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
+  padding: 1.5rem;
+}
+
+/* 自定义Markdown编辑器样式 */
+.markdown-editor-custom {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.dark .markdown-editor-custom {
+  border: 1px solid hsl(var(--border));
+}
+
+.dark .markdown-editor-custom .v-md-editor__toolbar {
+  background-color: hsl(var(--muted)) !important;
+  border-bottom: 1px solid hsl(var(--border)) !important;
+  padding: 0.5rem;
+}
+
+.dark .markdown-editor-custom .v-md-editor__toolbar-item {
+  color: hsl(var(--card-foreground)) !important;
+  margin: 0 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.dark .markdown-editor-custom .v-md-editor__toolbar-item:hover {
+  background-color: hsla(var(--primary) / 0.1) !important;
+  color: hsl(var(--primary)) !important;
+}
+
+.dark .markdown-editor-custom .v-md-editor__toolbar-item.active {
+  background-color: hsla(var(--primary) / 0.2) !important;
+  color: hsl(var(--primary)) !important;
+}
+
+/* 编辑器内部区域 */
+.dark .markdown-editor-custom .v-md-editor__editor-wrapper {
+  background-color: hsl(var(--card)) !important;
+}
+
+/* 文本编辑区域 */
+.dark .markdown-editor-custom textarea {
+  background-color: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
+  padding: 1rem;
+  line-height: 1.6;
+  caret-color: hsl(var(--primary));
+}
+
+/* 自定义编辑器高亮 */
+.dark .markdown-editor-custom textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px hsla(var(--primary) / 0.25) inset;
 }

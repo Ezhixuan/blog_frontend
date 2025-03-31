@@ -254,9 +254,12 @@ const {
             <span>{{ isGenerating ? '生成中...' : 'AI生成内容' }}</span>
           </button>
         </div>
-        <v-md-editor 
-          v-model="content" 
-          height="500px" />
+        <div class="rounded-lg overflow-hidden shadow-md dark:shadow-gray-900/40 border border-gray-200 dark:border-gray-700">
+          <v-md-editor 
+            v-model="content" 
+            height="500px" 
+            class="dark:bg-gray-800 dark:text-gray-200 markdown-editor-custom" />
+        </div>
       </div>
     </transition>
     <div class="flex justify-end space-x-4 pt-4 transform transition-all duration-700 ease-out"
