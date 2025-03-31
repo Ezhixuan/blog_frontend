@@ -145,6 +145,11 @@ onMounted(() => {
 
 // 监听分页、分类ID和标签ID的变化
 watch([current, pageSize, () => route.query.categoryId, () => route.query.tagId], ([newCurrent, newPageSize, newCategoryId, newTagId], [oldCurrent, oldPageSize, oldCategoryId, oldTagId]) => {
+  // 检查当前路由是否为blogs页面，如果不是则不执行后续逻辑
+  if (route.path !== '/blogs') {
+    return;
+  }
+  
   // 获取当前的categoryId和tagId参数
   const categoryId = route.query.categoryId;
   const tagId = route.query.tagId;
