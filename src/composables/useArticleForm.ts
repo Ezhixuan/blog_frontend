@@ -95,7 +95,7 @@ export function useArticleForm() {
         return null;
       }
       
-      const res = await submitCategory(name);
+      const res = await submitCategory({ name });
       if (res.data?.code === 0 && res.data?.data) {
         categories.value.push(res.data.data);
         newCategoryName.value = '';
@@ -116,7 +116,7 @@ export function useArticleForm() {
         return null;
       }
       
-      const res = await submitTag(name);
+      const res = await submitTag({name});
       if (res.data?.code === 0 && res.data?.data) {
         tags.value.push(res.data.data);
         newTagName.value = '';

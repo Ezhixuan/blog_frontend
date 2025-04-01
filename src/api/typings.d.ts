@@ -171,6 +171,14 @@ declare namespace API {
     tag?: string;
   };
 
+  type submitCategoryParams = {
+    name: string;
+  };
+
+  type submitTagParams = {
+    name: string;
+  };
+
   type UserEditDTO = {
     password?: string;
     oldPassword?: string;

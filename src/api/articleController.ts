@@ -53,15 +53,15 @@ export async function getCategoryCount(options?: { [key: string]: any }) {
 
 /** 此处后端没有提供注释 POST /article/category/add */
 export async function submitCategory(
-  body: string,
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.submitCategoryParams,
   options?: { [key: string]: any }
 ) {
   return request<API.BaseResponseArticleCategoryVO>("/article/category/add", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
+    params: {
+      ...params,
     },
-    data: body,
     ...(options || {}),
   });
 }
@@ -83,15 +83,15 @@ export async function getArticlePageList(
 
 /** 此处后端没有提供注释 POST /article/tag/add */
 export async function submitTag(
-  body: string,
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.submitTagParams,
   options?: { [key: string]: any }
 ) {
   return request<API.BaseResponseArticleTagVO>("/article/tag/add", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
+    params: {
+      ...params,
     },
-    data: body,
     ...(options || {}),
   });
 }

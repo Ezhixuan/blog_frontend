@@ -23,12 +23,8 @@ onMounted(() => {
         <footer class="mt-auto text-sm text-gray-600 dark:text-gray-400 pt-8">
           <div class="flex items-center justify-center space-x-2">
             <span class="text-gray-400 dark:text-gray-500">Copyright ©</span>
-            <span>EveSunMaple</span>
-            <span>2024 - All rights reserved</span>
-          </div>
-          <div class="flex items-center justify-center mt-2 space-x-2">
-            <span>Powered by</span>
-            <span class="font-semibold">Frosti Template ⚡</span>
+            <span>Ezhixuan</span>
+            <span>2025 - All rights reserved</span>
           </div>
         </footer>
       </main>
