@@ -209,4 +209,8 @@ declare namespace API {
     password?: string;
     confirmPassword?: string;
   };
+
+  type uploadParams = {
+    [key: string]: string | number | boolean;
+  };
 }

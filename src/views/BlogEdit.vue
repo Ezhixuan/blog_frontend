@@ -20,6 +20,7 @@ const {
   categoryId,
   tagIds,
   status,
+  coverUrl,
   
   // 分类相关
   categories,
@@ -36,6 +37,12 @@ const {
   isLoadingTags,
   isAddingTag,
   addNewTag,
+
+    // 图片上传相关
+    isUploading,
+  handleImageUpload,
+  removeCoverImage,
+  
   
   // UI状态
   contentExpanded,
@@ -69,6 +76,58 @@ const {
       </h1>
 
       <div class="space-y-6">
+         <!-- 封面图片上传 -->
+         <div class="transform transition-all duration-500 ease-out"
+          :class="{ 'translate-y-0 opacity-100': animations.title, 'translate-y-4 opacity-0': !animations.title }"
+          @mouseenter="activeSection = 'cover'" @mouseleave="activeSection = ''">
+          <label
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-all duration-300"
+            :class="{ 'text-blue-600 dark:text-blue-400': activeSection === 'cover' }">
+            博客封面
+          </label>
+          
+          <div class="mt-1 flex items-center space-x-4">
+            <div v-if="coverUrl" class="relative group">
+              <img :src="coverUrl" alt="封面图片" class="h-32 w-48 object-cover rounded-md border border-gray-300 dark:border-gray-600" />
+              <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 flex items-center justify-center transition-all duration-300 rounded-md">
+                <button 
+                  @click="removeCoverImage" 
+                  class="opacity-0 group-hover:opacity-100 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-300">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
+            <div v-if="!coverUrl" class="flex justify-center items-center border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-md h-32 w-48 hover:border-blue-500 dark:hover:border-blue-400 transition-all duration-300">
+              <label class="cursor-pointer flex flex-col items-center justify-center w-full h-full">
+                <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-400 dark:text-gray-500 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">点击上传封面图片</p>
+                </div>
+                <input 
+                  type="file" 
+                  class="hidden" 
+                  accept="image/*" 
+                  @change="handleImageUpload" 
+                  :disabled="isUploading" 
+                />
+              </label>
+            </div>
+            
+            <div v-if="isUploading" class="flex items-center text-sm text-gray-500 dark:text-gray-400">
+              <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              上传中...
+            </div>
+          </div>
+        </div>
+
         <div class="transform transition-all duration-500 ease-out"
           :class="{ 'translate-y-0 opacity-100': animations.title, 'translate-y-4 opacity-0': !animations.title }"
           @mouseenter="activeSection = 'title'" @mouseleave="activeSection = ''">
