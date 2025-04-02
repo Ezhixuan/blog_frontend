@@ -175,12 +175,6 @@ export function useArticleForm() {
       return;
     }
 
-    // 检查文件大小（限制为5MB）
-    if (file.size > 5 * 1024 * 1024) {
-      message.error('图片大小不能超过5MB');
-      return;
-    }
-
     isUploading.value = true;
 
     try {
@@ -202,6 +196,49 @@ export function useArticleForm() {
       isUploading.value = false;
     }
   };
+
+  const handleUploadImage2 = async(event, insertImage, files) => {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    // 检查文件类型
+    if (!file.type.includes('image/')) {
+      message.error('请上传图片文件');
+      return;
+    }
+
+      isUploading.value = true;
+  
+      try {
+        // 只提供必要的简单参数，避免复杂对象序列化问题
+        const response = await upload({
+          type: 'BLOG_COVER'  // 只保留简单的类型参数
+        }, file);
+        
+        if (response.data?.code === 0 && response.data?.data) {
+          const url = response.data.data;
+          console.log(url);
+          insertImage({
+            url:
+            url,
+            width: 'auto',
+            height: 'auto',
+          });
+          message.success('图片上传成功');
+        } else {
+          message.error('图片上传失败');
+        }
+      } catch (error) {
+        console.error('图片上传出错:', error);
+        message.error('图片上传失败');
+      } finally {
+        isUploading.value = false;
+      }
+  }
 
   // 移除封面图片
   const removeCoverImage = () => {
@@ -287,6 +324,7 @@ export function useArticleForm() {
     // 图片上传相关
     isUploading,
     handleImageUpload,
+    handleUploadImage2,
     removeCoverImage,
 
     // UI状态

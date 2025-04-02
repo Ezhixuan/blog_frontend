@@ -21,7 +21,7 @@ const {
   tagIds,
   status,
   coverUrl,
-  
+
   // 分类相关
   categories,
   newCategoryName,
@@ -29,7 +29,7 @@ const {
   isLoadingCategories,
   isAddingCategory,
   addNewCategory,
-  
+
   // 标签相关
   tags,
   newTagName,
@@ -38,22 +38,23 @@ const {
   isAddingTag,
   addNewTag,
 
-    // 图片上传相关
-    isUploading,
+  // 图片上传相关
+  isUploading,
   handleImageUpload,
+  handleUploadImage2,
   removeCoverImage,
-  
-  
+
+
   // UI状态
   contentExpanded,
   formVisible,
   activeSection,
   animations,
-  
+
   // 操作状态
   isLoading,
   isGenerating,
-  
+
   // 方法
   handleGenerateContent,
   handleSubmit,
@@ -76,52 +77,55 @@ const {
       </h1>
 
       <div class="space-y-6">
-         <!-- 封面图片上传 -->
-         <div class="transform transition-all duration-500 ease-out"
+        <!-- 封面图片上传 -->
+        <div class="transform transition-all duration-500 ease-out"
           :class="{ 'translate-y-0 opacity-100': animations.title, 'translate-y-4 opacity-0': !animations.title }"
           @mouseenter="activeSection = 'cover'" @mouseleave="activeSection = ''">
-          <label
-            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-all duration-300"
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-all duration-300"
             :class="{ 'text-blue-600 dark:text-blue-400': activeSection === 'cover' }">
             博客封面
           </label>
-          
+
           <div class="mt-1 flex items-center space-x-4">
             <div v-if="coverUrl" class="relative group">
-              <img :src="coverUrl" alt="封面图片" class="h-32 w-48 object-cover rounded-md border border-gray-300 dark:border-gray-600" />
-              <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 flex items-center justify-center transition-all duration-300 rounded-md">
-                <button 
-                  @click="removeCoverImage" 
+              <img :src="coverUrl" alt="封面图片"
+                class="h-32 w-48 object-cover rounded-md border border-gray-300 dark:border-gray-600" />
+              <div
+                class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 flex items-center justify-center transition-all duration-300 rounded-md">
+                <button @click="removeCoverImage"
                   class="opacity-0 group-hover:opacity-100 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-300">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    <path fill-rule="evenodd"
+                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                      clip-rule="evenodd" />
                   </svg>
                 </button>
               </div>
             </div>
-            
-            <div v-if="!coverUrl" class="flex justify-center items-center border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-md h-32 w-48 hover:border-blue-500 dark:hover:border-blue-400 transition-all duration-300">
+
+            <div v-if="!coverUrl"
+              class="flex justify-center items-center border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-md h-32 w-48 hover:border-blue-500 dark:hover:border-blue-400 transition-all duration-300">
               <label class="cursor-pointer flex flex-col items-center justify-center w-full h-full">
                 <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-400 dark:text-gray-500 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-400 dark:text-gray-500 mb-1"
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                   <p class="text-xs text-gray-500 dark:text-gray-400">点击上传封面图片</p>
                 </div>
-                <input 
-                  type="file" 
-                  class="hidden" 
-                  accept="image/*" 
-                  @change="handleImageUpload" 
-                  :disabled="isUploading" 
-                />
+                <input type="file" class="hidden" accept="image/*" @change="handleImageUpload"
+                  :disabled="isUploading" />
               </label>
             </div>
-            
+
             <div v-if="isUploading" class="flex items-center text-sm text-gray-500 dark:text-gray-400">
-              <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none"
+                viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                <path class="opacity-75" fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                </path>
               </svg>
               上传中...
             </div>
@@ -194,9 +198,8 @@ const {
 
             <!-- 分类选择 - 使用可搜索的下拉选择框 -->
             <a-select id="category" v-model:value="categoryId" :loading="isLoadingCategories" show-search
-              placeholder="请选择或搜索分类"
-              :filter-option="filterOption"
-              class="w-full transition-all duration-300" :class="{ 'ant-select-focused': activeSection === 'category' }">
+              placeholder="请选择或搜索分类" :filter-option="filterOption" class="w-full transition-all duration-300"
+              :class="{ 'ant-select-focused': activeSection === 'category' }">
               <a-select-option v-for="category in categories" :key="category.id" :value="category.id"
                 :label="category.name">
                 {{ category.name }}
@@ -245,10 +248,8 @@ const {
 
               <!-- 标签选择 - 使用可搜索的多选下拉选择框 -->
               <a-select v-model:value="tagIds" mode="multiple" :loading="isLoadingTags" show-search
-                placeholder="请选择或搜索标签"
-                :filter-option="filterOption"
-                class="w-full transition-all duration-300" :class="{ 'ant-select-focused': activeSection === 'tags' }"
-                style="min-height: 38px;">
+                placeholder="请选择或搜索标签" :filter-option="filterOption" class="w-full transition-all duration-300"
+                :class="{ 'ant-select-focused': activeSection === 'tags' }" style="min-height: 38px;">
                 <a-select-option v-for="tag in tags" :key="tag.id" :value="tag.id" :label="tag.name">
                   {{ tag.name }}
                 </a-select-option>
@@ -270,7 +271,8 @@ const {
               @click="contentExpanded = !contentExpanded">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24"
                 stroke="currentColor">
-                <path v-if="contentExpanded" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+                <path v-if="contentExpanded" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M5 15l7-7 7 7" />
                 <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
               </svg>
               {{ contentExpanded ? '收起' : '展开' }}
@@ -293,19 +295,15 @@ const {
     </div>
   </div>
   <div>
-    <transition
-      enter-active-class="transition-all duration-500 ease-out"
-      leave-active-class="transition-all duration-500 ease-in"
-      enter-from-class="opacity-0 max-h-0 overflow-hidden"
+    <transition enter-active-class="transition-all duration-500 ease-out"
+      leave-active-class="transition-all duration-500 ease-in" enter-from-class="opacity-0 max-h-0 overflow-hidden"
       enter-to-class="opacity-100 max-h-[600px] overflow-hidden"
-      leave-from-class="opacity-100 max-h-[600px] overflow-hidden"
-      leave-to-class="opacity-0 max-h-0 overflow-hidden">
+      leave-from-class="opacity-100 max-h-[600px] overflow-hidden" leave-to-class="opacity-0 max-h-0 overflow-hidden">
       <div v-if="contentExpanded">
         <div class="flex justify-end mb-2">
-          <button type="button" 
+          <button type="button"
             class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-md text-white bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 dark:from-indigo-600 dark:to-purple-700 dark:hover:from-indigo-500 dark:hover:to-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-all duration-300 transform hover:scale-105 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-            @click="handleGenerateContent"
-            :disabled="isGenerating || !title">
+            @click="handleGenerateContent" :disabled="isGenerating || !title">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24"
               stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
               <path d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -313,10 +311,9 @@ const {
             <span>{{ isGenerating ? '生成中...' : 'AI生成内容' }}</span>
           </button>
         </div>
-        <div class="rounded-lg overflow-hidden shadow-md dark:shadow-gray-900/40 border border-gray-200 dark:border-gray-700">
-          <v-md-editor 
-            v-model="content" 
-            height="500px" 
+        <div
+          class="rounded-lg overflow-hidden shadow-md dark:shadow-gray-900/40 border border-gray-200 dark:border-gray-700">
+          <v-md-editor v-model="content" height="500px" @upload-image="handleUploadImage2" :disabled-menus="[]"
             class="dark:bg-gray-800 dark:text-gray-200 markdown-editor-custom" />
         </div>
       </div>
