@@ -122,23 +122,11 @@ const isAuthor = computed(() => {
 const handleEditArticle = () => {
   if (!article.value) return;
   
-  // 获取标签ID，如果有tagMap则从中提取，否则使用空数组
-  let tagIds = '';
-  if (article.value.tagMap) {
-    tagIds = Object.keys(article.value.tagMap).join(',');
-  }
-  
+  // 只传递必要的ID信息，其他数据将在编辑页面加载时从API获取
   router.push({
     path: '/blog/edit',
     query: {
       id: articleId.value,
-      title: article.value.title,
-      summary: article.value.summary,
-      content: article.value.content,
-      categoryId: article.value.categoryId,
-      tagIds: tagIds,
-      status: article.value.status,
-      coverUrl: article.value.cover
     }
   });
 };

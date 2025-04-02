@@ -296,7 +296,9 @@ export function useArticleForm() {
   };
 
   // 删除标签
-  const deleteTagFunction = async (tagId: number) => {
+  const deleteTagFunction = async (tagId: number | undefined) => {
+    if (tagId === undefined) return;
+    
     try {
       await deleteTag({ id: tagId });
       tags.value = tags.value.filter((tag) => tag.id !== tagId);
@@ -309,7 +311,9 @@ export function useArticleForm() {
   };
 
   // 删除分类
-  const deleteCategoryFunction = async (id: number) => {
+  const deleteCategoryFunction = async (id: number | undefined) => {
+    if (id === undefined) return;
+    
     try {
       await deleteCategory({ id });
       categories.value = categories.value.filter(
@@ -335,6 +339,24 @@ export function useArticleForm() {
     tagIds.value = data.tagIds || [];
     status.value = data.status || 1;
     coverUrl.value = data.coverUrl || '';
+    
+    // 如果有分类名称和标签名称，预先处理选择项
+    const categoryName = data.categoryName;
+    const tagNamesList = data.tagNames || [];
+    
+    // 当分类和标签数据加载完成后，设置正确的显示
+    if (categoryName && categories.value.length > 0) {
+      // 如果找不到对应的分类ID，但有分类名称，则创建一个临时分类
+      if (!categories.value.some(c => c.id === categoryId.value)) {
+        console.log(`未找到ID为${categoryId.value}的分类，使用名称${categoryName}进行展示`);
+        // 这里不添加到categories，只是为了UI展示，实际提交时仍使用服务器的分类ID
+      }
+    }
+    
+    if (tagNamesList.length > 0 && tagIds.value.length > 0 && tags.value.length > 0) {
+      // 如果有标签ID和名称，但在现有标签中找不到，先展示这些名称
+      console.log(`设置标签展示，标签ID:${tagIds.value.join(',')}, 标签名称:${tagNamesList.join(',')}`);
+    }
     
     // 展开内容编辑区
     contentExpanded.value = true;

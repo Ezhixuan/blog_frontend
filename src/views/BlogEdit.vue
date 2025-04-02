@@ -1,19 +1,16 @@
 <script setup lang="ts">
 import { useArticleForm } from '@/composables/useArticleForm';
 import { useRoute } from 'vue-router';
+import { ref, onMounted } from 'vue';
+import { getArticleInfo } from '@/api/articleController';
+import message from "@/utils/message";
 
 // 获取路由参数
 const route = useRoute();
-const articleId = route.query.id ? Number(route.query.id) : undefined;
-const articleData = {
-  title: route.query.title as string || '',
-  content: route.query.content as string || '',
-  summary: route.query.summary as string || '',
-  categoryId: route.query.categoryId ? Number(route.query.categoryId) : undefined,
-  tagIds: route.query.tagIds ? (route.query.tagIds as string).split(',').map(Number) : [],
-  status: route.query.status ? Number(route.query.status) : 1,
-  coverUrl: route.query.coverUrl as string || '',
-};
+const articleId = route.query.id ? route.query.id : undefined;
+const categoryName = route.query.categoryName as string;
+const tagNames = route.query.tagNames ? (route.query.tagNames as string).split(',') : [];
+const isLoading = ref(false);
 
 // 定义类型
 interface SelectOption {
@@ -68,7 +65,7 @@ const {
   animations,
 
   // 操作状态
-  isLoading,
+  isLoading: isSubmitting,
   isGenerating,
 
   // 方法
@@ -80,21 +77,69 @@ const {
   initArticleData
 } = useArticleForm();
 
-// 如果存在文章ID，则初始化编辑数据
-if (articleId) {
-  initArticleData(articleId, articleData);
-}
+// 从API获取文章详情
+const fetchArticleDetail = async (id: number) => {
+  isLoading.value = true;
+  try {
+    const res = await getArticleInfo({ id: id.toString() });
+    if (res.data?.code === 0 && res.data?.data) {
+      const article = res.data.data;
+      
+      // 处理标签ID和标签名称
+      let tagIdsArray: number[] = [];
+      let tagNamesArray: string[] = [];
+      
+      if (article.tagMap) {
+        const tagEntries = Object.entries(article.tagMap);
+        tagIdsArray = tagEntries.map(([id]) => Number(id));
+        tagNamesArray = tagEntries.map(([, name]) => name as string);
+      }
+      
+      // 初始化表单数据
+      initArticleData(id, {
+        title: article.title,
+        content: article.content,
+        summary: article.summary,
+        categoryId: article.categoryId,
+        categoryName: article.categoryName,
+        tagIds: tagIdsArray,
+        tagNames: tagNamesArray,
+        status: article.status,
+        coverUrl: article.cover,
+      });
+    }
+  } catch (error) {
+    console.error("获取文章详情失败:", error);
+    message.error("获取文章详情失败");
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+// 如果存在文章ID，则获取文章详情
+onMounted(() => {
+  if (articleId) {
+    fetchArticleDetail(articleId);
+  }
+});
 </script>
 
 <template>
   <div class="blog-edit-container max-w-5xl mx-auto py-8 px-4">
-    <div
+    <div v-if="isLoading" class="flex justify-center items-center h-64">
+      <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500"></div>
+      <span class="ml-4 text-lg text-gray-600 dark:text-gray-300">加载文章中...</span>
+    </div>
+    
+    <div v-else
       class="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-8 transform transition-all duration-500 hover:shadow-lg"
       :class="{ 'scale-100 opacity-100': formVisible, 'scale-95 opacity-0': !formVisible }">
       <h1 class="text-3xl font-bold mb-6 flex items-center overflow-hidden">
         <span
           class="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600 transform transition-all duration-700 ease-out"
-          :class="{ 'translate-x-0 opacity-100': formVisible, '-translate-x-full opacity-0': !formVisible }">编辑博客</span>
+          :class="{ 'translate-x-0 opacity-100': formVisible, '-translate-x-full opacity-0': !formVisible }">
+          {{ articleId ? '编辑博客' : '新建博客' }}
+        </span>
         <div
           class="flex-grow border-b-2 border-gray-200 dark:border-gray-700 ml-4 transform transition-all duration-1000 ease-out"
           :class="{ 'scale-x-100': formVisible, 'scale-x-0': !formVisible }"></div>
@@ -224,6 +269,14 @@ if (articleId) {
             <a-select id="category" v-model:value="categoryId" :loading="isLoadingCategories" show-search
               placeholder="请选择或搜索分类" :filter-option="filterOption" class="w-full transition-all duration-300"
               :class="{ 'ant-select-focused': activeSection === 'category' }">
+              <!-- 当编辑时，如果没有找到对应ID的分类，但有分类名称，则显示一个临时选项 -->
+              <a-select-option v-if="categoryId && categoryName && !categories.some(c => c.id === categoryId)" 
+                :key="categoryId" :value="categoryId" :label="categoryName">
+                <div class="flex justify-between items-center">
+                  <span>{{ categoryName }}</span>
+                </div>
+              </a-select-option>
+              <!-- 常规分类选项 -->
               <a-select-option v-for="category in categories" :key="category.id" :value="category.id"
                 :label="category.name">
                 <div class="flex justify-between items-center">
@@ -281,6 +334,19 @@ if (articleId) {
               <a-select v-model:value="tagIds" mode="multiple" :loading="isLoadingTags" show-search
                 placeholder="请选择或搜索标签" :filter-option="filterOption" class="w-full transition-all duration-300"
                 :class="{ 'ant-select-focused': activeSection === 'tags' }" style="min-height: 38px;">
+                <!-- 当编辑时，为每个没有找到的标签ID创建临时选项 -->
+                <template v-for="(tagId, index) in tagIds" :key="`temp-${index}`">
+                  <a-select-option 
+                    v-if="tagId && !tags.some(t => t.id === tagId) && tagNames[index]"
+                    :key="`temp-${tagId}`" 
+                    :value="tagId" 
+                    :label="tagNames[index]">
+                    <div class="flex justify-between items-center">
+                      <span>{{ tagNames[index] }}</span>
+                    </div>
+                  </a-select-option>
+                </template>
+                <!-- 常规标签选项 -->
                 <a-select-option v-for="tag in tags" :key="tag.id" :value="tag.id" :label="tag.name">
                   <div class="flex justify-between items-center">
                     <span>{{ tag.name }}</span>
@@ -359,14 +425,14 @@ if (articleId) {
     <div class="flex justify-end space-x-4 pt-4 transform transition-all duration-700 ease-out"
       :class="{ 'translate-y-0 opacity-100': formVisible, 'translate-y-8 opacity-0': !formVisible }">
       <button type="button"
-        class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transform hover:scale-105 hover:shadow-md"
+        class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transform hover:scale-105 hover:shadow-md"
         @click="handleCancel">
         取消
       </button>
-      <button type="button" :disabled="isLoading"
+      <button type="button" :disabled="isSubmitting"
         class="relative px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 dark:hover:from-blue-500 dark:hover:to-blue-600 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 hover:shadow-md overflow-hidden"
         @click="handleSubmit">
-        <span>{{ isLoading ? '提交中...' : '提交博客' }}</span>
+        <span>{{ isSubmitting ? '提交中...' : '提交博客' }}</span>
       </button>
     </div>
   </div>
