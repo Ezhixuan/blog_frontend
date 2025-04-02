@@ -29,6 +29,7 @@ const {
   isLoadingCategories,
   isAddingCategory,
   addNewCategory,
+  deleteCategoryFunction,
 
   // 标签相关
   tags,
@@ -37,6 +38,7 @@ const {
   isLoadingTags,
   isAddingTag,
   addNewTag,
+  deleteTagFunction,
 
   // 图片上传相关
   isUploading,
@@ -202,7 +204,14 @@ const {
               :class="{ 'ant-select-focused': activeSection === 'category' }">
               <a-select-option v-for="category in categories" :key="category.id" :value="category.id"
                 :label="category.name">
-                {{ category.name }}
+                <div class="flex justify-between items-center">
+                  <span>{{ category.name }}</span>
+                  <button @click.stop="deleteCategoryFunction(category.id)" class="text-red-500 hover:text-red-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
               </a-select-option>
             </a-select>
             <div v-if="isLoadingCategories" class="mt-1 text-xs text-gray-500 dark:text-gray-400 animate-pulse">加载分类中...
@@ -251,7 +260,14 @@ const {
                 placeholder="请选择或搜索标签" :filter-option="filterOption" class="w-full transition-all duration-300"
                 :class="{ 'ant-select-focused': activeSection === 'tags' }" style="min-height: 38px;">
                 <a-select-option v-for="tag in tags" :key="tag.id" :value="tag.id" :label="tag.name">
-                  {{ tag.name }}
+                  <div class="flex justify-between items-center">
+                    <span>{{ tag.name }}</span>
+                    <button @click.stop="deleteTagFunction(tag.id)" class="text-red-500 hover:text-red-600">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
                 </a-select-option>
               </a-select>
             </div>

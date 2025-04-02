@@ -1,50 +1,52 @@
-import { ref, reactive, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import message from '@/utils/message';
+import { ref, reactive, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import message from "@/utils/message";
 import {
   doSubmitArticle,
   getArticleCategoryList,
   getArticleTagList,
   submitCategory,
-  submitTag
-} from '@/api/articleController';
-import { upload } from '@/api/pictureController';
-import { mockGenerateBlogContent } from '@/api/ai';
-import { useAsyncOperation } from './useAsyncOperation';
+  submitTag,
+  deleteTag,
+  deleteCategory,
+} from "@/api/articleController";
+import { upload } from "@/api/pictureController";
+import { mockGenerateBlogContent } from "@/api/ai";
+import { useAsyncOperation } from "./useAsyncOperation";
 
 export function useArticleForm() {
   const router = useRouter();
 
   // 文章基本信息
-  const title = ref('');
-  const content = ref('');
-  const summary = ref('');
+  const title = ref("");
+  const content = ref("");
+  const summary = ref("");
   const categoryId = ref<number | undefined>(undefined);
   const tagIds = ref<number[]>([]);
   const status = ref(1); // 默认发布状态: 1-发布, 0-草稿
-  const coverUrl = ref(''); // 封面图片URL
+  const coverUrl = ref(""); // 封面图片URL
 
   // 分类相关状态
   const categories = ref<API.ArticleCategoryVO[]>([]);
-  const newCategoryName = ref('');
+  const newCategoryName = ref("");
   const showCategoryForm = ref(false);
 
   // 标签相关状态
   const tags = ref<API.ArticleTagVO[]>([]);
-  const newTagName = ref('');
+  const newTagName = ref("");
   const showTagForm = ref(false);
 
   // UI状态
   const contentExpanded = ref(false);
   const formVisible = ref(false);
-  const activeSection = ref('');
+  const activeSection = ref("");
   const animations = reactive<Record<string, boolean>>({
     title: false,
     summary: false,
     category: false,
     tags: false,
     status: false,
-    content: false
+    content: false,
   });
 
   // 图片上传相关
@@ -55,31 +57,26 @@ export function useArticleForm() {
     async (articleData) => {
       const result = await doSubmitArticle(articleData);
       if (result.data?.code === 0) {
-        router.push('/blogs');
+        router.push("/blogs");
       }
       return result;
     },
-    { successMessage: '博客提交成功', errorMessage: '博客提交失败' }
+    { successMessage: "博客提交成功", errorMessage: "博客提交失败" }
   );
 
-  const {
-    isLoading: isLoadingCategories,
-    execute: fetchCategories
-  } = useAsyncOperation(
-    async () => {
-      const res = await getArticleCategoryList();
-      if (res.data?.code === 0 && res.data?.data) {
-        categories.value = res.data.data;
-      }
-      return res;
-    },
-    { errorMessage: '获取分类列表失败' }
-  );
+  const { isLoading: isLoadingCategories, execute: fetchCategories } =
+    useAsyncOperation(
+      async () => {
+        const res = await getArticleCategoryList();
+        if (res.data?.code === 0 && res.data?.data) {
+          categories.value = res.data.data;
+        }
+        return res;
+      },
+      { errorMessage: "获取分类列表失败" }
+    );
 
-  const {
-    isLoading: isLoadingTags,
-    execute: fetchTags
-  } = useAsyncOperation(
+  const { isLoading: isLoadingTags, execute: fetchTags } = useAsyncOperation(
     async () => {
       const res = await getArticleTagList();
       if (res.data?.code === 0 && res.data?.data) {
@@ -87,69 +84,65 @@ export function useArticleForm() {
       }
       return res;
     },
-    { errorMessage: '获取标签列表失败' }
+    { errorMessage: "获取标签列表失败" }
   );
 
-  const {
-    isLoading: isAddingCategory,
-    execute: addCategory
-  } = useAsyncOperation(
+  const { isLoading: isAddingCategory, execute: addCategory } =
+    useAsyncOperation(
+      async (name: string) => {
+        if (!name.trim()) {
+          message.warning("分类名称不能为空");
+          return null;
+        }
+
+        const res = await submitCategory({ name });
+        if (res.data?.code === 0 && res.data?.data) {
+          categories.value.push(res.data.data);
+          newCategoryName.value = "";
+          showCategoryForm.value = false;
+        }
+        return res;
+      },
+      { successMessage: "分类添加成功", errorMessage: "添加分类失败" }
+    );
+
+  const { isLoading: isAddingTag, execute: addTag } = useAsyncOperation(
     async (name: string) => {
       if (!name.trim()) {
-        message.warning('分类名称不能为空');
-        return null;
-      }
-
-      const res = await submitCategory({ name });
-      if (res.data?.code === 0 && res.data?.data) {
-        categories.value.push(res.data.data);
-        newCategoryName.value = '';
-        showCategoryForm.value = false;
-      }
-      return res;
-    },
-    { successMessage: '分类添加成功', errorMessage: '添加分类失败' }
-  );
-
-  const {
-    isLoading: isAddingTag,
-    execute: addTag
-  } = useAsyncOperation(
-    async (name: string) => {
-      if (!name.trim()) {
-        message.warning('标签名称不能为空');
+        message.warning("标签名称不能为空");
         return null;
       }
 
       const res = await submitTag({ name });
       if (res.data?.code === 0 && res.data?.data) {
         tags.value.push(res.data.data);
-        newTagName.value = '';
+        newTagName.value = "";
         showTagForm.value = false;
       }
       return res;
     },
-    { successMessage: '标签添加成功', errorMessage: '添加标签失败' }
+    { successMessage: "标签添加成功", errorMessage: "添加标签失败" }
   );
 
-  const {
-    isLoading: isGenerating,
-    execute: generateContent
-  } = useAsyncOperation(
-    async (title: string) => {
-      if (!title) {
-        message.warning('请先填写博客标题');
-        return null;
-      }
+  const { isLoading: isGenerating, execute: generateContent } =
+    useAsyncOperation(
+      async (title: string) => {
+        if (!title) {
+          message.warning("请先填写博客标题");
+          return null;
+        }
 
-      const response = await mockGenerateBlogContent(title);
-      if (response.data.code === 0) {
-        content.value = response.data.data;
+        const response = await mockGenerateBlogContent(title);
+        if (response.data.code === 0) {
+          content.value = response.data.data;
+        }
+        return response;
+      },
+      {
+        successMessage: "内容生成成功，请根据需要修改完善",
+        errorMessage: "AI生成内容失败",
       }
-      return response;
-    },
-    { successMessage: '内容生成成功，请根据需要修改完善', errorMessage: 'AI生成内容失败' }
-  );
+    );
 
   // 添加新分类
   const addNewCategory = () => addCategory(newCategoryName.value);
@@ -170,8 +163,8 @@ export function useArticleForm() {
     }
 
     // 检查文件类型
-    if (!file.type.includes('image/')) {
-      message.error('请上传图片文件');
+    if (!file.type.includes("image/")) {
+      message.error("请上传图片文件");
       return;
     }
 
@@ -179,25 +172,28 @@ export function useArticleForm() {
 
     try {
       // 只提供必要的简单参数，避免复杂对象序列化问题
-      const response = await upload({
-        type: 'BLOG_COVER'  // 只保留简单的类型参数
-      }, file);
-      
+      const response = await upload(
+        {
+          type: "BLOG_COVER", // 只保留简单的类型参数
+        },
+        file
+      );
+
       if (response.data?.code === 0 && response.data?.data) {
         coverUrl.value = response.data.data;
-        message.success('图片上传成功');
+        message.success("图片上传成功");
       } else {
-        message.error('图片上传失败');
+        message.error("图片上传失败");
       }
     } catch (error) {
-      console.error('图片上传出错:', error);
-      message.error('图片上传失败');
+      console.error("图片上传出错:", error);
+      message.error("图片上传失败");
     } finally {
       isUploading.value = false;
     }
   };
 
-  const handleUploadImage2 = async(event, insertImage, files) => {
+  const handleUploadImage2 = async (event, insertImage, files) => {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
 
@@ -206,54 +202,56 @@ export function useArticleForm() {
     }
 
     // 检查文件类型
-    if (!file.type.includes('image/')) {
-      message.error('请上传图片文件');
+    if (!file.type.includes("image/")) {
+      message.error("请上传图片文件");
       return;
     }
 
-      isUploading.value = true;
-  
-      try {
-        // 只提供必要的简单参数，避免复杂对象序列化问题
-        const response = await upload({
-          type: 'BLOG_COVER'  // 只保留简单的类型参数
-        }, file);
-        
-        if (response.data?.code === 0 && response.data?.data) {
-          const url = response.data.data;
-          console.log(url);
-          insertImage({
-            url:
-            url,
-            width: 'auto',
-            height: 'auto',
-          });
-          message.success('图片上传成功');
-        } else {
-          message.error('图片上传失败');
-        }
-      } catch (error) {
-        console.error('图片上传出错:', error);
-        message.error('图片上传失败');
-      } finally {
-        isUploading.value = false;
+    isUploading.value = true;
+
+    try {
+      // 只提供必要的简单参数，避免复杂对象序列化问题
+      const response = await upload(
+        {
+          type: "BLOG_COVER", // 只保留简单的类型参数
+        },
+        file
+      );
+
+      if (response.data?.code === 0 && response.data?.data) {
+        const url = response.data.data;
+        console.log(url);
+        insertImage({
+          url: url,
+          width: "auto",
+          height: "auto",
+        });
+        message.success("图片上传成功");
+      } else {
+        message.error("图片上传失败");
       }
-  }
+    } catch (error) {
+      console.error("图片上传出错:", error);
+      message.error("图片上传失败");
+    } finally {
+      isUploading.value = false;
+    }
+  };
 
   // 移除封面图片
   const removeCoverImage = () => {
-    coverUrl.value = '';
+    coverUrl.value = "";
   };
 
   // 提交表单
   const handleSubmit = async () => {
     if (!title.value || !content.value) {
-      message.warning('请填写完整信息');
+      message.warning("请填写完整信息");
       return;
     }
 
     if (!categoryId.value) {
-      message.warning('请选择博客分类');
+      message.warning("请选择博客分类");
       return;
     }
 
@@ -262,9 +260,9 @@ export function useArticleForm() {
       content: content.value,
       summary: summary.value,
       categoryId: categoryId.value,
-      tagIds: tagIds.value.join(','),
+      tagIds: tagIds.value.join(","),
       status: status.value,
-      cover: coverUrl.value // 添加封面图片URL
+      cover: coverUrl.value, // 添加封面图片URL
     });
   };
 
@@ -279,13 +277,42 @@ export function useArticleForm() {
       formVisible.value = true;
 
       // 依次触发各个表单项的动画
-      const sections = ['title', 'summary', 'category', 'tags', 'status', 'content'];
+      const sections = [
+        "title",
+        "summary",
+        "category",
+        "tags",
+        "status",
+        "content",
+      ];
       sections.forEach((section, index) => {
         setTimeout(() => {
           animations[section] = true;
         }, index * 150);
       });
     }, 100);
+  };
+
+  const deleteTagFunction = async (tagId: number) => {
+    try {
+      await deleteTag({ id: tagId });
+      tags.value = tags.value.filter((tag) => tag.id !== tagId);
+      message.success("标签删除成功");
+    } catch (error) {
+      message.error("标签删除失败", error);
+    }
+  };
+
+  const deleteCategoryFunction = async (categoryId: number) => {
+    try {
+      await deleteCategory({ id: categoryId });
+      categories.value = categories.value.filter(
+        (category) => category.id !== categoryId
+      );
+      message.success("分类删除成功");
+    } catch (error) {
+      message.error("分类删除失败", error);
+    }
   };
 
   // 页面加载时初始化
@@ -340,6 +367,8 @@ export function useArticleForm() {
     // 方法
     handleGenerateContent,
     handleSubmit,
-    handleCancel
+    handleCancel,
+    deleteTagFunction,
+    deleteCategoryFunction,
   };
 }
