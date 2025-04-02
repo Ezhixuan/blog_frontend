@@ -25,6 +25,16 @@
               <span>{{ article.viewCount || 0 }} 次阅读</span>
               <span class="meta-separator">•</span>
               <a href="javascript:void(0)" class="meta-category">{{ article.categoryName }}</a>
+              
+              <!-- 编辑按钮 - 仅在用户是作者时显示 -->
+              <span v-if="isAuthor" class="ml-auto">
+                <button @click="handleEditArticle" class="edit-button">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                  </svg>
+                  编辑文章
+                </button>
+              </span>
             </div>
             
             <!-- 文章标签 -->
@@ -63,6 +73,14 @@
                 <span>点赞</span>
                 <span>{{ article.likeCount || 0 }}</span>
               </button>
+              
+              <!-- 底部编辑按钮 -->
+              <button v-if="isAuthor" @click="handleEditArticle" class="action-btn edit-action-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                </svg>
+                <span>编辑文章</span>
+              </button>
             </div>
           </div>
           
@@ -89,6 +107,41 @@ import '@kangc/v-md-editor/lib/plugins/copy-code/copy-code.css';
 import VMdPreview from '@kangc/v-md-editor/lib/preview';
 import message from '@/utils/message';
 import { useTheme } from '@/utils/theme';
+import { useUserStore } from '@/stores/user'; // 导入用户状态存储
+
+// 获取用户状态
+const userStore = useUserStore();
+
+// 判断当前用户是否为文章作者
+const isAuthor = computed(() => {
+  console.log("用户ID:", userStore.userInfo?.id, "文章作者ID:", article.value?.userId);
+  return userStore.userInfo?.id === article.value?.userId;
+});
+
+// 编辑文章方法
+const handleEditArticle = () => {
+  if (!article.value) return;
+  
+  // 获取标签ID，如果有tagMap则从中提取，否则使用空数组
+  let tagIds = '';
+  if (article.value.tagMap) {
+    tagIds = Object.keys(article.value.tagMap).join(',');
+  }
+  
+  router.push({
+    path: '/blog/edit',
+    query: {
+      id: articleId.value,
+      title: article.value.title,
+      summary: article.value.summary,
+      content: article.value.content,
+      categoryId: article.value.categoryId,
+      tagIds: tagIds,
+      status: article.value.status,
+      coverUrl: article.value.cover
+    }
+  });
+};
 
 // 获取当前主题
 const { currentTheme } = useTheme();
@@ -1473,6 +1526,10 @@ watch(tocItems, (newItems) => {
   @apply bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-800/40 text-red-600 dark:text-red-400;
 }
 
+.edit-action-btn {
+  @apply ml-4 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-800/40 text-blue-600 dark:text-blue-400;
+}
+
 .loading-indicator {
   @apply flex flex-col items-center justify-center py-12 text-gray-500 dark:text-gray-400;
 }
@@ -1491,6 +1548,10 @@ watch(tocItems, (newItems) => {
 
 .back-btn {
   @apply px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors;
+}
+
+.edit-button {
+  @apply flex items-center text-xs font-medium px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-md hover:bg-blue-100 dark:hover:bg-blue-800/50 transition-all duration-300;
 }
 
 .no-content-tip {

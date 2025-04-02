@@ -25,6 +25,7 @@ export function useArticleForm() {
   const tagIds = ref<number[]>([]);
   const status = ref(1); // 默认发布状态: 1-发布, 0-草稿
   const coverUrl = ref(""); // 封面图片URL
+  const articleId = ref<number | undefined>(undefined); // 文章ID，编辑时使用
 
   // 分类相关状态
   const categories = ref<API.ArticleCategoryVO[]>([]);
@@ -193,7 +194,7 @@ export function useArticleForm() {
     }
   };
 
-  const handleUploadImage2 = async (event, insertImage, files) => {
+  const handleUploadImage2 = async (event: any, insertImage: any, files: any) => {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
 
@@ -256,6 +257,7 @@ export function useArticleForm() {
     }
 
     await submitArticle({
+      id: articleId.value, // 如果是编辑模式，传递文章ID
       title: title.value,
       content: content.value,
       summary: summary.value,
@@ -293,26 +295,55 @@ export function useArticleForm() {
     }, 100);
   };
 
+  // 删除标签
   const deleteTagFunction = async (tagId: number) => {
     try {
       await deleteTag({ id: tagId });
       tags.value = tags.value.filter((tag) => tag.id !== tagId);
+      // 如果删除的标签正在被选中，也从选择中移除
+      tagIds.value = tagIds.value.filter(id => id !== tagId);
       message.success("标签删除成功");
     } catch (error) {
-      message.error("标签删除失败", error);
+      message.error("标签删除失败");
     }
   };
 
-  const deleteCategoryFunction = async (categoryId: number) => {
+  // 删除分类
+  const deleteCategoryFunction = async (id: number) => {
     try {
-      await deleteCategory({ id: categoryId });
+      await deleteCategory({ id });
       categories.value = categories.value.filter(
-        (category) => category.id !== categoryId
+        (category) => category.id !== id
       );
+      // 如果删除的分类正在被选中，清空选择
+      if (id === categoryId.value) {
+        categoryId.value = undefined;
+      }
       message.success("分类删除成功");
     } catch (error) {
-      message.error("分类删除失败", error);
+      message.error("分类删除失败");
     }
+  };
+
+  // 初始化文章数据（编辑模式）
+  const initArticleData = (id: number, data: any) => {
+    articleId.value = id;
+    title.value = data.title || '';
+    content.value = data.content || '';
+    summary.value = data.summary || '';
+    categoryId.value = data.categoryId;
+    tagIds.value = data.tagIds || [];
+    status.value = data.status || 1;
+    coverUrl.value = data.coverUrl || '';
+    
+    // 展开内容编辑区
+    contentExpanded.value = true;
+    // 确保表单可见
+    formVisible.value = true;
+    // 立即激活所有动画
+    Object.keys(animations).forEach(key => {
+      animations[key] = true;
+    });
   };
 
   // 页面加载时初始化
@@ -331,6 +362,7 @@ export function useArticleForm() {
     tagIds,
     status,
     coverUrl,
+    articleId,
 
     // 分类相关
     categories,
@@ -370,5 +402,6 @@ export function useArticleForm() {
     handleCancel,
     deleteTagFunction,
     deleteCategoryFunction,
+    initArticleData,
   };
 }

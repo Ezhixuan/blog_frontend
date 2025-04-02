@@ -9,6 +9,10 @@ import { on } from '@/utils/eventBus';
 import message from '@/utils/message';
 import { getPageState, clearPageState } from '@/utils/pageMemory';
 import { useTheme } from '@/utils/theme';
+import { useUserStore } from '@/stores/user'; // 导入用户状态存储
+
+// 获取用户状态存储
+const userStore = useUserStore();
 
 // 获取主题状态
 const { currentTheme, toggleTheme } = useTheme();
@@ -65,6 +69,16 @@ const checkLoginStatus = async () => {
     isLoggedIn.value = response.data?.data != null;
     if (isLoggedIn.value && response.data?.data) {
       userInfo.value = response.data.data;
+      // 正确格式化参数调用userStore.login
+      const token = localStorage.getItem('token') || '';
+      userStore.setUserInfo({
+        id: userInfo.value.id || 0,
+        username: userInfo.value.username || userInfo.value.userAccount || '',
+        avatar: userInfo.value.avatar,
+        email: userInfo.value.email,
+        role: userInfo.value.role
+      });
+      userStore.setToken(token);
     }
   } catch (error) {
     isLoggedIn.value = false;
@@ -124,6 +138,10 @@ const handleLogout = async () => {
   isLoggedIn.value = false;
   userInfo.value = null;
   showLoginDialog.value = false;
+  
+  // 清除全局用户状态
+  userStore.logout();
+  
   router.push('/');
 };
 
@@ -221,6 +239,17 @@ onMounted(() => {
     userInfo.value = userData;
     isLoggedIn.value = true;
     isLoading.value = false;
+    
+    // 更新全局用户状态
+    const token = localStorage.getItem('token') || '';
+    userStore.setUserInfo({
+      id: userData.id || 0,
+      username: userData.username || userData.userAccount || '',
+      avatar: userData.avatar,
+      email: userData.email,
+      role: userData.role
+    });
+    userStore.setToken(token);
   });
   
   // 监听进入文章页面事件

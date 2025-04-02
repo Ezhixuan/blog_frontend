@@ -6,6 +6,10 @@ import Antd from 'ant-design-vue'
 import 'ant-design-vue/dist/reset.css'
 import { useTheme, initTheme } from './utils/theme'
 import { watch, ref } from 'vue'
+import { createPinia } from 'pinia'
+
+// 创建 Pinia 实例
+const pinia = createPinia()
 
 // 全局注册 v-md-editor
 import VueMarkdownEditor from '@kangc/v-md-editor'
@@ -57,6 +61,9 @@ import '@kangc/v-md-editor/lib/plugins/copy-code/copy-code.css'
 
 // 导入消息提示组件
 import message from '@/utils/message'
+
+// 导入用户状态存储
+import { useUserStore } from './stores/user'
 
 // 初始化主题
 initTheme();
@@ -145,6 +152,11 @@ app.use(router);
 app.use(Antd);
 app.use(VueMarkdownEditor);
 app.use(VMdPreview);
+app.use(pinia); // 使用Pinia
+
+// 初始化用户信息
+const userStore = useUserStore();
+userStore.init();
 
 // 挂载应用
 app.mount('#app');

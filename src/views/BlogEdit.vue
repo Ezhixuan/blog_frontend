@@ -1,5 +1,19 @@
 <script setup lang="ts">
 import { useArticleForm } from '@/composables/useArticleForm';
+import { useRoute } from 'vue-router';
+
+// 获取路由参数
+const route = useRoute();
+const articleId = route.query.id ? Number(route.query.id) : undefined;
+const articleData = {
+  title: route.query.title as string || '',
+  content: route.query.content as string || '',
+  summary: route.query.summary as string || '',
+  categoryId: route.query.categoryId ? Number(route.query.categoryId) : undefined,
+  tagIds: route.query.tagIds ? (route.query.tagIds as string).split(',').map(Number) : [],
+  status: route.query.status ? Number(route.query.status) : 1,
+  coverUrl: route.query.coverUrl as string || '',
+};
 
 // 定义类型
 interface SelectOption {
@@ -60,8 +74,16 @@ const {
   // 方法
   handleGenerateContent,
   handleSubmit,
-  handleCancel
+  handleCancel,
+  
+  // 初始化文章数据方法
+  initArticleData
 } = useArticleForm();
+
+// 如果存在文章ID，则初始化编辑数据
+if (articleId) {
+  initArticleData(articleId, articleData);
+}
 </script>
 
 <template>

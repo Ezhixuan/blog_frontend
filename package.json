@@ -21,6 +21,7 @@
     "node-fetch": "^2.7.0",
     "nunjucks": "^3.2.4",
     "openapi3-ts": "^4.4.0",
+    "pinia": "^3.0.1",
     "prettier": "^3.5.3",
     "prismjs": "^1.30.0",
     "reserved-words": "^0.1.2",
