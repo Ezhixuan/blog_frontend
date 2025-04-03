@@ -113,7 +113,7 @@
     </div>
     <BackToTop :visibility-height="300" :duration="500" />
     
-    <!-- 添加图片预览组件 -->
+    <!-- 图片预览组件 -->
     <ImageViewer v-model:visible="previewVisible" :image-url="previewImageUrl" />
   </div>
 </template>
@@ -123,15 +123,16 @@ import { ref, onMounted, nextTick, onUnmounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { getArticleInfo } from '../api/articleController';
 import BackToTop from '../components/BackToTop.vue';
+import ImageViewer from '../components/ImageViewer.vue';
 import { marked } from 'marked';
 import hljs from 'highlight.js';
 import 'highlight.js/styles/github.css';
 import 'highlight.js/styles/github-dark.css';
-import ImageViewer from '../components/ImageViewer.vue';
 import { useUserStore } from '@/stores/user';
 import { message } from 'ant-design-vue'; // 或其他你使用的消息组件
 import { getPageState } from '@/utils/pageMemory';
 import { useTheme } from '@/utils/theme';
+import copy from 'copy-to-clipboard';
 
 const route = useRoute();
 const router = useRouter();
@@ -157,45 +158,76 @@ const renderedContent = ref('');
 const previewVisible = ref(false);
 const previewImageUrl = ref('');
 
-// 配置Marked渲染器，增加对图片的处理
-const setupMarked = () => {
-  // 使用类型断言来绕过TypeScript的类型检查
-  const options = {
-    renderer: new marked.Renderer(),
-    highlight: function(code: string, lang: string) {
-      const language = hljs.getLanguage(lang) ? lang : 'plaintext';
-      return hljs.highlight(code, { language }).value;
-    },
-    langPrefix: 'hljs language-', // 添加代码块css类名的前缀
-    pedantic: false,
-    gfm: true,
-    breaks: false,
-    sanitize: false,
-    smartLists: true,
-    smartypants: false,
-    xhtml: false
-  };
-  
-  // 重写图片渲染器，添加特殊类名和数据属性
-  const renderer = options.renderer;
-  const originalImageRenderer = renderer.image;
-  
-  // 完全使用类型断言绕过TypeScript类型系统
-  (renderer as any).image = function(href: string, title: string, text: string) {
-    const originalHtml = (originalImageRenderer as any).call(this, href, title, text);
-    // 增加特殊类名，用于在DOM中识别和绑定事件
-    return originalHtml.replace('<img', '<img class="markdown-image" data-original-src="' + href + '"');
-  };
-  
-  marked.setOptions(options as any);
-};
-
 // 渲染Markdown内容
 const renderMarkdown = () => {
   if (!article.value?.content) return;
   
   try {
-    // 渲染Markdown内容并确保返回字符串
+    // 创建自定义渲染器
+    const renderer = new marked.Renderer();
+    
+    // 重写图片渲染方法
+    const originalImageRenderer = renderer.image;
+    (renderer as any).image = function(href: string | null, title: string | null, text: string | null) {
+      // 处理可能的null或undefined值
+      const safeHref = href || '';
+      const safeText = text || '';
+      const safeTitle = title || '';
+
+      let widthAttr = '';
+      let heightAttr = '';
+      let styleAttr = '';
+      
+      // 仅当href为有效字符串时才尝试匹配自定义语法
+      if (typeof safeHref === 'string' && safeHref.length > 0) {
+        try {
+          // 检查内容是否包含自定义属性语法
+          const content = article.value?.content || '';
+          const escapedHref = safeHref.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const imgPattern = new RegExp(`!\\[[^\\]]*\\]\\(${escapedHref}\\)\\s*\\{\\{\\{([^}]+)\\}\\}\\}`);
+          const match = content.match(imgPattern);
+          
+          if (match && match[1]) {
+            const attributesStr = match[1];
+            const widthMatch = attributesStr.match(/width=["']([^"']+)["']/);
+            const heightMatch = attributesStr.match(/height=["']([^"']+)["']/);
+            
+            if (widthMatch) widthAttr = ` width="${widthMatch[1]}"`;
+            if (heightMatch) heightAttr = ` height="${heightMatch[1]}"`;
+          }
+        } catch (error) {
+          console.error('图片属性解析错误:', error);
+        }
+      }
+      
+      // 添加可点击的类名
+      return `<img src="${safeHref}" alt="${safeText}" title="${safeTitle}"${widthAttr}${heightAttr}${styleAttr} class="clickable-image">`;
+    };
+    
+    // 配置Marked使用自定义渲染器和高亮
+    const options: any = {
+      renderer: renderer,
+      highlight: function(code: string, lang: string) {
+        const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+        try {
+          return hljs.highlight(code, { language }).value;
+        } catch (e) {
+          console.error('高亮显示错误:', e);
+          return code;
+        }
+      },
+      langPrefix: 'hljs language-',
+      gfm: true,
+      breaks: false,
+      pedantic: false,
+      sanitize: false,
+      smartLists: true,
+      smartypants: false
+    };
+    
+    marked.setOptions(options);
+    
+    // 渲染Markdown内容
     const content = marked.parse(article.value.content);
     renderedContent.value = typeof content === 'string' ? content : '';
     
@@ -203,7 +235,8 @@ const renderMarkdown = () => {
     nextTick(() => {
       ensureTocDisplay();
       applyThemeToCodeBlocks();
-      setupImageClickEvents(); // 添加图片点击事件
+      attachImageClickHandlers();
+      attachCodeCopyButtons();
     });
   } catch (error) {
     console.error('Markdown渲染失败:', error);
@@ -217,12 +250,29 @@ const applyThemeToCodeBlocks = () => {
   const isDark = currentTheme.value === 'dark';
   
   codeBlocks.forEach(block => {
+    // 确保代码块有适当的类，支持高亮
+    block.classList.add('hljs');
+    
     if (isDark) {
       block.classList.add('github-dark');
       block.classList.remove('github');
     } else {
       block.classList.add('github');
       block.classList.remove('github-dark');
+    }
+    
+    // 如果代码块内还没有高亮，尝试再次应用高亮
+    if (block.querySelectorAll('.hljs-keyword, .hljs-string, .hljs-comment').length === 0) {
+      const language = [...block.classList]
+        .find(cls => cls.startsWith('language-'))
+        ?.replace('language-', '') || 'plaintext';
+      
+      try {
+        const result = hljs.highlight(block.textContent || '', { language });
+        block.innerHTML = result.value;
+      } catch (e) {
+        console.error('后处理代码高亮失败:', e);
+      }
     }
   });
 };
@@ -237,9 +287,6 @@ interface TocItem {
 
 const goBack = () => router.back();
 const formatDate = (dateStr?: string) => dateStr ? new Date(dateStr).toLocaleDateString('zh-CN') : '';
-
-// 初始化marked设置
-setupMarked();
 
 const handleEditArticle = () => {
   if (!article.value) return;
@@ -478,28 +525,74 @@ watch(currentTheme, () => {
   });
 });
 
-// 打开图片预览
-const openPreview = (imageUrl: string) => {
-  previewImageUrl.value = imageUrl;
-  previewVisible.value = true;
+// 添加图片点击事件处理
+const attachImageClickHandlers = () => {
+  const images = document.querySelectorAll('.markdown-container img.clickable-image');
+  images.forEach(img => {
+    img.addEventListener('click', (e) => {
+      const target = e.target as HTMLImageElement;
+      const imageUrl = target.src;
+      if (imageUrl) {
+        previewImageUrl.value = imageUrl;
+        previewVisible.value = true;
+      }
+    });
+  });
 };
 
-// 添加图片点击事件
-const setupImageClickEvents = () => {
-  nextTick(() => {
-    const images = document.querySelectorAll('.markdown-container .markdown-image');
-    images.forEach((img) => {
-      img.addEventListener('click', (e) => {
-        e.preventDefault();
-        const imageUrl = (e.target as HTMLImageElement).getAttribute('data-original-src');
-        if (imageUrl) {
-          openPreview(imageUrl);
-        }
-      });
+// 添加代码块复制功能
+const attachCodeCopyButtons = () => {
+  const codeBlocks = document.querySelectorAll('.markdown-container pre');
+  
+  codeBlocks.forEach((pre) => {
+    // 检查是否已经有复制按钮
+    if (pre.querySelector('.code-copy-button')) return;
+    
+    // 创建复制按钮
+    const copyButton = document.createElement('button');
+    copyButton.className = 'code-copy-button';
+    copyButton.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+        <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+        <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
+      </svg>
+    `;
+    
+    // 添加复制成功效果
+    copyButton.addEventListener('click', () => {
+      const code = pre.querySelector('code');
+      if (!code) return;
       
-      // 添加鼠标样式提示这是可点击的
-      (img as HTMLElement).style.cursor = 'zoom-in';
+      // 复制代码内容到剪贴板
+      const text = code.textContent || '';
+      copy(text);
+      
+      // 显示复制成功状态
+      copyButton.classList.add('copied');
+      copyButton.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+        </svg>
+      `;
+      
+      // 显示成功提示
+      message.success('代码已复制到剪贴板');
+      
+      // 2秒后恢复原始状态
+      setTimeout(() => {
+        copyButton.classList.remove('copied');
+        copyButton.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+            <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
+          </svg>
+        `;
+      }, 2000);
     });
+    
+    // 添加按钮到pre标签
+    (pre as HTMLElement).style.position = 'relative';
+    pre.appendChild(copyButton);
   });
 };
 
@@ -548,15 +641,6 @@ onUnmounted(() => {
 /* Markdown容器样式 */
 .markdown-container {
   @apply text-gray-800 dark:text-gray-200 leading-relaxed;
-}
-
-/* 图片样式增强 */
-.markdown-container :deep(.markdown-image) {
-  @apply cursor-zoom-in rounded-lg transition-all duration-300 hover:shadow-lg;
-  max-width: 100%;
-  height: auto;
-  margin: 1rem auto;
-  display: block;
 }
 
 .markdown-container :deep(h1),
@@ -647,6 +731,15 @@ onUnmounted(() => {
 
 .markdown-container :deep(img) {
   @apply max-w-full h-auto my-6 rounded-lg mx-auto;
+}
+
+.markdown-container :deep(.clickable-image) {
+  @apply cursor-pointer transition-transform duration-300;
+  @apply hover:shadow-lg;
+}
+
+.markdown-container :deep(.clickable-image:hover) {
+  transform: scale(1.01);
 }
 
 .markdown-container :deep(hr) {
@@ -1091,5 +1184,78 @@ onUnmounted(() => {
 .back-button:hover svg {
   transform: translateX(-4px);
   color: #1a73e8; /* 悬停时图标变蓝 */
+}
+
+.code-copy-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.code-copy-button:hover {
+  opacity: 1;
+}
+
+.code-copy-button.copied {
+  opacity: 1;
+  color: #48bb78;
+}
+
+/* 代码复制按钮样式 */
+.markdown-container :deep(.clickable-image:hover) {
+  transform: scale(1.01);
+}
+
+/* 代码复制按钮样式 */
+.markdown-container :deep(pre) {
+  position: relative;
+}
+
+.markdown-container :deep(.code-copy-button) {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  padding: 0.25rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s, background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #e2e8f0;
+}
+
+.markdown-container :deep(pre:hover .code-copy-button) {
+  opacity: 0.8;
+}
+
+.markdown-container :deep(.code-copy-button:hover) {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.markdown-container :deep(.code-copy-button.copied) {
+  background: rgba(52, 211, 153, 0.2);
+  color: #34d399;
+  opacity: 1;
+}
+
+/* 暗色模式样式调整 */
+.dark .markdown-container :deep(.code-copy-button) {
+  background: rgba(0, 0, 0, 0.2);
+  color: #d1d5db;
+}
+
+.dark .markdown-container :deep(.code-copy-button:hover) {
+  background: rgba(0, 0, 0, 0.4);
 }
 </style>
