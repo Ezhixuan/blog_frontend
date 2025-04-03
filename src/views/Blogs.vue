@@ -319,7 +319,8 @@ const { formatDate, getReadTime } = utils;
   @apply hover:scale-[1.01] hover:shadow-xl;
   background: linear-gradient(to bottom right, white, #f0f9ff);
   
-  &.dark {
+  /* 暗色模式容器背景 - 修正CSS选择器语法 */
+  .dark & {
     background: linear-gradient(to bottom right, #1f2937, #111827);
   }
 }
@@ -341,12 +342,40 @@ const { formatDate, getReadTime } = utils;
 }
 
 .blogs-title-divider {
-  @apply flex-grow ml-4;
-  border-bottom: 2px solid #e5e7eb;
+  @apply flex-grow ml-4 h-1 relative overflow-hidden;
   
-  &.dark {
-    border-color: #374151;
+  &::before {
+    content: '';
+    @apply absolute inset-0;
+    background: linear-gradient(90deg, 
+      transparent 0%, 
+      #3b82f6 10%, 
+      #8b5cf6 30%, 
+      transparent 50%, 
+      #ec4899 70%, 
+      #f59e0b 90%, 
+      transparent 100%);
+    animation: particle-flow 4s linear infinite;
   }
+  
+  &::after {
+    content: '';
+    @apply absolute inset-0 opacity-70;
+    background: radial-gradient(circle at center, 
+      white 0%, 
+      transparent 70%);
+    animation: sparkle 2s ease-in-out infinite;
+  }
+}
+
+@keyframes particle-flow {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes sparkle {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.8; }
 }
 
 /* 文章网格布局 */
@@ -368,9 +397,10 @@ const { formatDate, getReadTime } = utils;
     border-color: #bfdbfe;
   }
 
-  &.dark {
+  /* 暗色模式样式 - 使用嵌套选择器确保正确应用样式 */
+  .dark & {
     background-color: #1f2937;
-    border-color: #374151;
+    border-color: #374151; /* 暗色模式边框颜色 */
     
     &:hover {
       border-color: #1d4ed8;
@@ -390,7 +420,8 @@ const { formatDate, getReadTime } = utils;
   @apply bg-white;
   width: 50%;
   
-  &.dark {
+  /* 暗色模式内容区背景 */
+  .dark & {
     @apply bg-gray-800;
   }
 }
@@ -416,7 +447,8 @@ const { formatDate, getReadTime } = utils;
   @apply line-clamp-3;
   color: #4b5563;
   
-  &.dark {
+  /* 暗色模式文字颜色 */
+  .dark & {
     color: #d1d5db;
   }
 }
@@ -425,7 +457,8 @@ const { formatDate, getReadTime } = utils;
   @apply flex items-center text-sm space-x-4;
   color: #6b7280;
   
-  &.dark {
+  /* 暗色模式元信息颜色 */
+  .dark & {
     color: #9ca3af;
   }
 }
@@ -443,7 +476,8 @@ const { formatDate, getReadTime } = utils;
   background-color: #dbeafe;
   color: #1e40af;
   
-  &.dark {
+  /* 暗色模式分类标签 */
+  .dark & {
     background-color: #1e3a8a;
     color: #93c5fd;
   }
@@ -459,7 +493,8 @@ const { formatDate, getReadTime } = utils;
     transform: rotate(6deg);
     transform-origin: top left;
     
-    &.dark {
+    /* 暗色模式分隔线 */
+    .dark & {
       background-color: #1f2937;
     }
   }
@@ -475,7 +510,8 @@ const { formatDate, getReadTime } = utils;
   @apply h-full w-full;
   background-color: #f9fafb;
   
-  &.dark {
+  /* 暗色模式图片容器背景 */
+  .dark & {
     background-color: #111827;
   }
 }
@@ -493,7 +529,8 @@ const { formatDate, getReadTime } = utils;
   @apply h-full w-full flex items-center justify-center;
   background: linear-gradient(to bottom right, #dbeafe, #ddd6fe);
   
-  &.dark {
+  /* 暗色模式占位图渐变 */
+  .dark & {
     background: linear-gradient(to bottom right, #1e3a8a, #5b21b6);
   }
 }
@@ -502,7 +539,8 @@ const { formatDate, getReadTime } = utils;
   @apply h-16 w-16;
   color: #2563eb;
   
-  &.dark {
+  /* 暗色模式图标颜色 */
+  .dark & {
     color: #60a5fa;
   }
 }
@@ -525,7 +563,8 @@ const { formatDate, getReadTime } = utils;
     background: linear-gradient(to right, #d1d5db, #9ca3af);
     @apply cursor-not-allowed;
     
-    &.dark {
+    /* 暗色模式禁用按钮 */
+    .dark & {
       background: linear-gradient(to right, #4b5563, #374151);
     }
   }
@@ -539,7 +578,8 @@ const { formatDate, getReadTime } = utils;
   @apply font-medium;
   color: #4b5563;
   
-  &.dark {
+  /* 暗色模式分页信息 */
+  .dark & {
     color: #d1d5db;
   }
 }

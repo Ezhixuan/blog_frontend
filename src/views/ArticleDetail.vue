@@ -5,6 +5,15 @@
     </div>
 
     <div class="article-layout">
+      <div class="back-button-container">
+        <button class="back-button" @click="handleBackToList" aria-label="返回文章列表">
+          <svg xmlns="http://www.w3.org/2000/svg" class="back-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          <span>返回</span>
+        </button>
+      </div>
+
       <div class="article-main">
         <div class="article-card">
           <div v-if="loading" class="loading-indicator">
@@ -117,6 +126,7 @@ import '@kangc/v-md-editor/lib/plugins/copy-code/copy-code.css';
 import VMdPreview from '@kangc/v-md-editor/lib/preview';
 import { useUserStore } from '@/stores/user';
 import { message } from 'ant-design-vue'; // 或其他你使用的消息组件
+import { getPageState } from '@/utils/pageMemory';
 
 const route = useRoute();
 const router = useRouter();
@@ -358,6 +368,52 @@ const handleScroll = throttle(() => {
 const toggleToc = () => {
   if (!floatingTocRef.value) return;
   floatingTocRef.value.classList.toggle('show');
+};
+
+const handleBackToList = () => {
+  const pageState = getPageState();
+  
+  if (pageState) {
+    // 如果有保存的分页状态，使用它返回到指定页
+    console.log(`返回到文章列表第${pageState.current}页`);
+    
+    // 构建查询参数
+    const query: Record<string, string> = {
+      page: pageState.current.toString(),
+      pageSize: pageState.pageSize.toString()
+    };
+    
+    // 如果有保存的分类ID，添加到查询参数
+    if (pageState.categoryId) {
+      query.categoryId = pageState.categoryId;
+      console.log(`恢复分类筛选: ${pageState.categoryId}`);
+    }
+    
+    // 如果有保存的标签ID，添加到查询参数
+    if (pageState.tagId) {
+      query.tagId = pageState.tagId;
+      console.log(`恢复标签筛选: ${pageState.tagId}`);
+    }
+    
+    router.push({
+      path: '/blogs',
+      query
+    });
+    
+    // 如果记录了滚动位置，在下一个时间循环中恢复滚动位置
+    if (pageState.scrollPosition) {
+      setTimeout(() => {
+        window.scrollTo({
+          top: pageState.scrollPosition,
+          behavior: 'smooth'
+        });
+      }, 100);
+    }
+  } else {
+    // 如果没有保存的分页状态，直接返回文章列表首页
+    console.log('返回到文章列表首页');
+    router.push('/blogs');
+  }
 };
 
 onMounted(() => {
@@ -792,5 +848,54 @@ onUnmounted(() => {
 .dark .toc-mobile-trigger {
   background: rgba(26, 32, 44, 0.95);
   color: #e2e8f0;
+}
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: transparent;
+  color: #2c3e50; /* 深蓝灰色，适合学术风格 */
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 20px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  font-family: 'Georgia', 'Times New Roman', serif; /* 适合学术的衬线字体 */
+}
+
+.back-button::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 16px;
+  width: calc(100% - 32px);
+  height: 1px;
+  background-color: #2c3e50;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.3s ease;
+}
+
+.back-button:hover {
+  color: #1a73e8; /* 悬停时变为蓝色 */
+}
+
+.back-button:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+.back-button svg {
+  transition: transform 0.3s ease;
+  color: #7f8c8d; /* 图标灰色 */
+}
+
+.back-button:hover svg {
+  transform: translateX(-4px);
+  color: #1a73e8; /* 悬停时图标变蓝 */
 }
 </style>

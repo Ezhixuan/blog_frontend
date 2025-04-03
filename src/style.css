@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 
+ * 主题变量配置 - 亮色模式
+ * 这些变量使用HSL格式，方便调整透明度
+ */
 :root {
   --background: 210 20% 98%;
   --foreground: 210 40% 2%;
@@ -34,6 +38,10 @@
   --radius: 0.5rem;
 }
 
+/* 
+ * 主题变量配置 - 暗色模式
+ * 确保颜色对比度足够，提高可读性
+ */
 .dark {
   --background: 210 40% 8%;
   --foreground: 210 20% 98%;
@@ -59,7 +67,7 @@
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
   
-  --border: 210 40% 18%;
+  --border: 210 40% 18%;  /* 暗色模式边框颜色 - 调整此处可以改变所有暗色模式边框 */
   --input: 210 40% 18%;
   --ring: 214 100% 67%;
 }
@@ -92,13 +100,17 @@ body {
   @apply bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200;
 }
 
-/* Markdown 编辑器暗色模式 */
+/* 
+ * Markdown 编辑器暗色模式样式
+ * 以下样式可以根据需要进行自定义调整
+ */
 .dark .v-md-editor {
   background-color: hsl(var(--card));
   color: hsl(var(--card-foreground));
-  border-color: hsl(var(--border));
+  border-color: hsl(var(--border)); /* 边框颜色 - 与其他组件保持一致 */
 }
 
+/* 编辑器工具栏样式 */
 .dark .v-md-editor .v-md-editor__toolbar {
   background-color: hsl(var(--muted));
   border-bottom-color: hsl(var(--border));
@@ -116,6 +128,7 @@ body {
   color: hsl(var(--primary));
 }
 
+/* 编辑区域样式 */
 .dark .v-md-editor .v-md-editor__editor-wrapper {
   background-color: hsl(var(--card));
 }
@@ -124,7 +137,10 @@ body {
   color: hsl(var(--card-foreground));
 }
 
-/* 预览模式 */
+/* 
+ * Markdown 预览模式样式
+ * 预览文档时的整体样式
+ */
 .dark .v-md-editor.v-md-editor--preview {
   background-color: hsl(var(--card));
   color: hsl(var(--card-foreground));
@@ -136,23 +152,32 @@ body {
   color: hsl(var(--card-foreground));
 }
 
-/* 代码块 */
+/* 
+ * 代码块样式
+ * 可以根据需要调整代码块的背景色、文字颜色等
+ */
 .dark .v-md-editor.v-md-editor--preview pre {
   background-color: hsl(var(--muted));
 }
 
 .dark .v-md-editor.v-md-editor--preview code {
   background-color: hsl(var(--muted));
-  color: #e06c75;
+  color: #e06c75; /* 行内代码颜色 - 可以调整为更适合的颜色 */
 }
 
-/* 引用块 */
+/* 
+ * 引用块样式
+ * 引用内容的背景和边框样式
+ */
 .dark .v-md-editor.v-md-editor--preview blockquote {
   background-color: hsl(var(--muted));
   border-left-color: hsl(var(--primary));
 }
 
-/* 表格 */
+/* 
+ * 表格样式
+ * 表格标题和单元格的样式
+ */
 .dark .v-md-editor.v-md-editor--preview table th {
   background-color: hsl(var(--muted));
   border-color: hsl(var(--border));
@@ -162,12 +187,18 @@ body {
   border-color: hsl(var(--border));
 }
 
-/* 链接 */
+/* 
+ * 链接样式
+ * 超链接的颜色可以调整
+ */
 .dark .v-md-editor.v-md-editor--preview a {
   color: hsl(var(--primary));
 }
 
-/* 标题 */
+/* 
+ * 标题样式
+ * h1-h6 标题的颜色
+ */
 .dark .v-md-editor.v-md-editor--preview h1,
 .dark .v-md-editor.v-md-editor--preview h2,
 .dark .v-md-editor.v-md-editor--preview h3,
@@ -177,7 +208,11 @@ body {
   color: hsl(var(--card-foreground));
 }
 
-/* VuePress主题暗黑模式代码块样式增强 */
+/* 
+ * VuePress主题暗黑模式代码块样式增强
+ * 以下样式用于增强代码块的显示效果
+ * 可根据项目需求调整颜色和样式
+ */
 .dark .v-md-editor.v-md-editor--preview .prism-editor-wrapper {
   background-color: hsl(var(--muted));
   border-radius: 6px;
@@ -192,15 +227,16 @@ body {
   outline: none;
 }
 
+/* Prism.js 语法高亮颜色 - 可自定义调整 */
 .dark .v-md-editor.v-md-editor--preview .token.comment,
 .dark .v-md-editor.v-md-editor--preview .token.prolog,
 .dark .v-md-editor.v-md-editor--preview .token.doctype,
 .dark .v-md-editor.v-md-editor--preview .token.cdata {
-  color: #8292a2;
+  color: #8292a2; /* 注释颜色 */
 }
 
 .dark .v-md-editor.v-md-editor--preview .token.punctuation {
-  color: #f8f8f2;
+  color: #f8f8f2; /* 标点符号颜色 */
 }
 
 .dark .v-md-editor.v-md-editor--preview .token.namespace {
@@ -212,12 +248,12 @@ body {
 .dark .v-md-editor.v-md-editor--preview .token.constant,
 .dark .v-md-editor.v-md-editor--preview .token.symbol,
 .dark .v-md-editor.v-md-editor--preview .token.deleted {
-  color: #f92672;
+  color: #f92672; /* 属性、标签、常量颜色 */
 }
 
 .dark .v-md-editor.v-md-editor--preview .token.boolean,
 .dark .v-md-editor.v-md-editor--preview .token.number {
-  color: #ae81ff;
+  color: #ae81ff; /* 布尔值和数字颜色 */
 }
 
 .dark .v-md-editor.v-md-editor--preview .token.selector,
@@ -226,7 +262,7 @@ body {
 .dark .v-md-editor.v-md-editor--preview .token.char,
 .dark .v-md-editor.v-md-editor--preview .token.builtin,
 .dark .v-md-editor.v-md-editor--preview .token.inserted {
-  color: #a6e22e;
+  color: #a6e22e; /* 选择器、属性名、字符串颜色 */
 }
 
 .dark .v-md-editor.v-md-editor--preview .token.operator,
@@ -234,27 +270,30 @@ body {
 .dark .v-md-editor.v-md-editor--preview .token.url,
 .dark .v-md-editor.v-md-editor--preview .language-css .token.string,
 .dark .v-md-editor.v-md-editor--preview .style .token.string {
-  color: #f8f8f2;
+  color: #f8f8f2; /* 操作符颜色 */
 }
 
 .dark .v-md-editor.v-md-editor--preview .token.atrule,
 .dark .v-md-editor.v-md-editor--preview .token.attr-value,
 .dark .v-md-editor.v-md-editor--preview .token.keyword {
-  color: #66d9ef;
+  color: #66d9ef; /* 关键字颜色 */
 }
 
 .dark .v-md-editor.v-md-editor--preview .token.function,
 .dark .v-md-editor.v-md-editor--preview .token.class-name {
-  color: #e6db74;
+  color: #e6db74; /* 函数和类名颜色 */
 }
 
 .dark .v-md-editor.v-md-editor--preview .token.regex,
 .dark .v-md-editor.v-md-editor--preview .token.important,
 .dark .v-md-editor.v-md-editor--preview .token.variable {
-  color: #fd971f;
+  color: #fd971f; /* 正则表达式和变量颜色 */
 }
 
-/* GitHub主题暗黑模式样式增强 */
+/* 
+ * GitHub 风格的 Markdown 暗黑模式样式增强
+ * 用于增强文章内容的显示效果
+ */
 .dark .github-markdown-body {
   background-color: hsl(var(--card)) !important;
   color: hsl(var(--card-foreground)) !important;
@@ -298,11 +337,15 @@ body {
   border-radius: 6px;
 }
 
-/* 确保使用GitHub Dark样式 */
+/* 
+ * Highlight.js 暗黑模式样式
+ * GitHub Dark 风格语法高亮
+ * 可以根据个人喜好调整颜色
+ */
 .dark .hljs {
   display: block;
   overflow-x: auto;
-  color: #c9d1d9 !important;
+  color: #c9d1d9 !important; /* 基本文本颜色 */
   background: hsl(var(--muted)) !important;
 }
 
@@ -313,14 +356,14 @@ body {
 .dark .hljs-template-variable,
 .dark .hljs-type,
 .dark .hljs-variable.language_ {
-  color: #ff7b72 !important;
+  color: #ff7b72 !important; /* 关键字颜色 */
 }
 
 .dark .hljs-title,
 .dark .hljs-title.class_,
 .dark .hljs-title.class_.inherited__,
 .dark .hljs-title.function_ {
-  color: #d2a8ff !important;
+  color: #d2a8ff !important; /* 标题、类名、函数颜色 */
 }
 
 .dark .hljs-attr,
@@ -333,35 +376,35 @@ body {
 .dark .hljs-selector-class,
 .dark .hljs-selector-id,
 .dark .hljs-variable {
-  color: #79c0ff !important;
+  color: #79c0ff !important; /* 属性、数字、选择器颜色 */
 }
 
 .dark .hljs-meta .hljs-string,
 .dark .hljs-regexp,
 .dark .hljs-string {
-  color: #a5d6ff !important;
+  color: #a5d6ff !important; /* 字符串颜色 */
 }
 
 .dark .hljs-built_in,
 .dark .hljs-symbol {
-  color: #ffa657 !important;
+  color: #ffa657 !important; /* 内建函数颜色 */
 }
 
 .dark .hljs-comment,
 .dark .hljs-code,
 .dark .hljs-formula {
-  color: #8b949e !important;
+  color: #8b949e !important; /* 注释颜色 */
 }
 
 .dark .hljs-name,
 .dark .hljs-quote,
 .dark .hljs-selector-pseudo,
 .dark .hljs-selector-tag {
-  color: #7ee787 !important;
+  color: #7ee787 !important; /* 标签名颜色 */
 }
 
 .dark .hljs-subst {
-  color: #c9d1d9 !important;
+  color: #c9d1d9 !important; /* 替换颜色 */
 }
 
 .dark .hljs-section {
@@ -899,4 +942,23 @@ body {
 .dark .markdown-editor-custom textarea:focus {
   outline: none;
   box-shadow: 0 0 0 2px hsla(var(--primary) / 0.25) inset;
+}
+
+/* 自定义滚动条样式
+ * 隐藏默认滚动条但保留滚动功能
+ */
+/* Chrome, Safari, Edge 和 Opera 浏览器 */
+::-webkit-scrollbar {
+  width: 0; /* 设置宽度为0实现滚动条隐藏 */
+  background: transparent; /* 透明背景 */
+}
+
+/* Firefox 浏览器 */
+* {
+  scrollbar-width: none; /* 隐藏滚动条 */
+}
+
+/* IE 10+ */
+* {
+  -ms-overflow-style: none; /* 隐藏滚动条 */
 }
