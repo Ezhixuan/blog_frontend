@@ -188,29 +188,6 @@ const setupMarked = () => {
     return originalHtml.replace('<img', '<img class="markdown-image" data-original-src="' + href + '"');
   };
   
-  // 重写代码块渲染器，添加复制按钮
-  const originalCodeRenderer = renderer.code;
-  (renderer as any).code = function(code: string, language: string) {
-    // 使用原始渲染器生成HTML
-    const originalHtml = (originalCodeRenderer as any).call(this, code, language);
-    
-    // 添加包装器和复制按钮
-    return `
-      <div class="code-block-wrapper">
-        <div class="code-block-header">
-          <span class="code-language">${language || 'text'}</span>
-          <button class="copy-code-button" data-code="${encodeURIComponent(code)}">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="copy-icon">
-              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-            </svg>
-          </button>
-        </div>
-        ${originalHtml}
-      </div>
-    `;
-  };
-  
   marked.setOptions(options as any);
 };
 
@@ -219,6 +196,9 @@ const renderMarkdown = () => {
   if (!article.value?.content) return;
   
   try {
+    // 先调用setupMarked确保渲染器配置正确
+    setupMarked();
+    
     // 渲染Markdown内容并确保返回字符串
     const content = marked.parse(article.value.content);
     renderedContent.value = typeof content === 'string' ? content : '';
@@ -546,24 +526,78 @@ const setupImageClickEvents = () => {
 // 添加代码块复制功能
 const setupCodeCopyButtons = () => {
   nextTick(() => {
-    const copyButtons = document.querySelectorAll('.copy-code-button');
-    copyButtons.forEach(button => {
-      button.addEventListener('click', (e) => {
+    // 获取所有代码块
+    const codeBlocks = document.querySelectorAll('.markdown-container pre code');
+    console.log('找到代码块数量:', codeBlocks.length);
+    
+    // 为每个代码块添加复制按钮
+    codeBlocks.forEach((codeBlock, index) => {
+      const pre = codeBlock.parentElement;
+      if (!pre) return;
+      
+      // 检查是否已经有复制按钮，避免重复添加
+      if (pre.querySelector('.code-copy-btn')) return;
+      
+      // 创建复制按钮容器
+      const copyBtnContainer = document.createElement('div');
+      copyBtnContainer.className = 'code-copy-container';
+      
+      // 创建复制按钮
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'code-copy-btn';
+      copyBtn.setAttribute('aria-label', '复制代码');
+      copyBtn.setAttribute('data-index', index.toString());
+      
+      // 按钮内部HTML (SVG图标 + 文字)
+      copyBtn.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+        <span class="copy-text">复制</span>
+      `;
+      
+      // 添加点击事件
+      copyBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        const button = e.currentTarget as HTMLButtonElement;
-        const code = decodeURIComponent(button.getAttribute('data-code') || '');
+        e.stopPropagation();
         
-        if (code) {
-          copy(code);
-          message.success('代码已复制到剪贴板');
+        // 获取代码块文本
+        const codeText = codeBlock.textContent || '';
+        
+        // 尝试复制到剪贴板
+        try {
+          copy(codeText);
           
-          // 显示复制成功视觉反馈
-          button.classList.add('copied');
-          setTimeout(() => {
-            button.classList.remove('copied');
-          }, 2000);
+          // 显示成功状态
+          copyBtn.classList.add('copied');
+          const textSpan = copyBtn.querySelector('.copy-text');
+          if (textSpan) {
+            const originalText = textSpan.textContent;
+            textSpan.textContent = '已复制!';
+            
+            setTimeout(() => {
+              copyBtn.classList.remove('copied');
+              if (textSpan) textSpan.textContent = originalText;
+            }, 2000);
+          }
+          
+          message.success('代码已复制到剪贴板');
+          console.log('复制成功, 代码长度:', codeText.length);
+        } catch (err) {
+          console.error('复制失败:', err);
+          message.error('复制失败');
         }
       });
+      
+      // 添加复制按钮到容器
+      copyBtnContainer.appendChild(copyBtn);
+      
+      // 给代码块父元素添加相对定位
+      pre.style.position = 'relative';
+      
+      // 将复制按钮容器添加到代码块中
+      pre.appendChild(copyBtnContainer);
     });
   });
 };
@@ -1229,5 +1263,159 @@ onUnmounted(() => {
 
 .dark .markdown-container :deep(.code-copy-button:hover) {
   background: rgba(0, 0, 0, 0.4);
+}
+
+/* 代码复制按钮样式 */
+.markdown-container :deep(.code-block-wrapper) {
+  position: relative;
+  margin: 1.5rem 0;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  background: #f8f9fa;
+}
+
+.dark .markdown-container :deep(.code-block-wrapper) {
+  background: #1a202c;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.markdown-container :deep(.code-block-header) {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.1);
+  padding: 0.5rem 1rem;
+  font-size: 0.8rem;
+  font-family: monospace;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.dark .markdown-container :deep(.code-block-header) {
+  background: rgba(0, 0, 0, 0.3);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.markdown-container :deep(.code-language) {
+  color: #718096;
+  font-weight: 500;
+}
+
+.dark .markdown-container :deep(.code-language) {
+  color: #a0aec0;
+}
+
+.markdown-container :deep(.copy-code-button) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  color: #4a5568;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.75rem;
+}
+
+.markdown-container :deep(.copy-code-button:hover) {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.markdown-container :deep(.copy-code-button.copied) {
+  background: rgba(72, 187, 120, 0.2);
+  color: #48bb78;
+}
+
+.dark .markdown-container :deep(.copy-code-button) {
+  color: #a0aec0;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dark .markdown-container :deep(.copy-code-button:hover) {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.dark .markdown-container :deep(.copy-code-button.copied) {
+  background: rgba(72, 187, 120, 0.2);
+  color: #4ade80;
+}
+
+.markdown-container :deep(.code-block-wrapper pre) {
+  margin: 0;
+  border-radius: 0;
+  background-color: transparent;
+}
+
+/* 移除旧的样式 */
+.markdown-container :deep(.code-copy-button) {
+  display: none;
+}
+
+/* 代码复制按钮样式 */
+.markdown-container :deep(pre) {
+  position: relative;
+  border-radius: 8px;
+}
+
+.markdown-container :deep(.code-copy-container) {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 10;
+}
+
+.markdown-container :deep(.code-copy-btn) {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s, background-color 0.2s;
+}
+
+.markdown-container :deep(pre:hover .code-copy-btn) {
+  opacity: 0.8;
+}
+
+.markdown-container :deep(.code-copy-btn:hover) {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.markdown-container :deep(.code-copy-btn.copied) {
+  background: rgba(52, 211, 153, 0.2);
+  color: #34d399;
+  opacity: 1;
+}
+
+/* 暗色模式适配 */
+.dark .markdown-container :deep(.code-copy-btn) {
+  background: rgba(0, 0, 0, 0.3);
+  color: #d1d5db;
+}
+
+.dark .markdown-container :deep(.code-copy-btn:hover) {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.dark .markdown-container :deep(.code-copy-btn.copied) {
+  background: rgba(52, 211, 153, 0.2);
+  color: #34d399;
+}
+
+/* 移除旧的样式 */
+.markdown-container :deep(.code-block-wrapper),
+.markdown-container :deep(.code-block-header),
+.markdown-container :deep(.copy-code-button) {
+  display: none;
 }
 </style>
