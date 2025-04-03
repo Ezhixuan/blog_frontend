@@ -112,6 +112,9 @@
       </div>
     </div>
     <BackToTop :visibility-height="300" :duration="500" />
+    
+    <!-- 添加图片预览组件 -->
+    <ImageViewer v-model:visible="previewVisible" :image-url="previewImageUrl" />
   </div>
 </template>
 
@@ -124,6 +127,7 @@ import { marked } from 'marked';
 import hljs from 'highlight.js';
 import 'highlight.js/styles/github.css';
 import 'highlight.js/styles/github-dark.css';
+import ImageViewer from '../components/ImageViewer.vue';
 import { useUserStore } from '@/stores/user';
 import { message } from 'ant-design-vue'; // 或其他你使用的消息组件
 import { getPageState } from '@/utils/pageMemory';
@@ -150,7 +154,10 @@ const hasToc = ref(false);
 const tocItems = ref<TocItem[]>([]);
 const renderedContent = ref('');
 
-// 配置Marked渲染器
+const previewVisible = ref(false);
+const previewImageUrl = ref('');
+
+// 配置Marked渲染器，增加对图片的处理
 const setupMarked = () => {
   // 使用类型断言来绕过TypeScript的类型检查
   const options = {
@@ -169,6 +176,17 @@ const setupMarked = () => {
     xhtml: false
   };
   
+  // 重写图片渲染器，添加特殊类名和数据属性
+  const renderer = options.renderer;
+  const originalImageRenderer = renderer.image;
+  
+  // 完全使用类型断言绕过TypeScript类型系统
+  (renderer as any).image = function(href: string, title: string, text: string) {
+    const originalHtml = (originalImageRenderer as any).call(this, href, title, text);
+    // 增加特殊类名，用于在DOM中识别和绑定事件
+    return originalHtml.replace('<img', '<img class="markdown-image" data-original-src="' + href + '"');
+  };
+  
   marked.setOptions(options as any);
 };
 
@@ -185,6 +203,7 @@ const renderMarkdown = () => {
     nextTick(() => {
       ensureTocDisplay();
       applyThemeToCodeBlocks();
+      setupImageClickEvents(); // 添加图片点击事件
     });
   } catch (error) {
     console.error('Markdown渲染失败:', error);
@@ -459,6 +478,31 @@ watch(currentTheme, () => {
   });
 });
 
+// 打开图片预览
+const openPreview = (imageUrl: string) => {
+  previewImageUrl.value = imageUrl;
+  previewVisible.value = true;
+};
+
+// 添加图片点击事件
+const setupImageClickEvents = () => {
+  nextTick(() => {
+    const images = document.querySelectorAll('.markdown-container .markdown-image');
+    images.forEach((img) => {
+      img.addEventListener('click', (e) => {
+        e.preventDefault();
+        const imageUrl = (e.target as HTMLImageElement).getAttribute('data-original-src');
+        if (imageUrl) {
+          openPreview(imageUrl);
+        }
+      });
+      
+      // 添加鼠标样式提示这是可点击的
+      (img as HTMLElement).style.cursor = 'zoom-in';
+    });
+  });
+};
+
 onMounted(() => {
   const id = route.params.id;
   if (id && typeof id === 'string') {
@@ -504,6 +548,15 @@ onUnmounted(() => {
 /* Markdown容器样式 */
 .markdown-container {
   @apply text-gray-800 dark:text-gray-200 leading-relaxed;
+}
+
+/* 图片样式增强 */
+.markdown-container :deep(.markdown-image) {
+  @apply cursor-zoom-in rounded-lg transition-all duration-300 hover:shadow-lg;
+  max-width: 100%;
+  height: auto;
+  margin: 1rem auto;
+  display: block;
 }
 
 .markdown-container :deep(h1),
