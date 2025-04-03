@@ -117,7 +117,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick, onUnmounted, computed } from 'vue';
+import { ref, onMounted, nextTick, onUnmounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { getArticleInfo } from '../api/articleController';
 import BackToTop from '../components/BackToTop.vue';
@@ -127,6 +127,7 @@ import VMdPreview from '@kangc/v-md-editor/lib/preview';
 import { useUserStore } from '@/stores/user';
 import { message } from 'ant-design-vue'; // 或其他你使用的消息组件
 import { getPageState } from '@/utils/pageMemory';
+import { useTheme } from '@/utils/theme';
 
 const route = useRoute();
 const router = useRouter();
@@ -415,6 +416,80 @@ const handleBackToList = () => {
     router.push('/blogs');
   }
 };
+
+// 获取主题状态以监听变化
+const { currentTheme } = useTheme();
+
+// 监听主题变化，改进重新应用样式的方法
+watch(currentTheme, () => {
+  nextTick(() => {
+    // 找到v-md-preview元素和其内部所有元素
+    const markdownElements = document.querySelectorAll('.article-markdown .v-md-editor');
+    const markdownContainer = document.querySelector('.article-markdown');
+    
+    if (markdownContainer && previewRef.value) {
+      // 设置过渡效果为'none'以防止闪烁
+      (markdownContainer as HTMLElement).style.transition = 'none';
+      
+      // 保存原始内容
+      const originalContent = article.value?.content || '';
+      
+      // 完全重新渲染Markdown内容
+      if (currentTheme.value === 'dark') {
+        // 在暗色模式下，先应用类名
+        markdownElements.forEach(el => {
+          (el as HTMLElement).dataset.theme = 'dark';
+          el.classList.add('github-markdown-body--dark');
+        });
+        
+        // 强制重新渲染整个Markdown - 使用两步渲染
+        // 步骤1: 短暂清空内容
+        previewRef.value.text = '';
+        
+        // 步骤2: 使用延迟重新设置内容
+        setTimeout(() => {
+          previewRef.value.text = originalContent;
+          
+          // 恢复过渡效果
+          setTimeout(() => {
+            (markdownContainer as HTMLElement).style.transition = '';
+            
+            // 确保暗色模式样式再次应用
+            setTimeout(() => {
+              const rerenderedElements = document.querySelectorAll('.article-markdown .v-md-editor');
+              rerenderedElements.forEach(el => {
+                (el as HTMLElement).dataset.theme = 'dark';
+                el.classList.add('github-markdown-body--dark');
+                
+                // 查找并处理内部代码块
+                const codeBlocks = el.querySelectorAll('pre, code');
+                codeBlocks.forEach(block => {
+                  block.classList.add('dark-code');
+                });
+              });
+              
+              // 对目录也进行样式更新
+              updateFloatingToc();
+            }, 50);
+          }, 50);
+        }, 50);
+      } else {
+        // 明亮模式处理类似但更简单
+        markdownElements.forEach(el => {
+          (el as HTMLElement).dataset.theme = 'light';
+          el.classList.remove('github-markdown-body--dark');
+        });
+        
+        // 简单重新渲染
+        previewRef.value.text = '';
+        setTimeout(() => {
+          previewRef.value.text = originalContent;
+          updateFloatingToc();
+        }, 50);
+      }
+    }
+  });
+});
 
 onMounted(() => {
   const id = route.params.id;

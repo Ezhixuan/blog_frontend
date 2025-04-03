@@ -962,3 +962,129 @@ body {
 * {
   -ms-overflow-style: none; /* 隐藏滚动条 */
 }
+
+/* 
+ * 文章详情页的Markdown渲染组件暗色模式样式
+ * 这些样式会在主题切换时应用
+ */
+.dark .article-markdown {
+  color: hsl(var(--card-foreground)) !important;
+}
+
+.dark .article-markdown .v-md-editor {
+  background-color: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+.dark .article-markdown img {
+  filter: brightness(0.8) contrast(1.2);
+}
+
+.dark .article-markdown .github-markdown-body {
+  background-color: transparent !important;
+  color: hsl(var(--card-foreground)) !important;
+}
+
+.dark .article-markdown pre {
+  background-color: hsl(var(--muted)) !important;
+}
+
+.dark .article-markdown code {
+  background-color: hsla(var(--muted) / 0.6) !important;
+  color: hsl(var(--primary)) !important;
+}
+
+.dark .article-markdown blockquote {
+  background-color: hsla(var(--muted) / 0.7) !important;
+  border-left-color: hsl(var(--primary)) !important;
+  color: hsl(var(--card-foreground)) !important;
+}
+
+.dark .article-markdown a {
+  color: hsl(var(--primary)) !important;
+}
+
+.dark .article-markdown hr {
+  border-color: hsl(var(--border)) !important;
+}
+
+.dark .article-markdown table th {
+  background-color: hsl(var(--muted)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+.dark .article-markdown table td {
+  border-color: hsl(var(--border)) !important;
+}
+
+/* 
+ * 确保code标签中的代码高亮正确显示
+ */
+.dark .article-markdown .hljs {
+  background-color: hsl(var(--muted)) !important;
+}
+
+/* 
+ * 修复暗色模式切换中的过渡效果
+ */
+.article-markdown, 
+.article-markdown .v-md-editor,
+.article-markdown .github-markdown-body {
+  transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+}
+
+/* 
+ * 针对代码块的暗色模式专用类
+ * 确保代码块在主题切换后保持正确的样式
+ */
+.dark-code {
+  background-color: hsl(var(--muted)) !important;
+  color: hsl(var(--card-foreground)) !important;
+}
+
+.dark-code .hljs {
+  background-color: hsl(var(--muted)) !important;
+}
+
+.dark-code .token.comment,
+.dark-code .token.prolog,
+.dark-code .token.doctype,
+.dark-code .token.cdata {
+  color: #8292a2 !important; 
+}
+
+.dark-code .token.punctuation {
+  color: #f8f8f2 !important; 
+}
+
+.dark-code .token.property,
+.dark-code .token.tag,
+.dark-code .token.constant,
+.dark-code .token.symbol,
+.dark-code .token.deleted {
+  color: #f92672 !important; 
+}
+
+.dark-code .token.boolean,
+.dark-code .token.number {
+  color: #ae81ff !important; 
+}
+
+.dark-code .token.selector,
+.dark-code .token.attr-name,
+.dark-code .token.string,
+.dark-code .token.char,
+.dark-code .token.builtin,
+.dark-code .token.inserted {
+  color: #a6e22e !important; 
+}
+
+.dark-code .token.keyword {
+  color: #66d9ef !important; 
+}
+
+.dark-code .token.function,
+.dark-code .token.class-name {
+  color: #e6db74 !important; 
+}
