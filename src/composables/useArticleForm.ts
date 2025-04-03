@@ -223,9 +223,7 @@ export function useArticleForm() {
         const url = response.data.data;
         console.log(url);
         insertImage({
-          url: url,
-          width: "auto",
-          height: "auto",
+          url: url
         });
         message.success("图片上传成功");
       } else {

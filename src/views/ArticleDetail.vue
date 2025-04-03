@@ -10,7 +10,7 @@
           <svg xmlns="http://www.w3.org/2000/svg" class="back-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
-          <span>返回</span>
+          <span>返 回</span>
         </button>
       </div>
 
@@ -129,7 +129,7 @@ import hljs from 'highlight.js';
 import 'highlight.js/styles/github.css';
 import 'highlight.js/styles/github-dark.css';
 import { useUserStore } from '@/stores/user';
-import { message } from 'ant-design-vue'; // 或其他你使用的消息组件
+import message from "@/utils/message";
 import { getPageState } from '@/utils/pageMemory';
 import { useTheme } from '@/utils/theme';
 import copy from 'copy-to-clipboard';
@@ -1362,9 +1362,64 @@ onUnmounted(() => {
 
 .markdown-container :deep(.code-copy-container) {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: 12px;
+  right: 12px;
   z-index: 10;
+  opacity: 0;
+  transition: all 0.3s ease;
+  transform: translateY(-5px);
+}
+
+.markdown-container:hover :deep(.code-copy-container),
+.markdown-container :deep(.code-copy-container):hover,
+.markdown-container :deep(.code-copy-container):focus {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.markdown-container :deep(.code-copy-btn) {
+  background: rgba(30, 144, 255, 0.8);
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.markdown-container :deep(.code-copy-btn:hover) {
+  background: rgba(30, 144, 255, 1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.markdown-container :deep(.code-copy-btn:active) {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.markdown-container :deep(.code-copy-btn.copied) {
+  background: rgba(46, 204, 113, 0.9);
+  animation: pulse 0.5s ease;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7);
+  }
+  70% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 6px rgba(46, 204, 113, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(46, 204, 113, 0);
+  }
 }
 
 .markdown-container :deep(.code-copy-btn) {
