@@ -159,75 +159,67 @@ const previewVisible = ref(false);
 const previewImageUrl = ref('');
 
 // 渲染Markdown内容
+const setupMarked = () => {
+  // 使用类型断言来绕过TypeScript的类型检查
+  const options = {
+    renderer: new marked.Renderer(),
+    highlight: function(code: string, lang: string) {
+      const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+      return hljs.highlight(code, { language }).value;
+    },
+    langPrefix: 'hljs language-', // 添加代码块css类名的前缀
+    pedantic: false,
+    gfm: true,
+    breaks: false,
+    sanitize: false,
+    smartLists: true,
+    smartypants: false,
+    xhtml: false
+  };
+  
+  // 重写图片渲染器，添加特殊类名和数据属性
+  const renderer = options.renderer;
+  const originalImageRenderer = renderer.image;
+  
+  // 完全使用类型断言绕过TypeScript类型系统
+  (renderer as any).image = function(href: string, title: string, text: string) {
+    const originalHtml = (originalImageRenderer as any).call(this, href, title, text);
+    // 增加特殊类名，用于在DOM中识别和绑定事件
+    return originalHtml.replace('<img', '<img class="markdown-image" data-original-src="' + href + '"');
+  };
+  
+  // 重写代码块渲染器，添加复制按钮
+  const originalCodeRenderer = renderer.code;
+  (renderer as any).code = function(code: string, language: string) {
+    // 使用原始渲染器生成HTML
+    const originalHtml = (originalCodeRenderer as any).call(this, code, language);
+    
+    // 添加包装器和复制按钮
+    return `
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-language">${language || 'text'}</span>
+          <button class="copy-code-button" data-code="${encodeURIComponent(code)}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="copy-icon">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+          </button>
+        </div>
+        ${originalHtml}
+      </div>
+    `;
+  };
+  
+  marked.setOptions(options as any);
+};
+
+// 渲染Markdown内容
 const renderMarkdown = () => {
   if (!article.value?.content) return;
   
   try {
-    // 创建自定义渲染器
-    const renderer = new marked.Renderer();
-    
-    // 重写图片渲染方法
-    const originalImageRenderer = renderer.image;
-    (renderer as any).image = function(href: string | null, title: string | null, text: string | null) {
-      // 处理可能的null或undefined值
-      const safeHref = href || '';
-      const safeText = text || '';
-      const safeTitle = title || '';
-
-      let widthAttr = '';
-      let heightAttr = '';
-      let styleAttr = '';
-      
-      // 仅当href为有效字符串时才尝试匹配自定义语法
-      if (typeof safeHref === 'string' && safeHref.length > 0) {
-        try {
-          // 检查内容是否包含自定义属性语法
-          const content = article.value?.content || '';
-          const escapedHref = safeHref.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-          const imgPattern = new RegExp(`!\\[[^\\]]*\\]\\(${escapedHref}\\)\\s*\\{\\{\\{([^}]+)\\}\\}\\}`);
-          const match = content.match(imgPattern);
-          
-          if (match && match[1]) {
-            const attributesStr = match[1];
-            const widthMatch = attributesStr.match(/width=["']([^"']+)["']/);
-            const heightMatch = attributesStr.match(/height=["']([^"']+)["']/);
-            
-            if (widthMatch) widthAttr = ` width="${widthMatch[1]}"`;
-            if (heightMatch) heightAttr = ` height="${heightMatch[1]}"`;
-          }
-        } catch (error) {
-          console.error('图片属性解析错误:', error);
-        }
-      }
-      
-      // 添加可点击的类名
-      return `<img src="${safeHref}" alt="${safeText}" title="${safeTitle}"${widthAttr}${heightAttr}${styleAttr} class="clickable-image">`;
-    };
-    
-    // 配置Marked使用自定义渲染器和高亮
-    const options: any = {
-      renderer: renderer,
-      highlight: function(code: string, lang: string) {
-        const language = hljs.getLanguage(lang) ? lang : 'plaintext';
-        try {
-          return hljs.highlight(code, { language }).value;
-        } catch (e) {
-          console.error('高亮显示错误:', e);
-          return code;
-        }
-      },
-      langPrefix: 'hljs language-',
-      gfm: true,
-      breaks: false,
-      pedantic: false,
-      sanitize: false,
-      smartLists: true,
-      smartypants: false
-    };
-    
-    marked.setOptions(options);
-    
-    // 渲染Markdown内容
+    // 渲染Markdown内容并确保返回字符串
     const content = marked.parse(article.value.content);
     renderedContent.value = typeof content === 'string' ? content : '';
     
@@ -235,8 +227,8 @@ const renderMarkdown = () => {
     nextTick(() => {
       ensureTocDisplay();
       applyThemeToCodeBlocks();
-      attachImageClickHandlers();
-      attachCodeCopyButtons();
+      setupImageClickEvents(); // 添加图片点击事件
+      setupCodeCopyButtons(); // 添加代码复制功能
     });
   } catch (error) {
     console.error('Markdown渲染失败:', error);
@@ -525,74 +517,54 @@ watch(currentTheme, () => {
   });
 });
 
-// 添加图片点击事件处理
-const attachImageClickHandlers = () => {
-  const images = document.querySelectorAll('.markdown-container img.clickable-image');
-  images.forEach(img => {
-    img.addEventListener('click', (e) => {
-      const target = e.target as HTMLImageElement;
-      const imageUrl = target.src;
-      if (imageUrl) {
-        previewImageUrl.value = imageUrl;
-        previewVisible.value = true;
-      }
+const openPreview = (imageUrl: string) => {
+  console.log('打开图片预览:', imageUrl); // 调试用
+  previewImageUrl.value = imageUrl;
+  previewVisible.value = true;
+};
+
+// 添加图片点击事件
+const setupImageClickEvents = () => {
+  console.log('设置图片点击事件');
+  nextTick(() => {
+    const images = document.querySelectorAll('.markdown-container img.markdown-image');
+    console.log('找到的图片数量:', images.length);
+    
+    images.forEach((img) => {
+      img.addEventListener('click', (e) => {
+        e.preventDefault();
+        const imageUrl = (e.target as HTMLImageElement).getAttribute('data-original-src');
+        console.log('图片被点击, URL:', imageUrl);
+        if (imageUrl) {
+          openPreview(imageUrl);
+        }
+      });
     });
   });
 };
 
 // 添加代码块复制功能
-const attachCodeCopyButtons = () => {
-  const codeBlocks = document.querySelectorAll('.markdown-container pre');
-  
-  codeBlocks.forEach((pre) => {
-    // 检查是否已经有复制按钮
-    if (pre.querySelector('.code-copy-button')) return;
-    
-    // 创建复制按钮
-    const copyButton = document.createElement('button');
-    copyButton.className = 'code-copy-button';
-    copyButton.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-        <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
-        <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
-      </svg>
-    `;
-    
-    // 添加复制成功效果
-    copyButton.addEventListener('click', () => {
-      const code = pre.querySelector('code');
-      if (!code) return;
-      
-      // 复制代码内容到剪贴板
-      const text = code.textContent || '';
-      copy(text);
-      
-      // 显示复制成功状态
-      copyButton.classList.add('copied');
-      copyButton.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-        </svg>
-      `;
-      
-      // 显示成功提示
-      message.success('代码已复制到剪贴板');
-      
-      // 2秒后恢复原始状态
-      setTimeout(() => {
-        copyButton.classList.remove('copied');
-        copyButton.innerHTML = `
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
-            <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
-          </svg>
-        `;
-      }, 2000);
+const setupCodeCopyButtons = () => {
+  nextTick(() => {
+    const copyButtons = document.querySelectorAll('.copy-code-button');
+    copyButtons.forEach(button => {
+      button.addEventListener('click', (e) => {
+        e.preventDefault();
+        const button = e.currentTarget as HTMLButtonElement;
+        const code = decodeURIComponent(button.getAttribute('data-code') || '');
+        
+        if (code) {
+          copy(code);
+          message.success('代码已复制到剪贴板');
+          
+          // 显示复制成功视觉反馈
+          button.classList.add('copied');
+          setTimeout(() => {
+            button.classList.remove('copied');
+          }, 2000);
+        }
+      });
     });
-    
-    // 添加按钮到pre标签
-    (pre as HTMLElement).style.position = 'relative';
-    pre.appendChild(copyButton);
   });
 };
 
