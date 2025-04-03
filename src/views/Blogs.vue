@@ -1,59 +1,73 @@
 <template>
   <div class="blogs-container">
-    <div class="bg-gradient-to-br from-white to-blue-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-md p-8 transform transition-all duration-300 hover:scale-[1.01] hover:shadow-xl">
-      <h1 class="text-3xl font-bold mb-6 flex items-center">
-        <span class="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400">Blog Posts</span>
-        <div class="flex-grow border-b-2 border-gray-200 dark:border-gray-700 ml-4"></div>
+    <div class="blogs-wrapper">
+      <h1 class="blogs-title">
+        <span class="blogs-title-text">Blog Posts</span>
+        <div class="blogs-title-divider"></div>
       </h1>
-      
+
       <!-- 文章列表 -->
-      <div class="grid gap-6">
+      <div class="blogs-grid">
         <article 
           v-for="article in articles" 
-          :key="article.id" 
-          class="group bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 dark:border-gray-700 hover:border-blue-200 dark:hover:border-blue-700 cursor-pointer relative max-h-80"
-          @click="goToArticleDetail(article.id)"
+          :key="article.id"
+          class="blog-article"
+          role="article" 
+          :aria-labelledby="`article-title-${article.id}`"
         >
-          <div class="flex flex-col md:flex-row relative h-full">
-            <!-- 左侧内容 -->
-            <div class="p-6 md:w-1/2 z-10 bg-white dark:bg-gray-800 relative overflow-hidden">
-              <h2 class="font-semibold text-lg mb-2 group-hover:text-blue-600 dark:text-white dark:group-hover:text-blue-400 transition-colors line-clamp-2">
+          <div class="article-container">
+            <!-- 左侧内容 - 点击查看文章 -->
+            <div 
+              class="article-content"
+              @click="goToArticleDetail(article.id)"
+            >
+              <h2 
+                :id="`article-title-${article.id}`"
+                class="article-title"
+              >
                 {{ article.title }}
               </h2>
-              <p class="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-3">
+              <p class="article-summary">
                 {{ article.summary || '暂无摘要' }}
               </p>
-              <div class="flex items-center text-sm text-gray-500 dark:text-gray-400 space-x-4">
-                <span class="flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div class="article-meta">
+                <span class="meta-item">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="meta-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                   {{ formatDate(article.createTime) }}
                 </span>
-                <span class="flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <span class="meta-item">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="meta-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   {{ getReadTime(article.wordCount) }} min read
                 </span>
-                <span class="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-xs font-medium">
+                <span class="article-category">
                   {{ article.categoryName }}
                 </span>
               </div>
             </div>
             
             <!-- 斜线分隔 -->
-            <div class="hidden md:block absolute top-0 bottom-0 left-1/2 w-12 z-20 transform -translate-x-1/2">
-              <div class="absolute top-0 bottom-0 w-full bg-white dark:bg-gray-800 transform rotate-6 origin-top-left shadow-md"></div>
-            </div>
+            <div class="article-divider"></div>
             
             <!-- 右侧图片 -->
-            <div class="md:w-1/2 h-48 md:h-full md:max-h-80 overflow-hidden" @click.stop="article.cover ? openPreview(article.cover) : goToArticleDetail(article.id)">
-              <div v-if="article.cover" class="h-full w-full bg-gray-50 dark:bg-gray-900">
-                <img :src="article.cover" class="w-full h-full object-cover transform transition-transform duration-300 group-hover:scale-105" :alt="article.title" loading="lazy" />
+            <div 
+              class="article-image-container"
+              @click.stop="handleImageClick(article)"
+            >
+              <div v-if="article.cover" class="article-image-wrapper">
+                <img 
+                  :src="article.cover"
+                  class="article-image"
+                  :alt="article.title" 
+                  loading="lazy" 
+                  decoding="async" 
+                />
               </div>
-              <div v-else class="h-full w-full bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div v-else class="article-image-placeholder">
+                <svg xmlns="http://www.w3.org/2000/svg" class="placeholder-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                 </svg>
               </div>
@@ -61,51 +75,62 @@
           </div>
         </article>
       </div>
-      
+
       <!-- 分页控件 -->
-      <div class="flex items-center justify-center mt-8 space-x-4" v-if="total > 0">
-        <button 
-          class="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 disabled:from-gray-300 disabled:to-gray-400 dark:disabled:from-gray-700 dark:disabled:to-gray-800 disabled:cursor-not-allowed transition-all duration-300 shadow-sm hover:shadow flex items-center space-x-2" 
-          :disabled="current === 1"
-          @click="changePage(current - 1)"
+      <div class="pagination-container" v-if="total > 0">
+        <button
+          class="pagination-button"
+          :disabled="pagination.current === 1" 
+          @click="changePage(pagination.current - 1)" 
+          aria-label="上一页"
+          :aria-disabled="pagination.current === 1"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" class="pagination-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
           </svg>
           <span>上一页</span>
         </button>
-        <span class="text-gray-600 dark:text-gray-300 font-medium">{{ current }} / {{ totalPages }}</span>
-        <button 
-          class="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 disabled:from-gray-300 disabled:to-gray-400 dark:disabled:from-gray-700 dark:disabled:to-gray-800 disabled:cursor-not-allowed transition-all duration-300 shadow-sm hover:shadow flex items-center space-x-2" 
-          :disabled="current === totalPages"
-          @click="changePage(current + 1)"
+        <span class="pagination-info">{{ pagination.current }} / {{ pagination.totalPages }}</span>
+        <button
+          class="pagination-button"
+          :disabled="pagination.current === pagination.totalPages" 
+          @click="changePage(pagination.current + 1)"
+          aria-label="下一页" 
+          :aria-disabled="pagination.current === pagination.totalPages"
         >
           <span>下一页</span>
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" class="pagination-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
           </svg>
         </button>
       </div>
     </div>
   </div>
-  
+
   <!-- 回到顶部按钮 -->
   <BackToTop :visibility-height="300" :duration="500" />
-  
+
   <!-- 图片预览组件 -->
-  <ImageViewer
-    v-model:visible="previewVisible"
-    :image-url="previewImageUrl"
-  />
+  <ImageViewer v-model:visible="previewVisible" :image-url="previewImageUrl" />
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch, onUnmounted } from 'vue';
+import { debounce } from 'lodash-es';
 import ImageViewer from '../components/ImageViewer.vue';
 import BackToTop from '../components/BackToTop.vue';
 import { useRouter, useRoute } from 'vue-router';
 import { getArticlePageList } from '../api/articleController';
 import { savePageState } from '@/utils/pageMemory';
+
+interface ArticleQueryParams {
+  current: number;
+  pageSize: number;
+  sortField?: string;
+  sortOrder?: string;
+  categoryIds?: number[];
+  tagIds?: number[];
+}
 
 const router = useRouter();
 const route = useRoute();
@@ -114,88 +139,92 @@ const total = ref(0);
 const current = ref(1);
 const pageSize = ref(10);
 const loading = ref(false);
+const previewVisible = ref(false);
+const previewImageUrl = ref('');
 
-// 计算总页数
-const totalPages = computed(() => {
-  return Math.ceil(total.value / pageSize.value);
-});
+// 计算分页信息
+const pagination = computed(() => ({
+  current: current.value,
+  pageSize: pageSize.value,
+  total: total.value,
+  totalPages: Math.ceil(total.value / pageSize.value)
+}));
+
+// 工具函数
+const utils = {
+  formatDate(dateStr?: string): string {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+    return date.toLocaleDateString('zh-CN', options);
+  },
+
+  getReadTime(wordCount?: number): number {
+    if (!wordCount) return 1;
+    return Math.max(1, Math.ceil(wordCount / 200));
+  },
+
+  getQueryParams(route: any): { categoryId?: string; tagId?: string } {
+    return {
+      categoryId: route.query.categoryId as string | undefined,
+      tagId: route.query.tagId as string | undefined
+    };
+  }
+};
 
 // 从URL参数中获取初始分页状态
 onMounted(() => {
-  // 检查URL中是否有页码参数
   const pageParam = route.query.page;
   const pageSizeParam = route.query.pageSize;
-  
+
   if (pageParam && typeof pageParam === 'string') {
     const pageNumber = parseInt(pageParam);
-    if (!isNaN(pageNumber) && pageNumber > 0) {
-      current.value = pageNumber;
+    if (!isNaN(pageNumber)) {
+      current.value = Math.max(1, pageNumber);
     }
   }
-  
+
   if (pageSizeParam && typeof pageSizeParam === 'string') {
     const pageSizeNumber = parseInt(pageSizeParam);
-    if (!isNaN(pageSizeNumber) && pageSizeNumber > 0) {
-      pageSize.value = pageSizeNumber;
+    if (!isNaN(pageSizeNumber)) {
+      pageSize.value = Math.max(1, pageSizeNumber);
     }
   }
-  
+
   loadArticles();
 });
 
-// 监听分页、分类ID和标签ID的变化
-watch([current, pageSize, () => route.query.categoryId, () => route.query.tagId], ([newCurrent, newPageSize, newCategoryId, newTagId], [oldCurrent, oldPageSize, oldCategoryId, oldTagId]) => {
-  // 检查当前路由是否为blogs页面，如果不是则不执行后续逻辑
-  if (route.path !== '/blogs') {
-    return;
-  }
-  
-  // 获取当前的categoryId和tagId参数
-  const categoryId = route.query.categoryId;
-  const tagId = route.query.tagId;
+// 监听路由参数变化
+watch(
+  [() => current.value, () => pageSize.value, () => route.query.categoryId, () => route.query.tagId],
+  ([newCurrent, newPageSize, newCategoryId, newTagId], [oldCurrent, oldPageSize, oldCategoryId, oldTagId]) => {
+    if (route.path !== '/blogs') return;
 
-  // 更新URL，不触发路由变化
-  const query: Record<string, string> = {
-    page: newCurrent.toString(),
-    pageSize: newPageSize.toString()
-  };
+    const { categoryId, tagId } = utils.getQueryParams(route);
+    const query: Record<string, string> = {
+      page: newCurrent.toString(),
+      pageSize: newPageSize.toString()
+    };
 
-  // 如果有分类ID，保留在URL中
-  if (categoryId) {
-    query.categoryId = categoryId as string;
-  }
-  // 如果有标签ID，保留在URL中
-  if (tagId) {
-    query.tagId = tagId as string;
-  }
+    if (categoryId) query.categoryId = categoryId;
+    if (tagId) query.tagId = tagId;
 
-  router.replace({
-    path: '/blogs',
-    query
-  });
+    router.replace({ path: '/blogs', query });
+    saveCurrentPageState();
 
-  // 保存当前分页状态和滚动位置
-  saveCurrentPageState();
+    if (newCategoryId !== oldCategoryId || newTagId !== oldTagId) {
+      current.value = 1;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
 
-  // 当分类ID或标签ID变化时，重置为第一页并回到顶部
-  if (newCategoryId!== oldCategoryId || newTagId!== oldTagId) {
-    current.value = 1;
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    });
-  }
-
-  // 加载文章数据
-  loadArticles();
-}, { flush: 'sync' }); // 使用sync模式，确保在DOM更新前执行
+    loadArticles();
+  },
+  { flush: 'sync' }
+);
 
 // 保存当前分页状态
 const saveCurrentPageState = () => {
-  // 获取当前的分类ID和标签ID（如果有）
-  const categoryId = route.query.categoryId as string | undefined;
-  const tagId = route.query.tagId as string | undefined;
-  
+  const { categoryId, tagId } = utils.getQueryParams(route);
   savePageState(
     current.value,
     pageSize.value,
@@ -207,32 +236,24 @@ const saveCurrentPageState = () => {
 
 // 加载文章列表
 const loadArticles = async () => {
+  if (loading.value) return;
+
   loading.value = true;
   try {
-    const params: API.ArticleQueryDTO = {
+    const params: ArticleQueryParams = {
       current: current.value,
       pageSize: pageSize.value,
       sortField: 'createTime',
       sortOrder: 'descend'
     };
-    
-    // 如果URL中有categoryId参数，添加到查询条件
-    const categoryId = route.query.categoryId;
-    if (categoryId && typeof categoryId === 'string') {
-      params.categoryIds = [parseInt(categoryId)];
-    }
-    
-    // 如果URL中有tagId参数，添加到查询条件
-    const tagId = route.query.tagId;
-    if (tagId && typeof tagId === 'string') {
-      params.tagIds = [parseInt(tagId)];
-    }
-    
+
+    const { categoryId, tagId } = utils.getQueryParams(route);
+    if (categoryId) params.categoryIds = [parseInt(categoryId)];
+    if (tagId) params.tagIds = [parseInt(tagId)];
+
     const res = await getArticlePageList(params);
-    console.log('API响应数据:', res);
-    
-    // 根据实际返回数据结构进行处理
-    if (res.data && res.data.data) {
+
+    if (res.data?.data) {
       articles.value = res.data.data.data || [];
       total.value = res.data.data.total || 0;
     } else {
@@ -251,65 +272,290 @@ const loadArticles = async () => {
 
 // 切换页面
 const changePage = (page: number) => {
-  // 防止重复加载，如果页码相同则不处理
-  if (current.value === page) return;
-  
-  // 设置加载状态，防止重复点击
-  if (loading.value) return;
-  
+  if (current.value === page || loading.value) return;
   current.value = page;
-  
-  // 回到顶部
-  window.scrollTo({
-    top: 0,
-    behavior: 'smooth'
-  });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
-// 格式化日期
-const formatDate = (dateStr?: string) => {
-  if (!dateStr) return '';
-  const date = new Date(dateStr);
-  const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
-  return date.toLocaleDateString('zh-CN', options);
+// 图片点击处理
+const handleImageClick = (article: API.ArticlePageVO) => {
+  if (article.cover) {
+    openPreview(article.cover);
+  } else {
+    goToArticleDetail(article.id);
+  }
 };
 
-// 计算阅读时间
-const getReadTime = (wordCount?: number) => {
-  if (!wordCount) return 1;
-  // 假设阅读速度为每分钟200字
-  return Math.max(1, Math.ceil(wordCount / 200));
-};
-
-// 跳转到文章详情页
+// 恢复原有的 goToArticleDetail 函数
 const goToArticleDetail = (id?: number) => {
   if (id) {
-    // 保存当前分页状态再跳转
     saveCurrentPageState();
     router.push(`/article/${id}`);
   }
 };
 
-// 图片预览功能
-const previewVisible = ref(false);
-const previewImageUrl = ref('');
-
+// 图片预览功能保持不变
 const openPreview = (imageUrl?: string) => {
   if (!imageUrl) return;
   previewImageUrl.value = imageUrl;
   previewVisible.value = true;
 };
+
+// 暴露工具方法给模板
+const { formatDate, getReadTime } = utils;
 </script>
 
+
 <style scoped>
+/* 基础容器样式 */
 .blogs-container {
   @apply space-y-8;
+  container-type: inline-size;
 }
-.article {
-  width: 300px;
-  height: 200px;
-  padding: 10px;
-  margin: 10px;
-  font-size: 14px;
+
+.blogs-wrapper {
+  @apply rounded-2xl shadow-md p-8;
+  @apply transform transition-all duration-300;
+  @apply hover:scale-[1.01] hover:shadow-xl;
+  background: linear-gradient(to bottom right, white, #f0f9ff);
+  
+  &.dark {
+    background: linear-gradient(to bottom right, #1f2937, #111827);
+  }
+}
+
+/* 标题样式 */
+.blogs-title {
+  @apply text-3xl font-bold mb-6 flex items-center;
+}
+
+.blogs-title-text {
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  background-image: linear-gradient(to right, #2563eb, #7c3aed);
+  
+  &.dark {
+    background-image: linear-gradient(to right, #60a5fa, #a78bfa);
+  }
+}
+
+.blogs-title-divider {
+  @apply flex-grow ml-4;
+  border-bottom: 2px solid #e5e7eb;
+  
+  &.dark {
+    border-color: #374151;
+  }
+}
+
+/* 文章网格布局 */
+.blogs-grid {
+  @apply grid gap-6;
+}
+
+/* 文章卡片样式 - 注意移除了 @apply group */
+.blog-article {
+  @apply relative max-h-80;
+  @apply rounded-xl overflow-hidden;
+  @apply shadow-sm hover:shadow-md;
+  @apply transition-all duration-300;
+  @apply cursor-pointer;
+  background-color: white;
+  border: 1px solid #f3f4f6;
+  
+  &:hover {
+    border-color: #bfdbfe;
+  }
+
+  &.dark {
+    background-color: #1f2937;
+    border-color: #374151;
+    
+    &:hover {
+      border-color: #1d4ed8;
+    }
+  }
+}
+
+/* 需要在模板中保留 group 类名 */
+.article-container {
+  @apply flex relative h-full;
+  @apply flex-col md:flex-row;
+}
+
+.article-content {
+  @apply p-6 relative overflow-hidden;
+  @apply cursor-pointer;
+  @apply bg-white;
+  width: 50%;
+  
+  &.dark {
+    @apply bg-gray-800;
+  }
+}
+
+.article-title {
+  @apply font-semibold text-lg mb-2;
+  @apply line-clamp-2;
+  @apply transition-colors;
+  color: inherit;
+  
+  .blog-article:hover & {
+    color: #2563eb;
+  }
+  
+  .dark .blog-article:hover & {
+    color: #60a5fa;
+  }
+}
+
+/* 其余样式保持不变... */
+.article-summary {
+  @apply text-sm mb-4;
+  @apply line-clamp-3;
+  color: #4b5563;
+  
+  &.dark {
+    color: #d1d5db;
+  }
+}
+
+.article-meta {
+  @apply flex items-center text-sm space-x-4;
+  color: #6b7280;
+  
+  &.dark {
+    color: #9ca3af;
+  }
+}
+
+.meta-item {
+  @apply flex items-center;
+}
+
+.meta-icon {
+  @apply h-4 w-4 mr-1;
+}
+
+.article-category {
+  @apply px-2 py-1 rounded-full text-xs font-medium;
+  background-color: #dbeafe;
+  color: #1e40af;
+  
+  &.dark {
+    background-color: #1e3a8a;
+    color: #93c5fd;
+  }
+}
+
+.article-divider {
+  @apply hidden md:block absolute top-0 bottom-0 left-1/2 w-12 z-20;
+  transform: translateX(-50%);
+  
+  & > div {
+    @apply absolute top-0 bottom-0 w-full shadow-md;
+    background-color: white;
+    transform: rotate(6deg);
+    transform-origin: top left;
+    
+    &.dark {
+      background-color: #1f2937;
+    }
+  }
+}
+
+.article-image-container {
+  @apply h-48 md:h-full overflow-hidden;
+  @apply cursor-pointer;
+  width: 50%;
+}
+
+.article-image-wrapper {
+  @apply h-full w-full;
+  background-color: #f9fafb;
+  
+  &.dark {
+    background-color: #111827;
+  }
+}
+
+.article-image {
+  @apply w-full h-full object-cover;
+  @apply transform transition-transform duration-300;
+  
+  .blog-article:hover & {
+    transform: scale(1.05);
+  }
+}
+
+.article-image-placeholder {
+  @apply h-full w-full flex items-center justify-center;
+  background: linear-gradient(to bottom right, #dbeafe, #ddd6fe);
+  
+  &.dark {
+    background: linear-gradient(to bottom right, #1e3a8a, #5b21b6);
+  }
+}
+
+.placeholder-icon {
+  @apply h-16 w-16;
+  color: #2563eb;
+  
+  &.dark {
+    color: #60a5fa;
+  }
+}
+
+.pagination-container {
+  @apply flex items-center justify-center mt-8 space-x-4;
+}
+
+.pagination-button {
+  @apply px-4 py-2 text-white rounded-lg;
+  @apply flex items-center space-x-2;
+  @apply transition-all duration-300 shadow-sm hover:shadow;
+  background: linear-gradient(to right, #3b82f6, #2563eb);
+  
+  &:hover {
+    background: linear-gradient(to right, #2563eb, #1d4ed8);
+  }
+  
+  &:disabled {
+    background: linear-gradient(to right, #d1d5db, #9ca3af);
+    @apply cursor-not-allowed;
+    
+    &.dark {
+      background: linear-gradient(to right, #4b5563, #374151);
+    }
+  }
+}
+
+.pagination-icon {
+  @apply h-4 w-4;
+}
+
+.pagination-info {
+  @apply font-medium;
+  color: #4b5563;
+  
+  &.dark {
+    color: #d1d5db;
+  }
+}
+
+@container (max-width: 768px) {
+  .article-container {
+    flex-direction: column;
+  }
+  
+  .article-content, .article-image-container {
+    width: 100%;
+  }
+}
+
+/* 性能优化 - 保留 will-change */
+.blog-article {
+  will-change: transform, box-shadow;
 }
 </style>
