@@ -508,12 +508,12 @@ const setupImageClickEvents = () => {
   console.log('设置图片点击事件');
   nextTick(() => {
     const images = document.querySelectorAll('.markdown-container img.markdown-image');
-    console.log('找到的图片数量:', images.length);
+    console.log('找到的图片数量:', images);
     
     images.forEach((img) => {
       img.addEventListener('click', (e) => {
         e.preventDefault();
-        const imageUrl = (e.target as HTMLImageElement).getAttribute('data-original-src');
+        const imageUrl = e.target.currentSrc;
         console.log('图片被点击, URL:', imageUrl);
         if (imageUrl) {
           openPreview(imageUrl);
