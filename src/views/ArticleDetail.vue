@@ -55,8 +55,7 @@
                 {{ article.summary }}
               </div>
 
-              <v-md-preview v-if="article.content" ref="previewRef" :text="article.content"
-                :include-level="[1, 2, 3, 4]" @rendered="onContentRendered" class="article-markdown" />
+              <div v-if="article.content" class="markdown-container" ref="markdownContainer" v-html="renderedContent"></div>
 
               <p v-if="!article.content" class="no-content-tip">文章详情内容暂未提供</p>
             </div>
@@ -121,9 +120,10 @@ import { ref, onMounted, nextTick, onUnmounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { getArticleInfo } from '../api/articleController';
 import BackToTop from '../components/BackToTop.vue';
-import createCopyCodePlugin from '@kangc/v-md-editor/lib/plugins/copy-code/index';
-import '@kangc/v-md-editor/lib/plugins/copy-code/copy-code.css';
-import VMdPreview from '@kangc/v-md-editor/lib/preview';
+import { marked } from 'marked';
+import hljs from 'highlight.js';
+import 'highlight.js/styles/github.css';
+import 'highlight.js/styles/github-dark.css';
 import { useUserStore } from '@/stores/user';
 import { message } from 'ant-design-vue'; // 或其他你使用的消息组件
 import { getPageState } from '@/utils/pageMemory';
@@ -137,7 +137,7 @@ const articleId = ref<string | null>(null);
 const article = ref<any>(null);
 const loading = ref(true);
 const readingProgress = ref(0);
-const previewRef = ref<any>(null);
+const markdownContainer = ref<HTMLElement | null>(null);
 let observer: IntersectionObserver | null = null;
 const scrollThrottleTimeout = ref<ReturnType<typeof setTimeout> | null>(null);
 
@@ -148,6 +148,65 @@ const isMobile = computed(() => window.innerWidth < 768);
 const floatingTocRef = ref<HTMLElement | null>(null);
 const hasToc = ref(false);
 const tocItems = ref<TocItem[]>([]);
+const renderedContent = ref('');
+
+// 配置Marked渲染器
+const setupMarked = () => {
+  // 使用类型断言来绕过TypeScript的类型检查
+  const options = {
+    renderer: new marked.Renderer(),
+    highlight: function(code: string, lang: string) {
+      const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+      return hljs.highlight(code, { language }).value;
+    },
+    langPrefix: 'hljs language-', // 添加代码块css类名的前缀
+    pedantic: false,
+    gfm: true,
+    breaks: false,
+    sanitize: false,
+    smartLists: true,
+    smartypants: false,
+    xhtml: false
+  };
+  
+  marked.setOptions(options as any);
+};
+
+// 渲染Markdown内容
+const renderMarkdown = () => {
+  if (!article.value?.content) return;
+  
+  try {
+    // 渲染Markdown内容并确保返回字符串
+    const content = marked.parse(article.value.content);
+    renderedContent.value = typeof content === 'string' ? content : '';
+    
+    // 下一个tick后处理目录和代码块
+    nextTick(() => {
+      ensureTocDisplay();
+      applyThemeToCodeBlocks();
+    });
+  } catch (error) {
+    console.error('Markdown渲染失败:', error);
+    renderedContent.value = '<p>内容渲染失败</p>';
+  }
+};
+
+// 根据当前主题应用代码块样式
+const applyThemeToCodeBlocks = () => {
+  const codeBlocks = document.querySelectorAll('.markdown-container pre code');
+  const isDark = currentTheme.value === 'dark';
+  
+  codeBlocks.forEach(block => {
+    if (isDark) {
+      block.classList.add('github-dark');
+      block.classList.remove('github');
+    } else {
+      block.classList.add('github');
+      block.classList.remove('github-dark');
+    }
+  });
+};
 
 interface TocItem {
   level: number;
@@ -160,9 +219,8 @@ interface TocItem {
 const goBack = () => router.back();
 const formatDate = (dateStr?: string) => dateStr ? new Date(dateStr).toLocaleDateString('zh-CN') : '';
 
-VMdPreview.use(createCopyCodePlugin({
-  afterCopy: () => message.success('复制成功')
-}));
+// 初始化marked设置
+setupMarked();
 
 const handleEditArticle = () => {
   if (!article.value) return;
@@ -187,7 +245,9 @@ const fetchArticleDetail = async (id: string) => {
     loading.value = true;
     const res = await getArticleInfo({ id });
     article.value = res.data?.data || null;
-    nextTick(onContentRendered);
+    nextTick(() => {
+      renderMarkdown();
+    });
   } catch (error) {
     article.value = null;
   } finally {
@@ -277,16 +337,6 @@ const scrollToAnchor = (anchorId: string) => {
   }
 };
 
-// 在onContentRendered方法中添加
-const onContentRendered = () => {
-  console.log('TOC Items:', previewRef.value?.previewRef?.tocItems); // 添加这行检查
-  if (previewRef.value?.previewRef?.tocItems) {
-    tocItems.value = previewRef.value.previewRef.tocItems;
-    hasToc.value = tocItems.value.length > 0;
-    nextTick(updateFloatingToc);
-  }
-};
-
 const generateStableAnchor = (text: string, existingAnchors: Set<string>) => {
   let anchor = text
     .toLowerCase()
@@ -309,48 +359,30 @@ const generateStableAnchor = (text: string, existingAnchors: Set<string>) => {
 
 const ensureTocDisplay = () => {
   nextTick(() => {
-    if (!hasToc.value && article.value?.content) {
-      const existingAnchors = new Set<string>();
-      const articleContent = document.querySelector('.article-markdown');
-      const headings = articleContent?.querySelectorAll('h1, h2, h3, h4, h5, h6') || [];
+    const existingAnchors = new Set<string>();
+    const articleContent = document.querySelector('.markdown-container');
+    const headings = articleContent?.querySelectorAll('h1, h2, h3, h4, h5, h6') || [];
 
-      if (headings.length > 0) {
-        tocItems.value = Array.from(headings).map((h, i) => {
-          // 确保标题有ID
-          if (!h.id) {
-            h.id = generateStableAnchor(h.textContent || `heading-${i}`, existingAnchors);
-          }
+    if (headings.length > 0) {
+      tocItems.value = Array.from(headings).map((h, i) => {
+        // 确保标题有ID
+        if (!h.id) {
+          h.id = generateStableAnchor(h.textContent || `heading-${i}`, existingAnchors);
+        }
 
-          return {
-            level: parseInt(h.tagName.substring(1)),
-            text: h.textContent?.trim() || `标题 ${i + 1}`,
-            anchor: h.id,
-            active: false
-          };
-        });
+        return {
+          level: parseInt(h.tagName.substring(1)),
+          text: h.textContent?.trim() || `标题 ${i + 1}`,
+          anchor: h.id,
+          active: false
+        };
+      });
 
-        // 构建层级结构
-        const stack: any[] = [{ children: tocItems.value, level: 0 }];
-        const flatToc = [...tocItems.value];
-
-        flatToc.forEach(item => {
-          // 找到合适的父级
-          while (stack.length > 0 && stack[stack.length - 1].level >= item.level) {
-            stack.pop();
-          }
-
-          const parent = stack[stack.length - 1];
-          if (!parent.children) parent.children = [];
-          parent.children.push(item);
-          stack.push(item);
-        });
-
-        hasToc.value = true;
-        nextTick(() => {
-          updateFloatingToc();
-          updateActiveTocItem(); // 初始化高亮状态
-        });
-      }
+      hasToc.value = tocItems.value.length > 0;
+      nextTick(() => {
+        updateFloatingToc();
+        updateActiveTocItem(); // 初始化高亮状态
+      });
     }
   });
 };
@@ -420,74 +452,10 @@ const handleBackToList = () => {
 // 获取主题状态以监听变化
 const { currentTheme } = useTheme();
 
-// 监听主题变化，改进重新应用样式的方法
+// 监听主题变化，应用新的样式
 watch(currentTheme, () => {
   nextTick(() => {
-    // 找到v-md-preview元素和其内部所有元素
-    const markdownElements = document.querySelectorAll('.article-markdown .v-md-editor');
-    const markdownContainer = document.querySelector('.article-markdown');
-    
-    if (markdownContainer && previewRef.value) {
-      // 设置过渡效果为'none'以防止闪烁
-      (markdownContainer as HTMLElement).style.transition = 'none';
-      
-      // 保存原始内容
-      const originalContent = article.value?.content || '';
-      
-      // 完全重新渲染Markdown内容
-      if (currentTheme.value === 'dark') {
-        // 在暗色模式下，先应用类名
-        markdownElements.forEach(el => {
-          (el as HTMLElement).dataset.theme = 'dark';
-          el.classList.add('github-markdown-body--dark');
-        });
-        
-        // 强制重新渲染整个Markdown - 使用两步渲染
-        // 步骤1: 短暂清空内容
-        previewRef.value.text = '';
-        
-        // 步骤2: 使用延迟重新设置内容
-        setTimeout(() => {
-          previewRef.value.text = originalContent;
-          
-          // 恢复过渡效果
-          setTimeout(() => {
-            (markdownContainer as HTMLElement).style.transition = '';
-            
-            // 确保暗色模式样式再次应用
-            setTimeout(() => {
-              const rerenderedElements = document.querySelectorAll('.article-markdown .v-md-editor');
-              rerenderedElements.forEach(el => {
-                (el as HTMLElement).dataset.theme = 'dark';
-                el.classList.add('github-markdown-body--dark');
-                
-                // 查找并处理内部代码块
-                const codeBlocks = el.querySelectorAll('pre, code');
-                codeBlocks.forEach(block => {
-                  block.classList.add('dark-code');
-                });
-              });
-              
-              // 对目录也进行样式更新
-              updateFloatingToc();
-            }, 50);
-          }, 50);
-        }, 50);
-      } else {
-        // 明亮模式处理类似但更简单
-        markdownElements.forEach(el => {
-          (el as HTMLElement).dataset.theme = 'light';
-          el.classList.remove('github-markdown-body--dark');
-        });
-        
-        // 简单重新渲染
-        previewRef.value.text = '';
-        setTimeout(() => {
-          previewRef.value.text = originalContent;
-          updateFloatingToc();
-        }, 50);
-      }
-    }
+    applyThemeToCodeBlocks();
   });
 });
 
@@ -498,7 +466,6 @@ onMounted(() => {
     fetchArticleDetail(id);
   }
 
-  setTimeout(ensureTocDisplay, 1000);
   window.addEventListener('scroll', handleScroll, { passive: true });
   window.addEventListener('resize', handleScroll);
 
@@ -515,11 +482,6 @@ onMounted(() => {
       threshold: 1.0
     }
   );
-
-  // 观察所有标题
-  document.querySelectorAll('h1, h2, h3, h4, h5, h6').forEach(h => {
-    if (h.id && observer) observer.observe(h);
-  });
 });
 
 onUnmounted(() => {
@@ -537,6 +499,110 @@ onUnmounted(() => {
 <style scoped>
 .article-container {
   @apply w-[85%] md:w-[80%] lg:w-[75%] mx-auto px-4 py-8;
+}
+
+/* Markdown容器样式 */
+.markdown-container {
+  @apply text-gray-800 dark:text-gray-200 leading-relaxed;
+}
+
+.markdown-container :deep(h1),
+.markdown-container :deep(h2),
+.markdown-container :deep(h3),
+.markdown-container :deep(h4),
+.markdown-container :deep(h5),
+.markdown-container :deep(h6) {
+  @apply font-bold my-4 text-gray-900 dark:text-white;
+}
+
+.markdown-container :deep(h1) {
+  @apply text-3xl mt-8 mb-4 pb-2 border-b border-gray-200 dark:border-gray-700;
+}
+
+.markdown-container :deep(h2) {
+  @apply text-2xl mt-6 mb-3;
+}
+
+.markdown-container :deep(h3) {
+  @apply text-xl mt-5 mb-3;
+}
+
+.markdown-container :deep(h4) {
+  @apply text-lg mt-4 mb-2;
+}
+
+.markdown-container :deep(p) {
+  @apply my-4;
+}
+
+.markdown-container :deep(a) {
+  @apply text-blue-600 dark:text-blue-400 hover:underline;
+}
+
+.markdown-container :deep(ul),
+.markdown-container :deep(ol) {
+  @apply pl-6 my-4;
+}
+
+.markdown-container :deep(ul) {
+  @apply list-disc;
+}
+
+.markdown-container :deep(ol) {
+  @apply list-decimal;
+}
+
+.markdown-container :deep(li) {
+  @apply my-1;
+}
+
+.markdown-container :deep(blockquote) {
+  @apply pl-4 py-1 border-l-4 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 my-4 text-gray-700 dark:text-gray-300 italic;
+}
+
+.markdown-container :deep(pre) {
+  @apply rounded-lg p-4 my-6 overflow-x-auto;
+}
+
+.markdown-container :deep(code) {
+  @apply font-mono text-sm;
+}
+
+.markdown-container :deep(code:not(pre code)) {
+  @apply bg-gray-100 dark:bg-gray-800 rounded px-1 py-0.5 text-red-600 dark:text-red-400;
+}
+
+.markdown-container :deep(table) {
+  @apply w-full my-6 border-collapse overflow-hidden rounded-lg;
+}
+
+.markdown-container :deep(thead) {
+  @apply bg-gray-100 dark:bg-gray-800;
+}
+
+.markdown-container :deep(th) {
+  @apply p-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700;
+}
+
+.markdown-container :deep(td) {
+  @apply p-3 border-b border-gray-200 dark:border-gray-800;
+}
+
+.markdown-container :deep(tr:nth-child(even)) {
+  @apply bg-gray-50 dark:bg-gray-900/50;
+}
+
+.markdown-container :deep(img) {
+  @apply max-w-full h-auto my-6 rounded-lg mx-auto;
+}
+
+.markdown-container :deep(hr) {
+  @apply my-8 border-gray-200 dark:border-gray-700;
+}
+
+/* 为GitHub主题的代码块提供暗色模式支持 */
+.github-dark {
+  @apply dark:bg-gray-900 !important;
 }
 
 .reading-progress-container {
