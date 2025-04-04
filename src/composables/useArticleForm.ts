@@ -10,7 +10,7 @@ import {
   deleteTag,
   deleteCategory,
 } from "@/api/articleController";
-import { upload } from "@/api/pictureController";
+import { upload, getPictureList } from "@/api/pictureController";
 import { mockGenerateBlogContent } from "@/api/ai";
 import { useAsyncOperation } from "./useAsyncOperation";
 
@@ -52,6 +52,30 @@ export function useArticleForm() {
 
   // 图片上传相关
   const isUploading = ref(false);
+
+  const pictureList = ref<API.PictureUploadVO[]>([]);
+  const isPictureModalVisible = ref(false);
+  const isFetchingPictures = ref(false);
+
+  const fetchPictureList = async () => {
+    try {
+      isFetchingPictures.value = true;
+      const res = await getPictureList();
+      if (res.data?.code === 0 && res.data?.data) {
+        pictureList.value = res.data.data.data || [];
+      }
+    } catch (error) {
+      console.error("获取图片列表失败:", error);
+      message.error("获取图片列表失败");
+    } finally {
+      isFetchingPictures.value = false;
+    }
+  };
+
+  const showPictureModal = async () => {
+    isPictureModalVisible.value = true;
+    await fetchPictureList();
+  };
 
   // 异步操作封装
   const { isLoading, execute: submitArticle } = useAsyncOperation(
@@ -155,86 +179,79 @@ export function useArticleForm() {
   const handleGenerateContent = () => generateContent(title.value);
 
   // 上传图片方法
-  const handleImageUpload = async (event: Event) => {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
 
-    if (!file) {
-      return;
-    }
+const handleImageUpload = async (options: any) => {
+  const { file } = options;
+  isUploading.value = true;
 
-    // 检查文件类型
-    if (!file.type.includes("image/")) {
-      message.error("请上传图片文件");
-      return;
-    }
+  try {
+    const response = await upload(
+      { type: "BLOG_COVER" },
+      file
+    );
 
-    isUploading.value = true;
+    if (response.data?.code === 0 && response.data?.data) {
+      const imageUrl = response.data.data;
+      message.success("图片上传成功");
+      
+      // 添加到图片列表
+      pictureList.value.unshift({
+        id: Date.now().toString(),
+        url: imageUrl,
+        name: file.name
+      });
 
-    try {
-      // 只提供必要的简单参数，避免复杂对象序列化问题
-      const response = await upload(
-        {
-          type: "BLOG_COVER", // 只保留简单的类型参数
-        },
-        file
-      );
-
-      if (response.data?.code === 0 && response.data?.data) {
-        coverUrl.value = response.data.data;
-        message.success("图片上传成功");
-      } else {
-        message.error("图片上传失败");
-      }
-    } catch (error) {
-      console.error("图片上传出错:", error);
-      message.error("图片上传失败");
-    } finally {
-      isUploading.value = false;
-    }
-  };
-
-  const handleUploadImage2 = async (event: any, insertImage: any, files: any) => {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-
-    if (!file) {
-      return;
-    }
-
-    // 检查文件类型
-    if (!file.type.includes("image/")) {
-      message.error("请上传图片文件");
-      return;
-    }
-
-    isUploading.value = true;
-
-    try {
-      // 只提供必要的简单参数，避免复杂对象序列化问题
-      const response = await upload(
-        {
-          type: "BLOG_COVER", // 只保留简单的类型参数
-        },
-        file
-      );
-
-      if (response.data?.code === 0 && response.data?.data) {
-        const url = response.data.data;
-        console.log(url);
-        insertImage({
-          url: url
+      // 判断是封面图片还是markdown插入图片
+      if (activeUploadHandler.value) {
+        // 如果是markdown编辑器调用的上传
+        activeUploadHandler.value({
+          url: imageUrl,
+          desc: file.name
         });
-        message.success("图片上传成功");
       } else {
-        message.error("图片上传失败");
+        // 如果是封面图片上传
+        coverUrl.value = imageUrl;
       }
-    } catch (error) {
-      console.error("图片上传出错:", error);
+      
+      isPictureModalVisible.value = false;
+    } else {
       message.error("图片上传失败");
-    } finally {
-      isUploading.value = false;
     }
+  } catch (error) {
+    console.error("图片上传出错:", error);
+    message.error("图片上传失败");
+  } finally {
+    isUploading.value = false;
+    activeUploadHandler.value = null;
+  }
+};
+
+  const activeUploadHandler = ref<Function | null>(null);
+
+  const handleUploadImage2 = async (event: any, insertImage: Function) => {
+    // 保存插入图片的函数
+    activeUploadHandler.value = insertImage;
+    // 显示图片选择模态窗口
+    isPictureModalVisible.value = true;
+    await fetchPictureList();
+  };
+  
+  // 修改 selectPicture 方法
+  const selectPicture = (url: string) => {
+    if (activeUploadHandler.value !== null) {
+      // 如果是markdown编辑器调用的上传
+      if (activeUploadHandler.value) {
+        activeUploadHandler.value({
+          url: url,
+          desc: '图片描述' // 可以修改为可配置
+        });
+      }
+    } else {
+      // 如果是封面图片上传
+      coverUrl.value = url;
+    }
+    isPictureModalVisible.value = false;
+    activeUploadHandler.value = null; // 重置
   };
 
   // 移除封面图片
@@ -296,12 +313,12 @@ export function useArticleForm() {
   // 删除标签
   const deleteTagFunction = async (tagId: number | undefined) => {
     if (tagId === undefined) return;
-    
+
     try {
       await deleteTag({ id: tagId });
       tags.value = tags.value.filter((tag) => tag.id !== tagId);
       // 如果删除的标签正在被选中，也从选择中移除
-      tagIds.value = tagIds.value.filter(id => id !== tagId);
+      tagIds.value = tagIds.value.filter((id) => id !== tagId);
       message.success("标签删除成功");
     } catch (error) {
       message.error("标签删除失败");
@@ -311,7 +328,7 @@ export function useArticleForm() {
   // 删除分类
   const deleteCategoryFunction = async (id: number | undefined) => {
     if (id === undefined) return;
-    
+
     try {
       await deleteCategory({ id });
       categories.value = categories.value.filter(
@@ -330,38 +347,46 @@ export function useArticleForm() {
   // 初始化文章数据（编辑模式）
   const initArticleData = (id: number, data: any) => {
     articleId.value = id;
-    title.value = data.title || '';
-    content.value = data.content || '';
-    summary.value = data.summary || '';
+    title.value = data.title || "";
+    content.value = data.content || "";
+    summary.value = data.summary || "";
     categoryId.value = data.categoryId;
     tagIds.value = data.tagIds || [];
     status.value = data.status || 1;
-    coverUrl.value = data.coverUrl || '';
-    
+    coverUrl.value = data.coverUrl || "";
+
     // 如果有分类名称和标签名称，预先处理选择项
     const categoryName = data.categoryName;
     const tagNamesList = data.tagNames || [];
-    
+
     // 当分类和标签数据加载完成后，设置正确的显示
     if (categoryName && categories.value.length > 0) {
       // 如果找不到对应的分类ID，但有分类名称，则创建一个临时分类
-      if (!categories.value.some(c => c.id === categoryId.value)) {
-        console.log(`未找到ID为${categoryId.value}的分类，使用名称${categoryName}进行展示`);
+      if (!categories.value.some((c) => c.id === categoryId.value)) {
+        console.log(
+          `未找到ID为${categoryId.value}的分类，使用名称${categoryName}进行展示`
+        );
         // 这里不添加到categories，只是为了UI展示，实际提交时仍使用服务器的分类ID
       }
     }
-    
-    if (tagNamesList.length > 0 && tagIds.value.length > 0 && tags.value.length > 0) {
+
+    if (
+      tagNamesList.length > 0 &&
+      tagIds.value.length > 0 &&
+      tags.value.length > 0
+    ) {
       // 如果有标签ID和名称，但在现有标签中找不到，先展示这些名称
-      console.log(`设置标签展示，标签ID:${tagIds.value.join(',')}, 标签名称:${tagNamesList.join(',')}`);
+      console.log(
+        `设置标签展示，标签ID:${tagIds.value.join(",")}, 标签名称:${tagNamesList.join(",")}`
+      );
     }
-    
+
     // 展开内容编辑区
     contentExpanded.value = true;
     // 确保表单可见
     formVisible.value = true;
     // 立即激活所有动画
-    Object.keys(animations).forEach(key => {
+    Object.keys(animations).forEach((key) => {
       animations[key] = true;
     });
   };
@@ -405,6 +430,12 @@ export function useArticleForm() {
     handleImageUpload,
     handleUploadImage2,
     removeCoverImage,
+    pictureList,
+    isPictureModalVisible,
+    isFetchingPictures,
+    fetchPictureList,
+    showPictureModal,
+    selectPicture,
 
     // UI状态
     contentExpanded,

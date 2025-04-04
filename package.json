@@ -19,6 +19,7 @@
     "cosmiconfig": "^9.0.0",
     "highlight.js": "^11.11.1",
     "marked": "^15.0.7",
+    "md-editor-v3": "^5.4.5",
     "node-fetch": "^2.7.0",
     "nunjucks": "^3.2.4",
     "openapi3-ts": "^4.4.0",

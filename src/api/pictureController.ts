@@ -41,3 +41,11 @@ export async function upload(
     ...(options || {}),
   });
 }
+
+/** 此处后端没有提供注释 GET /pic/list */
+export async function getPictureList(options?: { [key: string]: any }) {
+  return request<API.BaseResponsePageResponsePictureUploadVO>("/pic/list", {
+    method: "GET",
+    ...(options || {}),
+  });
+}
