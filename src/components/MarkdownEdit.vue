@@ -28,6 +28,7 @@
           :style="{ height: '500px' }"
           :theme="theme"
           class="markdown-editor"
+          @onUploadImg="handleUploadImage"
           :footers="['markdownTotal', '=', 0, 'scrollSwitch']"
         >
         <template #defToolbars>
@@ -111,6 +112,23 @@
   watch(content, (newValue) => {
     emit('update:modelValue', newValue);
   });
+
+  const handleUploadImage = async (files: File[], callback: (urls: string[]) => void) => {
+    const urls: string[] = [];
+    
+    for (const file of files) {
+      try {
+        emit("upload-image", file, (url: string) => {
+          urls.push(url);
+          if (urls.length === files.length) {
+            callback(urls);
+          }
+        });
+      } catch (error) {
+        console.error("图片上传失败", error);
+      }
+    }
+  };
 
   </script>
   
