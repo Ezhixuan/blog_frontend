@@ -46,6 +46,7 @@
   import { MdEditor, NormalFooterToolbar } from "md-editor-v3";
   import "md-editor-v3/lib/style.css";
   import parseTime from "@/utils/time";
+  import { useTheme } from '../utils/theme'
   const props = defineProps({
     modelValue: {
       type: String,
@@ -74,39 +75,8 @@
   const content = ref(props.modelValue);
   
   // 根据传入的 isDark 属性计算主题
-  const theme = computed(() => props.isDark ? 'dark' : 'light');
-  
-  // 定义工具栏配置（带文字说明）
-  const toolbars = [
-    { name: 'bold', tip: '加粗' },
-    { name: 'underline', tip: '下划线' },
-    { name: 'italic', tip: '斜体' },
-    '-',
-    { name: 'title', tip: '标题' },
-    { name: 'strikeThrough', tip: '删除线' },
-    { name: 'sub', tip: '下标' },
-    { name: 'sup', tip: '上标' },
-    { name: 'quote', tip: '引用' },
-    { name: 'unorderedList', tip: '无序列表' },
-    { name: 'orderedList', tip: '有序列表' },
-    { name: 'task', tip: '任务列表' },
-    '-',
-    { name: 'codeRow', tip: '行内代码' },
-    { name: 'code', tip: '代码块' },
-    { name: 'link', tip: '链接' },
-    { name: 'image', tip: '图片' },
-    { name: 'table', tip: '表格' },
-    '-',
-    { name: 'revoke', tip: '撤销' },
-    { name: 'next', tip: '重做' },
-    { name: 'save', tip: '保存' },
-    '=',
-    { name: 'pageFullscreen', tip: '全屏' },
-    { name: 'fullscreen', tip: '全屏编辑' },
-    { name: 'preview', tip: '预览' },
-    { name: 'htmlPreview', tip: 'HTML预览' },
-    { name: 'catalog', tip: '目录' }
-  ];
+  const { currentTheme } = useTheme();
+  const theme = computed(() => currentTheme.value);
   
   // 监听内容变化
   watch(content, (newValue) => {
@@ -198,4 +168,25 @@
     width: 0.75rem;
     margin-right: 0.25rem;
   }
+
+  /* 新增工具栏图标样式 */
+:deep(.md-editor-toolbar) {
+  --md-badge-icon-size: 20px;
+  --md-editor-icon-size: 20px;
+}
+
+:deep(.md-editor-toolbar-item svg) {
+  width: 20px;
+  height: 20px;
+}
+
+/* 调整工具栏整体高度 */
+:deep(.md-editor-toolbar-wrapper) {
+  height: 42px;
+}
+
+/* 调整工具栏按钮间距 */
+:deep(.md-editor-toolbar-item) {
+  padding: 10px 6px;
+}
   </style>

@@ -56,8 +56,7 @@
                 {{ article.summary }}
               </div>
 
-              <MarkdownPreview v-if="article.content" :content="article.content" :theme="currentTheme"
-                language="zh-CN" />
+              <MarkdownPreview v-if="article.content" :content="article.content" />
 
               <p v-if="!article.content" class="no-content-tip">文章详情内容暂未提供</p>
             </div>
