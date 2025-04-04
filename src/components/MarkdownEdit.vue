@@ -26,21 +26,25 @@
         <MdEditor
           v-model="content"
           :style="{ height: '500px' }"
-          @onUploadImg="handleUploadImage"
           :theme="theme"
           class="markdown-editor"
-          no-katex
-          no-mermaid
-        />
+          :footers="['markdownTotal', '=', 0, 'scrollSwitch']"
+        >
+        <template #defToolbars>
+      </template>
+        <template #defFooters>
+        <NormalFooterToolbar>{{ parseTime(new Date()) }}</NormalFooterToolbar>
+        </template>
+        </MdEditor>
       </div>
     </div>
   </template>
   
   <script setup lang="ts">
   import { ref, watch, computed } from "vue";
-  import { MdEditor } from "md-editor-v3";
+  import { MdEditor, NormalFooterToolbar } from "md-editor-v3";
   import "md-editor-v3/lib/style.css";
-  
+  import parseTime from "@/utils/time";
   const props = defineProps({
     modelValue: {
       type: String,
@@ -107,24 +111,7 @@
   watch(content, (newValue) => {
     emit('update:modelValue', newValue);
   });
-  
-  const handleUploadImage = async (files: File[], callback: (urls: string[]) => void) => {
-    const urls: string[] = [];
-    
-    for (const file of files) {
-      try {
-        // 这里需要父组件处理实际的上传逻辑
-        emit("upload-image", file, (url: string) => {
-          urls.push(url);
-          if (urls.length === files.length) {
-            callback(urls);
-          }
-        });
-      } catch (error) {
-        console.error("图片上传失败", error);
-      }
-    }
-  };
+
   </script>
   
   <style scoped>

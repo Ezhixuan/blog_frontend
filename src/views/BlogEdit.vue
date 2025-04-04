@@ -6,6 +6,7 @@ import { getArticleInfo } from '@/api/articleController';
 import message from "@/utils/message";
 import { UploadOutlined } from '@ant-design/icons-vue';
 import MarkdownEditor from '@/components/MarkdownEdit.vue';
+import { useTheme } from '@/utils/theme'
 
 // 获取路由参数
 const route = useRoute();
@@ -13,6 +14,10 @@ const articleId = route.query.id ? route.query.id : undefined;
 const categoryName = route.query.categoryName as string;
 const tagNames = route.query.tagNames ? (route.query.tagNames as string).split(',') : [];
 const isLoading = ref(false);
+
+const { currentTheme } = useTheme();
+
+console.log(currentTheme.value)
 
 // 定义类型
 interface SelectOption {
@@ -136,7 +141,6 @@ onMounted(() => {
       <div class="loading-spinner"></div>
       <span class="loading-text">加载文章中...</span>
     </div>
-
     <div v-else class="form-container"
       :class="{ 'scale-100 opacity-100': formVisible, 'scale-95 opacity-0': !formVisible }">
       <h1 class="form-title">
@@ -393,7 +397,7 @@ onMounted(() => {
       leave-from-class="opacity-100 max-h-[600px] overflow-hidden" leave-to-class="opacity-0 max-h-0 overflow-hidden">
       <div v-if="contentExpanded">
         <MarkdownEditor v-model="content" :title="title" :is-generating="isGenerating"
-          @upload-image="handleUploadImage2" @generate-content="handleGenerateContent" />
+          @upload-image="handleUploadImage2" @generate-content="handleGenerateContent" :is-dark="currentTheme === 'dark'" />
       </div>
     </transition>
     <div class="form-actions" :class="{ 'visible-actions': formVisible, 'hidden-actions': !formVisible }">
@@ -1156,32 +1160,6 @@ onMounted(() => {
 .ai-generate-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-}
-
-/* 编辑器容器 */
-.editor-container {
-  border-radius: 0.5rem;
-  overflow: hidden;
-  --tw-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --tw-shadow-colored: 0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);
-  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
-  border-width: 1px;
-  --tw-border-opacity: 1;
-  border-color: rgb(209 213 219 / var(--tw-border-opacity));
-}
-
-.dark .editor-container {
-  --tw-shadow-color: rgb(17 24 39 / 0.4);
-  --tw-shadow: var(--tw-shadow-colored);
-  --tw-border-opacity: 1;
-  border-color: rgb(55 65 81 / var(--tw-border-opacity));
-}
-
-.markdown-editor {
-  --tw-bg-opacity: 1;
-  background-color: rgb(31 41 55 / var(--tw-bg-opacity));
-  --tw-text-opacity: 1;
-  color: rgb(229 231 235 / var(--tw-text-opacity));
 }
 
 /* 表单操作按钮 */

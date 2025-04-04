@@ -7,7 +7,6 @@ import { RouterLink, useRouter } from 'vue-router';
 import { doLogout, getLoginUserInfo } from '@/api/sysUserController';
 import { on } from '@/utils/eventBus';
 import message from '@/utils/message';
-import { getPageState, clearPageState } from '@/utils/pageMemory';
 import { useTheme } from '@/utils/theme';
 import { useUserStore } from '@/stores/user'; // 导入用户状态存储
 
@@ -41,12 +40,6 @@ const userInfo = ref<API.UserInfoVO | null>(null);
 const avatarError = ref(false);
 const showChangePasswordModal = ref(false);
 const showSubmitBlogModal = ref(false);
-
-// 文章目录相关状态
-const isArticlePage = ref(false);
-const articleTitle = ref('');
-const articleId = ref<string | null>(null);
-const tocItems = ref<any[]>([]);
 
 // 默认头像
 const defaultAvatar = "https://avatars.githubusercontent.com/u/46998172?v=4";
@@ -170,65 +163,6 @@ const handleDialogLeave = () => {
   }, 500) as unknown as number;
 };
 
-// 处理目录项点击
-const handleTocItemClick = (anchor: string) => {
-  // 查找元素，支持anchor或id属性
-  const element = document.getElementById(anchor);
-  if (element) {
-    element.scrollIntoView({ behavior: 'smooth' });
-  }
-};
-
-// 返回文章列表
-const backToArticleList = () => {
-  const pageState = getPageState();
-  
-  if (pageState) {
-    // 如果有保存的分页状态，使用它返回到指定页
-    console.log(`返回到文章列表第${pageState.current}页`);
-    
-    // 构建查询参数
-    const query: Record<string, string> = {
-      page: pageState.current.toString(),
-      pageSize: pageState.pageSize.toString()
-    };
-    
-    // 如果有保存的分类ID，添加到查询参数
-    if (pageState.categoryId) {
-      query.categoryId = pageState.categoryId;
-      console.log(`恢复分类筛选: ${pageState.categoryId}`);
-    }
-    
-    // 如果有保存的标签ID，添加到查询参数
-    if (pageState.tagId) {
-      query.tagId = pageState.tagId;
-      console.log(`恢复标签筛选: ${pageState.tagId}`);
-    }
-    
-    router.push({
-      path: '/blogs',
-      query
-    });
-    
-    // 如果记录了滚动位置，在下一个时间循环中恢复滚动位置
-    if (pageState.scrollPosition) {
-      setTimeout(() => {
-        window.scrollTo({
-          top: pageState.scrollPosition,
-          behavior: 'smooth'
-        });
-      }, 100);
-    }
-  } else {
-    // 如果没有保存的分页状态，直接返回文章列表首页
-    console.log('返回到文章列表首页');
-    router.push('/blogs');
-  }
-  
-  // 返回后清空分页状态缓存
-  clearPageState();
-};
-
 onMounted(() => {
   checkLoginStatus();
   loadTags(); // 加载标签列表
@@ -250,37 +184,6 @@ onMounted(() => {
       role: userData.role
     });
     userStore.setToken(token);
-  });
-  
-  // 监听进入文章页面事件
-  on('enter-article-page', (isEntering: boolean) => {
-    console.log('收到文章页面状态变化:', isEntering);
-    isArticlePage.value = isEntering;
-    if (!isEntering) {
-      // 重置文章目录相关状态
-      articleTitle.value = '';
-      articleId.value = null;
-      tocItems.value = [];
-    }
-  });
-  
-  // 监听文章目录更新事件
-  on('article-toc-updated', (data: { tocItems: any[], title: string, articleId: string }) => {
-    console.log('收到文章目录数据:', {
-      tocItemsCount: data.tocItems.length,
-      title: data.title
-    });
-    tocItems.value = data.tocItems;
-    articleTitle.value = data.title;
-    articleId.value = data.articleId;
-  });
-  
-  // 监听目录激活状态更新事件
-  on('article-toc-active-updated', (data: { tocItems: any[] }) => {
-    // 只更新激活状态，保持目录结构不变
-    if (data.tocItems.length === tocItems.value.length) {
-      tocItems.value = data.tocItems;
-    }
   });
 });
 
@@ -397,48 +300,9 @@ const filterByTag = (tagId?: number) => {
       name="sidebar-transition"
       mode="out-in"
     >
-      <!-- 文章侧边栏 (在文章页面显示，无论是否有目录) -->
-      <div v-if="isArticlePage" key="article-toc" class="sidebar-content article-toc">
-        <div class="toc-header">
-          <h2 class="text-xl font-bold mb-2 truncate dark:text-white" :title="articleTitle">{{ articleTitle || '文章' }}</h2>
-          <button 
-            @click="backToArticleList" 
-            class="text-xs text-blue-600 flex items-center hover:text-blue-800 transition-colors dark:text-blue-400 dark:hover:text-blue-300"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
-            </svg>
-            返回文章列表
-          </button>
-        </div>
-        
-        <!-- 只有当确实有目录项时才显示目录内容 -->
-        <div v-if="tocItems.length > 0" class="mt-6 mb-4 border-t border-gray-100 pt-4 dark:border-gray-800">
-          <h3 class="text-base font-medium mb-3 dark:text-gray-300">目录</h3>
-          <div class="toc-content space-y-2">
-            <transition-group name="toc-item">
-              <div 
-                v-for="(item, index) in tocItems" 
-                :key="item.id || index"
-                class="toc-item dark:text-gray-400 dark:hover:text-blue-300"
-                :style="{ 'padding-left': item.level * 8 + 'px' }"
-                :class="{ 'toc-active': item.active, 'dark:text-blue-300': item.active }"
-                @click="handleTocItemClick(item.anchor || item.id)"
-              >
-                {{ item.text }}
-              </div>
-            </transition-group>
-          </div>
-        </div>
-        
-        <!-- 无目录提示 -->
-        <div v-else class="mt-6 mb-4 border-t border-gray-100 pt-4 text-center text-gray-500 italic dark:border-gray-800 dark:text-gray-400">
-          <p>该文章没有目录结构</p>
-        </div>
-      </div>
       
       <!-- 默认侧边栏 (非文章页面显示) -->
-      <div v-else key="default-sidebar" class="sidebar-content">
+      <div class="sidebar-content">
         <!-- Profile -->
         <div class="text-center mb-8 relative">
           <div
@@ -822,93 +686,6 @@ button {
 
 button:hover {
   transform: translateY(-2px);
-}
-
-/* 目录样式 */
-.article-toc {
-  @apply flex flex-col h-full;
-}
-
-.toc-header {
-  @apply border-b border-gray-100 pb-4;
-}
-
-.toc-content {
-  @apply overflow-y-auto max-h-[calc(100vh-200px)];
-}
-
-.toc-item {
-  @apply text-sm text-gray-600 cursor-pointer transition-colors truncate py-1 hover:text-blue-600;
-}
-
-.toc-active {
-  @apply text-blue-600 font-medium;
-}
-
-/* 侧边栏切换过渡动画 */
-.sidebar-transition-enter-active,
-.sidebar-transition-leave-active {
-  transition: all 0.5s ease;
-}
-
-.sidebar-transition-enter-from {
-  opacity: 0;
-  transform: translateY(30px);
-}
-
-.sidebar-transition-leave-to {
-  opacity: 0;
-  transform: translateY(-30px);
-}
-
-/* 目录项过渡动画 */
-.toc-item-enter-active,
-.toc-item-leave-active {
-  transition: all 0.3s ease;
-}
-
-.toc-item-enter-from {
-  opacity: 0;
-  transform: translateX(20px);
-}
-
-.toc-item-leave-to {
-  opacity: 0;
-  transform: translateX(-20px);
-}
-
-/* 导航项过渡动画 */
-.nav-item-enter-active,
-.nav-item-leave-active {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  transition-delay: calc(var(--i, 0) * 0.05s);
-}
-
-.nav-item-enter-from {
-  opacity: 0;
-  transform: translateX(-20px);
-}
-
-.nav-item-leave-to {
-  opacity: 0;
-  transform: translateX(20px);
-}
-
-/* 添加淡入动画样式 */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-fade-slow {
-  animation: fadeIn 0.8s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
-  opacity: 0;
 }
 
 /* 确保侧边栏内容始终占满高度 */
