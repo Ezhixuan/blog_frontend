@@ -56,7 +56,8 @@
                 {{ article.summary }}
               </div>
 
-                <MarkdownPreview v-if="article.content"  :content="article.content" :theme="currentTheme" language="zh-CN" />
+              <MarkdownPreview v-if="article.content" :content="article.content" :theme="currentTheme"
+                language="zh-CN" />
 
               <p v-if="!article.content" class="no-content-tip">文章详情内容暂未提供</p>
             </div>
@@ -102,10 +103,11 @@
             </button>
           </div>
           <div class="toc-content">
-            <div v-for="(item, index) in tocItems" :key="index" :class="['toc-item', { 'active': item.active }]" :style="{
-              paddingLeft: `${item.level * 10}px`,
-              '--item-index': index
-            }" @click="scrollToAnchor(item.anchor)">
+
+
+            <div v-for="item in tocItems" :key="item.uniqueId"
+              :class="['toc-item', `level-${item.level}`, { active: item.active }]"
+              @click="scrollToAnchor(item.anchor)">
               <div class="toc-item-indicator"></div>
               <span class="toc-item-text">{{ item.text }}</span>
             </div>
@@ -132,8 +134,6 @@ import { getPageState } from '@/utils/pageMemory';
 import { useTheme } from '@/utils/theme';
 import 'md-editor-v3/lib/preview.css';
 import MarkdownPreview from '@/components/MarkdownPreview.vue';
-
-const scrollElement = document.documentElement;
 
 const route = useRoute();
 const router = useRouter();
@@ -164,6 +164,7 @@ interface TocItem {
   anchor: string;
   active: boolean;
   children?: TocItem[];
+  uniqueId: string;
 }
 
 const goBack = () => router.back();
@@ -253,7 +254,7 @@ const scrollTocToActiveItem = () => {
   });
 };
 
-const generateStableAnchor = (text: string, existingAnchors: Set<string>) => {
+const generateStableAnchor = (text: string, existingAnchors: Set<string>, index: number) => {
   let anchor = text
     .toLowerCase()
     .replace(/[^\u4e00-\u9fa5a-zA-Z0-9\- ]/g, '')
@@ -262,10 +263,12 @@ const generateStableAnchor = (text: string, existingAnchors: Set<string>) => {
     .replace(/^-|-$/g, '');
 
   if (!anchor) anchor = 'section';
-  let uniqueAnchor = anchor;
+
+  // 添加索引确保唯一性
+  let uniqueAnchor = `${anchor}-${index}`;
   let counter = 1;
   while (existingAnchors.has(uniqueAnchor)) {
-    uniqueAnchor = `${anchor}-${counter}`;
+    uniqueAnchor = `${anchor}-${index}-${counter}`;
     counter++;
   }
   existingAnchors.add(uniqueAnchor);
@@ -274,34 +277,92 @@ const generateStableAnchor = (text: string, existingAnchors: Set<string>) => {
 
 const generateTocFromContent = () => {
   nextTick(() => {
-    console.log('generateTocFromContent');
     const existingAnchors = new Set<string>();
     const articleContent = document.querySelector('.md-editor-preview');
-    console.log(document)
-    console.log('articleContent', articleContent);
     const headings = articleContent?.querySelectorAll('h1, h2, h3, h4, h5, h6') || [];
 
     if (headings.length > 0) {
       tocItems.value = Array.from(headings).map((h, i) => {
-        if (!h.id) {
-          h.id = generateStableAnchor(h.textContent || `heading-${i}`, existingAnchors);
-        }
+        const anchor = generateStableAnchor(h.textContent || `heading-${i}`, existingAnchors, i);
+        h.id = anchor;
 
         return {
           level: parseInt(h.tagName.substring(1)),
           text: h.textContent?.trim() || `标题 ${i + 1}`,
-          anchor: h.id,
-          active: false
+          anchor,
+          active: false,
+          uniqueId: crypto.randomUUID() // 使用更可靠的唯一ID生成方式
         };
       });
 
       hasToc.value = tocItems.value.length > 0;
-      nextTick(() => {
-        updateFloatingToc();
-        updateActiveTocItem();
-      });
+      setupIntersectionObserver();
     }
   });
+};
+
+const generateUniqueId = () => {
+  return crypto.randomUUID();
+};
+
+const setupIntersectionObserver = () => {
+  if (observer) {
+    observer.disconnect();
+  }
+
+  const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+  if (headings.length === 0) return;
+
+  observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          // 找到最接近视口顶部的标题
+          const closest = findClosestHeading();
+          if (closest) {
+            currentActiveAnchor.value = closest;
+            updateTocActiveState(closest);
+          }
+        }
+      });
+    },
+    {
+      rootMargin: '-100px 0px -50% 0px',
+      threshold: 0.1
+    }
+  );
+
+  headings.forEach(heading => observer?.observe(heading));
+};
+
+const findClosestHeading = (): string | null => {
+  const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+  let closestHeading = null;
+  let minDistance = Infinity;
+
+  headings.forEach((heading) => {
+    if (!heading.id) return;
+
+    const rect = heading.getBoundingClientRect();
+    const distance = Math.abs(rect.top - 100); // 100px是考虑顶部偏移
+
+    if (rect.top <= 200 && distance < minDistance) {
+      minDistance = distance;
+      closestHeading = heading.id;
+    }
+  });
+
+  return closestHeading;
+};
+
+const updateTocActiveState = (anchor: string) => {
+  tocItems.value = tocItems.value.map(item => {
+    return {
+      ...item,
+      active: item.anchor === anchor
+    };
+  });
+  scrollTocToActiveItem();
 };
 
 const updateFloatingToc = () => {
@@ -341,11 +402,6 @@ const handleBackToList = () => {
       path: '/blogs',
       query
     });
-    
-    
-    // 如果记录了滚动位置，在下一个时间循环中恢复滚动位置
-
-    // 如果记录了滚动位置，在下一个时间循环中恢复滚动位置
     if (pageState.scrollPosition) {
       setTimeout(() => {
         window.scrollTo({
@@ -374,13 +430,11 @@ const handleImageClick = (e: Event) => {
 
 const handleScroll = throttle(() => {
   calculateReadingProgress();
-  updateActiveTocItem();
-  if (scrollThrottleTimeout.value) {
-    clearTimeout(scrollThrottleTimeout.value);
+  const closest = findClosestHeading();
+  if (closest && closest !== currentActiveAnchor.value) {
+    currentActiveAnchor.value = closest;
+    updateTocActiveState(closest);
   }
-  scrollThrottleTimeout.value = setTimeout(() => {
-    scrollThrottleTimeout.value = null;
-  }, 100);
 }, 100);
 
 onMounted(() => {
