@@ -7,7 +7,8 @@
     <div class="article-layout">
       <div class="back-button-container">
         <button class="back-button" @click="handleBackToList" aria-label="返回文章列表">
-          <svg xmlns="http://www.w3.org/2000/svg" class="back-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" class="back-icon" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
           <span>返 回</span>
@@ -55,7 +56,7 @@
                 {{ article.summary }}
               </div>
 
-              <div v-if="article.content" class="markdown-container" ref="markdownContainer" v-html="renderedContent"></div>
+                <MarkdownPreview v-if="article.content"  :content="article.content" :theme="currentTheme" language="zh-CN" />
 
               <p v-if="!article.content" class="no-content-tip">文章详情内容暂未提供</p>
             </div>
@@ -85,7 +86,8 @@
       <div v-if="hasToc" class="floating-toc-container" ref="floatingTocRef">
         <div v-if="isMobile" class="toc-mobile-trigger" @click="toggleToc">
           <span>文章目录</span>
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
           </svg>
         </div>
@@ -112,7 +114,7 @@
       </div>
     </div>
     <BackToTop :visibility-height="300" :duration="500" />
-    
+
     <!-- 图片预览组件 -->
     <ImageViewer v-model:visible="previewVisible" :image-url="previewImageUrl" />
   </div>
@@ -124,25 +126,24 @@ import { useRoute, useRouter } from 'vue-router';
 import { getArticleInfo } from '../api/articleController';
 import BackToTop from '../components/BackToTop.vue';
 import ImageViewer from '../components/ImageViewer.vue';
-import { marked } from 'marked';
-import hljs from 'highlight.js';
-import 'highlight.js/styles/github.css';
-import 'highlight.js/styles/github-dark.css';
+import 'md-editor-v3/lib/style.css';
 import { useUserStore } from '@/stores/user';
-import message from "@/utils/message";
 import { getPageState } from '@/utils/pageMemory';
 import { useTheme } from '@/utils/theme';
-import copy from 'copy-to-clipboard';
+import 'md-editor-v3/lib/preview.css';
+import MarkdownPreview from '@/components/MarkdownPreview.vue';
+
+const scrollElement = document.documentElement;
 
 const route = useRoute();
 const router = useRouter();
 const userStore = useUserStore();
+const { currentTheme } = useTheme();
 
 const articleId = ref<string | null>(null);
 const article = ref<any>(null);
 const loading = ref(true);
 const readingProgress = ref(0);
-const markdownContainer = ref<HTMLElement | null>(null);
 let observer: IntersectionObserver | null = null;
 const scrollThrottleTimeout = ref<ReturnType<typeof setTimeout> | null>(null);
 
@@ -153,101 +154,9 @@ const isMobile = computed(() => window.innerWidth < 768);
 const floatingTocRef = ref<HTMLElement | null>(null);
 const hasToc = ref(false);
 const tocItems = ref<TocItem[]>([]);
-const renderedContent = ref('');
 
 const previewVisible = ref(false);
 const previewImageUrl = ref('');
-
-// 渲染Markdown内容
-const setupMarked = () => {
-  // 使用类型断言来绕过TypeScript的类型检查
-  const options = {
-    renderer: new marked.Renderer(),
-    highlight: function(code: string, lang: string) {
-      const language = hljs.getLanguage(lang) ? lang : 'plaintext';
-      return hljs.highlight(code, { language }).value;
-    },
-    langPrefix: 'hljs language-', // 添加代码块css类名的前缀
-    pedantic: false,
-    gfm: true,
-    breaks: false,
-    sanitize: false,
-    smartLists: true,
-    smartypants: false,
-    xhtml: false
-  };
-  
-  // 重写图片渲染器，添加特殊类名和数据属性
-  const renderer = options.renderer;
-  const originalImageRenderer = renderer.image;
-  
-  // 完全使用类型断言绕过TypeScript类型系统
-  (renderer as any).image = function(href: string, title: string, text: string) {
-    const originalHtml = (originalImageRenderer as any).call(this, href, title, text);
-    // 增加特殊类名，用于在DOM中识别和绑定事件
-    return originalHtml.replace('<img', '<img class="markdown-image" data-original-src="' + href + '"');
-  };
-  
-  marked.setOptions(options as any);
-};
-
-// 渲染Markdown内容
-const renderMarkdown = () => {
-  if (!article.value?.content) return;
-  
-  try {
-    // 先调用setupMarked确保渲染器配置正确
-    setupMarked();
-    
-    // 渲染Markdown内容并确保返回字符串
-    const content = marked.parse(article.value.content);
-    renderedContent.value = typeof content === 'string' ? content : '';
-    
-    // 下一个tick后处理目录和代码块
-    nextTick(() => {
-      ensureTocDisplay();
-      applyThemeToCodeBlocks();
-      setupImageClickEvents(); // 添加图片点击事件
-      setupCodeCopyButtons(); // 添加代码复制功能
-    });
-  } catch (error) {
-    console.error('Markdown渲染失败:', error);
-    renderedContent.value = '<p>内容渲染失败</p>';
-  }
-};
-
-// 根据当前主题应用代码块样式
-const applyThemeToCodeBlocks = () => {
-  const codeBlocks = document.querySelectorAll('.markdown-container pre code');
-  const isDark = currentTheme.value === 'dark';
-  
-  codeBlocks.forEach(block => {
-    // 确保代码块有适当的类，支持高亮
-    block.classList.add('hljs');
-    
-    if (isDark) {
-      block.classList.add('github-dark');
-      block.classList.remove('github');
-    } else {
-      block.classList.add('github');
-      block.classList.remove('github-dark');
-    }
-    
-    // 如果代码块内还没有高亮，尝试再次应用高亮
-    if (block.querySelectorAll('.hljs-keyword, .hljs-string, .hljs-comment').length === 0) {
-      const language = [...block.classList]
-        .find(cls => cls.startsWith('language-'))
-        ?.replace('language-', '') || 'plaintext';
-      
-      try {
-        const result = hljs.highlight(block.textContent || '', { language });
-        block.innerHTML = result.value;
-      } catch (e) {
-        console.error('后处理代码高亮失败:', e);
-      }
-    }
-  });
-};
 
 interface TocItem {
   level: number;
@@ -284,7 +193,7 @@ const fetchArticleDetail = async (id: string) => {
     const res = await getArticleInfo({ id });
     article.value = res.data?.data || null;
     nextTick(() => {
-      renderMarkdown();
+      generateTocFromContent();
     });
   } catch (error) {
     article.value = null;
@@ -311,7 +220,6 @@ const updateActiveTocItem = () => {
     const rect = heading.getBoundingClientRect();
     const distance = Math.abs(rect.top - 100); // 100px是考虑顶部偏移
 
-    // 找到距离视口顶部最近且已进入视口的标题
     if (rect.top <= 100 && distance < minDistance) {
       minDistance = distance;
       closestHeading = heading.id;
@@ -320,13 +228,9 @@ const updateActiveTocItem = () => {
 
   if (closestHeading && closestHeading !== currentActiveAnchor.value) {
     currentActiveAnchor.value = closestHeading;
-
-    // 更新目录项状态
     tocItems.value.forEach(item => {
       item.active = item.anchor === currentActiveAnchor.value;
     });
-
-    // 自动滚动目录到当前项
     scrollTocToActiveItem();
   }
 };
@@ -335,44 +239,18 @@ const scrollTocToActiveItem = () => {
   requestAnimationFrame(() => {
     const tocContainer = floatingTocRef.value?.querySelector('.toc-content') as HTMLElement | null;
     const activeItem = floatingTocRef.value?.querySelector('.active') as HTMLElement | null;
-    
+
     if (tocContainer && activeItem) {
       const containerHeight = tocContainer.clientHeight;
       const itemOffset = activeItem.offsetTop;
       const itemHeight = activeItem.clientHeight;
-      
+
       tocContainer.scrollTo({
-        top: itemOffset - containerHeight/2 + itemHeight/2,
+        top: itemOffset - containerHeight / 2 + itemHeight / 2,
         behavior: 'smooth'
       });
     }
   });
-};
-
-const updateFloatingToc = () => {
-  if (!floatingTocRef.value) return;
-
-  // 不再需要设置最大高度，改为设置最大高度为视口高度减去一些间距
-  const viewportHeight = window.innerHeight;
-  // 设置目录内容的最大高度而不是容器
-  const tocContent = floatingTocRef.value.querySelector('.toc-content') as HTMLElement | null;
-  if (tocContent) {
-    tocContent.style.maxHeight = `${viewportHeight - 160}px`;
-  }
-
-  // 自动滚动到当前活跃的目录项
-  const activeItem = floatingTocRef.value.querySelector('.active') as HTMLElement | null;
-  if (activeItem && tocContent) {
-    // 使用scrollIntoView让活跃项滚动到可视区域
-    activeItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-  }
-};
-
-const scrollToAnchor = (anchorId: string) => {
-  const element = document.getElementById(anchorId);
-  if (element) {
-    element.scrollIntoView({ behavior: 'smooth' });
-  }
 };
 
 const generateStableAnchor = (text: string, existingAnchors: Set<string>) => {
@@ -383,7 +261,6 @@ const generateStableAnchor = (text: string, existingAnchors: Set<string>) => {
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '');
 
-  // 处理空锚点和重复情况
   if (!anchor) anchor = 'section';
   let uniqueAnchor = anchor;
   let counter = 1;
@@ -395,15 +272,17 @@ const generateStableAnchor = (text: string, existingAnchors: Set<string>) => {
   return uniqueAnchor;
 };
 
-const ensureTocDisplay = () => {
+const generateTocFromContent = () => {
   nextTick(() => {
+    console.log('generateTocFromContent');
     const existingAnchors = new Set<string>();
-    const articleContent = document.querySelector('.markdown-container');
+    const articleContent = document.querySelector('.md-editor-preview');
+    console.log(document)
+    console.log('articleContent', articleContent);
     const headings = articleContent?.querySelectorAll('h1, h2, h3, h4, h5, h6') || [];
 
     if (headings.length > 0) {
       tocItems.value = Array.from(headings).map((h, i) => {
-        // 确保标题有ID
         if (!h.id) {
           h.id = generateStableAnchor(h.textContent || `heading-${i}`, existingAnchors);
         }
@@ -419,10 +298,78 @@ const ensureTocDisplay = () => {
       hasToc.value = tocItems.value.length > 0;
       nextTick(() => {
         updateFloatingToc();
-        updateActiveTocItem(); // 初始化高亮状态
+        updateActiveTocItem();
       });
     }
   });
+};
+
+const updateFloatingToc = () => {
+  if (!floatingTocRef.value) return;
+  const viewportHeight = window.innerHeight;
+  const tocContent = floatingTocRef.value.querySelector('.toc-content') as HTMLElement | null;
+  if (tocContent) {
+    tocContent.style.maxHeight = `${viewportHeight - 160}px`;
+  }
+};
+
+const scrollToAnchor = (anchorId: string) => {
+  const element = document.getElementById(anchorId);
+  if (element) {
+    element.scrollIntoView({ behavior: 'smooth' });
+  }
+};
+
+const toggleToc = () => {
+  if (!floatingTocRef.value) return;
+  floatingTocRef.value.classList.toggle('show');
+};
+
+const handleBackToList = () => {
+  const pageState = getPageState();
+
+  if (pageState) {
+    const query: Record<string, string> = {
+      page: pageState.current.toString(),
+      pageSize: pageState.pageSize.toString()
+    };
+
+    if (pageState.categoryId) query.categoryId = pageState.categoryId;
+    if (pageState.tagId) query.tagId = pageState.tagId;
+
+    router.push({
+      path: '/blogs',
+      query
+    });
+    
+    
+    // 如果记录了滚动位置，在下一个时间循环中恢复滚动位置
+
+    // 如果记录了滚动位置，在下一个时间循环中恢复滚动位置
+    if (pageState.scrollPosition) {
+      setTimeout(() => {
+        window.scrollTo({
+          top: pageState.scrollPosition,
+          behavior: 'smooth'
+        });
+      }, 100);
+    }
+  } else {
+    router.push('/blogs');
+  }
+};
+
+const openPreview = (imageUrl: string) => {
+  previewImageUrl.value = imageUrl;
+  previewVisible.value = true;
+};
+
+const handleImageClick = (e: Event) => {
+  const target = e.target as HTMLImageElement;
+  if (target.classList.contains('md-editor-v3-img')) {
+    e.preventDefault();
+    openPreview(target.src);
+  }
 };
 
 const handleScroll = throttle(() => {
@@ -436,178 +383,17 @@ const handleScroll = throttle(() => {
   }, 100);
 }, 100);
 
-const toggleToc = () => {
-  if (!floatingTocRef.value) return;
-  floatingTocRef.value.classList.toggle('show');
-};
-
-const handleBackToList = () => {
-  const pageState = getPageState();
-  
-  if (pageState) {
-    // 如果有保存的分页状态，使用它返回到指定页
-    console.log(`返回到文章列表第${pageState.current}页`);
-    
-    // 构建查询参数
-    const query: Record<string, string> = {
-      page: pageState.current.toString(),
-      pageSize: pageState.pageSize.toString()
-    };
-    
-    // 如果有保存的分类ID，添加到查询参数
-    if (pageState.categoryId) {
-      query.categoryId = pageState.categoryId;
-      console.log(`恢复分类筛选: ${pageState.categoryId}`);
-    }
-    
-    // 如果有保存的标签ID，添加到查询参数
-    if (pageState.tagId) {
-      query.tagId = pageState.tagId;
-      console.log(`恢复标签筛选: ${pageState.tagId}`);
-    }
-    
-    router.push({
-      path: '/blogs',
-      query
-    });
-    
-    // 如果记录了滚动位置，在下一个时间循环中恢复滚动位置
-    if (pageState.scrollPosition) {
-      setTimeout(() => {
-        window.scrollTo({
-          top: pageState.scrollPosition,
-          behavior: 'smooth'
-        });
-      }, 100);
-    }
-  } else {
-    // 如果没有保存的分页状态，直接返回文章列表首页
-    console.log('返回到文章列表首页');
-    router.push('/blogs');
-  }
-};
-
-// 获取主题状态以监听变化
-const { currentTheme } = useTheme();
-
-// 监听主题变化，应用新的样式
-watch(currentTheme, () => {
-  nextTick(() => {
-    applyThemeToCodeBlocks();
-  });
-});
-
-const openPreview = (imageUrl: string) => {
-  console.log('打开图片预览:', imageUrl); // 调试用
-  previewImageUrl.value = imageUrl;
-  previewVisible.value = true;
-};
-
-// 添加图片点击事件
-const setupImageClickEvents = () => {
-  console.log('设置图片点击事件');
-  nextTick(() => {
-    const images = document.querySelectorAll('.markdown-container img.markdown-image');
-    console.log('找到的图片数量:', images);
-    
-    images.forEach((img) => {
-      img.addEventListener('click', (e) => {
-        e.preventDefault();
-        const imageUrl = e.target.currentSrc;
-        console.log('图片被点击, URL:', imageUrl);
-        if (imageUrl) {
-          openPreview(imageUrl);
-        }
-      });
-    });
-  });
-};
-
-// 添加代码块复制功能
-const setupCodeCopyButtons = () => {
-  nextTick(() => {
-    // 获取所有代码块
-    const codeBlocks = document.querySelectorAll('.markdown-container pre code');
-    console.log('找到代码块数量:', codeBlocks.length);
-    
-    // 为每个代码块添加复制按钮
-    codeBlocks.forEach((codeBlock, index) => {
-      const pre = codeBlock.parentElement;
-      if (!pre) return;
-      
-      // 检查是否已经有复制按钮，避免重复添加
-      if (pre.querySelector('.code-copy-btn')) return;
-      
-      // 创建复制按钮容器
-      const copyBtnContainer = document.createElement('div');
-      copyBtnContainer.className = 'code-copy-container';
-      
-      // 创建复制按钮
-      const copyBtn = document.createElement('button');
-      copyBtn.className = 'code-copy-btn';
-      copyBtn.setAttribute('aria-label', '复制代码');
-      copyBtn.setAttribute('data-index', index.toString());
-      
-      // 按钮内部HTML (SVG图标 + 文字)
-      copyBtn.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-        </svg>
-        <span class="copy-text">复制</span>
-      `;
-      
-      // 添加点击事件
-      copyBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        // 获取代码块文本
-        const codeText = codeBlock.textContent || '';
-        
-        // 尝试复制到剪贴板
-        try {
-          copy(codeText);
-          
-          // 显示成功状态
-          copyBtn.classList.add('copied');
-          const textSpan = copyBtn.querySelector('.copy-text');
-          if (textSpan) {
-            const originalText = textSpan.textContent;
-            textSpan.textContent = '已复制!';
-            
-            setTimeout(() => {
-              copyBtn.classList.remove('copied');
-              if (textSpan) textSpan.textContent = originalText;
-            }, 2000);
-          }
-          
-          message.success('代码已复制到剪贴板');
-          console.log('复制成功, 代码长度:', codeText.length);
-        } catch (err) {
-          console.error('复制失败:', err);
-          message.error('复制失败');
-        }
-      });
-      
-      // 添加复制按钮到容器
-      copyBtnContainer.appendChild(copyBtn);
-      
-      // 给代码块父元素添加相对定位
-      pre.style.position = 'relative';
-      
-      // 将复制按钮容器添加到代码块中
-      pre.appendChild(copyBtnContainer);
-    });
-  });
-};
-
 onMounted(() => {
   const id = route.params.id;
   if (id && typeof id === 'string') {
     articleId.value = id;
     fetchArticleDetail(id);
   }
+
+  // 添加图片点击事件监听
+  document.addEventListener('click', handleImageClick);
+
+
 
   window.addEventListener('scroll', handleScroll, { passive: true });
   window.addEventListener('resize', handleScroll);
@@ -621,7 +407,7 @@ onMounted(() => {
       });
     },
     {
-      rootMargin: '-100px 0px -50% 0px', // 调整触发区域
+      rootMargin: '-100px 0px -50% 0px',
       threshold: 1.0
     }
   );
@@ -632,6 +418,7 @@ onUnmounted(() => {
   observer = null;
   window.removeEventListener('scroll', handleScroll);
   window.removeEventListener('resize', handleScroll);
+  document.removeEventListener('click', handleImageClick);
   if (scrollThrottleTimeout.value) {
     clearTimeout(scrollThrottleTimeout.value);
     scrollThrottleTimeout.value = null;
@@ -644,119 +431,6 @@ onUnmounted(() => {
   @apply w-[85%] md:w-[80%] lg:w-[75%] mx-auto px-4 py-8;
 }
 
-/* Markdown容器样式 */
-.markdown-container {
-  @apply text-gray-800 dark:text-gray-200 leading-relaxed;
-}
-
-.markdown-container :deep(h1),
-.markdown-container :deep(h2),
-.markdown-container :deep(h3),
-.markdown-container :deep(h4),
-.markdown-container :deep(h5),
-.markdown-container :deep(h6) {
-  @apply font-bold my-4 text-gray-900 dark:text-white;
-}
-
-.markdown-container :deep(h1) {
-  @apply text-3xl mt-8 mb-4 pb-2 border-b border-gray-200 dark:border-gray-700;
-}
-
-.markdown-container :deep(h2) {
-  @apply text-2xl mt-6 mb-3;
-}
-
-.markdown-container :deep(h3) {
-  @apply text-xl mt-5 mb-3;
-}
-
-.markdown-container :deep(h4) {
-  @apply text-lg mt-4 mb-2;
-}
-
-.markdown-container :deep(p) {
-  @apply my-4;
-}
-
-.markdown-container :deep(a) {
-  @apply text-blue-600 dark:text-blue-400 hover:underline;
-}
-
-.markdown-container :deep(ul),
-.markdown-container :deep(ol) {
-  @apply pl-6 my-4;
-}
-
-.markdown-container :deep(ul) {
-  @apply list-disc;
-}
-
-.markdown-container :deep(ol) {
-  @apply list-decimal;
-}
-
-.markdown-container :deep(li) {
-  @apply my-1;
-}
-
-.markdown-container :deep(blockquote) {
-  @apply pl-4 py-1 border-l-4 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 my-4 text-gray-700 dark:text-gray-300 italic;
-}
-
-.markdown-container :deep(pre) {
-  @apply rounded-lg p-4 my-6 overflow-x-auto;
-}
-
-.markdown-container :deep(code) {
-  @apply font-mono text-sm;
-}
-
-.markdown-container :deep(code:not(pre code)) {
-  @apply bg-gray-100 dark:bg-gray-800 rounded px-1 py-0.5 text-red-600 dark:text-red-400;
-}
-
-.markdown-container :deep(table) {
-  @apply w-full my-6 border-collapse overflow-hidden rounded-lg;
-}
-
-.markdown-container :deep(thead) {
-  @apply bg-gray-100 dark:bg-gray-800;
-}
-
-.markdown-container :deep(th) {
-  @apply p-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700;
-}
-
-.markdown-container :deep(td) {
-  @apply p-3 border-b border-gray-200 dark:border-gray-800;
-}
-
-.markdown-container :deep(tr:nth-child(even)) {
-  @apply bg-gray-50 dark:bg-gray-900/50;
-}
-
-.markdown-container :deep(img) {
-  @apply max-w-full h-auto my-6 rounded-lg mx-auto;
-}
-
-.markdown-container :deep(.clickable-image) {
-  @apply cursor-pointer transition-transform duration-300;
-  @apply hover:shadow-lg;
-}
-
-.markdown-container :deep(.clickable-image:hover) {
-  transform: scale(1.01);
-}
-
-.markdown-container :deep(hr) {
-  @apply my-8 border-gray-200 dark:border-gray-700;
-}
-
-/* 为GitHub主题的代码块提供暗色模式支持 */
-.github-dark {
-  @apply dark:bg-gray-900 !important;
-}
-
 .reading-progress-container {
   @apply fixed top-0 left-0 w-full h-1 z-50 bg-gray-200 dark:bg-gray-700;
 }
@@ -766,11 +440,11 @@ onUnmounted(() => {
 }
 
 .article-layout {
-  @apply flex flex-col md:flex-row; /* 移动端垂直布局，桌面端横向布局 */
+  @apply flex flex-col md:flex-row;
 }
 
 .article-main {
-  @apply flex-[4] w-full; /* 占据更多空间，比例为4 */
+  @apply flex-[4] w-full;
 }
 
 .article-card {
@@ -855,21 +529,21 @@ onUnmounted(() => {
 
 /* 现代化悬浮目录样式 */
 .floating-toc-container {
-  position: relative; /* 保持相对定位 */
+  position: relative;
   width: auto;
   max-height: none;
   margin-right: 0;
   transform: none;
-  order: 2; /* 在flex布局中的顺序 */
+  order: 2;
   margin-left: 0;
-  margin-top: 20px; /* 移动端上方间距 */
-  flex: 1; /* 占据剩余空间，比例为1 */
-  @apply md:ml-6 md:mt-0; /* 中等屏幕以上左侧间距 */
+  margin-top: 20px;
+  flex: 1;
+  @apply md:ml-6 md:mt-0;
 }
 
 .floating-toc {
-  position: sticky; /* 改为粘性定位 */
-  top: 20px; /* 距离顶部20px */
+  position: sticky;
+  top: 20px;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   border-radius: 12px;
@@ -974,14 +648,7 @@ onUnmounted(() => {
   --hover-color: theme('colors.blue.300');
 }
 
-/* 层级缩进优化 */
-.toc-item[style*="paddingLeft: 10px"] { --level: 1; }
-.toc-item[style*="paddingLeft: 20px"] { --level: 2; }
-.toc-item[style*="paddingLeft: 30px"] { --level: 3; }
-.toc-item[style*="paddingLeft: 40px"] { --level: 4; }
-
 .toc-item-text {
-  /* 根据层级改变字体粗细 */
   font-weight: calc(600 - var(--level, 0) * 100);
 }
 
@@ -1082,14 +749,14 @@ onUnmounted(() => {
   .article-container {
     @apply w-[90%];
   }
-  
+
   .floating-toc-container {
     width: auto;
     margin-right: 0;
   }
-  
+
   .floating-toc {
-    top: 15px; /* 中等屏幕上距离顶部稍小 */
+    top: 15px;
   }
 }
 
@@ -1097,24 +764,24 @@ onUnmounted(() => {
   .article-container {
     @apply w-[95%];
   }
-  
+
   .toc-mobile-trigger {
     display: flex;
   }
-  
+
   .floating-toc-container {
     width: 100%;
     margin-top: 20px;
     transform: none;
     margin-right: 0;
   }
-  
+
   .floating-toc {
     display: none;
     position: relative;
     top: 0;
   }
-  
+
   .floating-toc-container.show .floating-toc {
     display: block;
     position: sticky;
@@ -1148,7 +815,7 @@ onUnmounted(() => {
   align-items: center;
   gap: 8px;
   background-color: transparent;
-  color: #2c3e50; /* 深蓝灰色，适合学术风格 */
+  color: #2c3e50;
   border: none;
   padding: 8px 16px;
   border-radius: 4px;
@@ -1157,7 +824,7 @@ onUnmounted(() => {
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
-  font-family: 'Georgia', 'Times New Roman', serif; /* 适合学术的衬线字体 */
+  font-family: 'Georgia', 'Times New Roman', serif;
 }
 
 .back-button::after {
@@ -1174,7 +841,7 @@ onUnmounted(() => {
 }
 
 .back-button:hover {
-  color: #1a73e8; /* 悬停时变为蓝色 */
+  color: #1a73e8;
 }
 
 .back-button:hover::after {
@@ -1184,293 +851,39 @@ onUnmounted(() => {
 
 .back-button svg {
   transition: transform 0.3s ease;
-  color: #7f8c8d; /* 图标灰色 */
+  color: #7f8c8d;
 }
 
 .back-button:hover svg {
   transform: translateX(-4px);
-  color: #1a73e8; /* 悬停时图标变蓝 */
+  color: #1a73e8;
 }
 
-.code-copy-button {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 4px;
-  opacity: 0.6;
-  transition: opacity 0.2s;
+/* md-editor-v3 容器样式调整 */
+:deep(.md-editor-v3) {
+  @apply bg-transparent;
 }
 
-.code-copy-button:hover {
-  opacity: 1;
+:deep(.md-editor-v3-content-wrapper) {
+  @apply bg-transparent;
 }
 
-.code-copy-button.copied {
-  opacity: 1;
-  color: #48bb78;
+:deep(.md-editor-v3-preview) {
+  @apply bg-transparent p-0;
 }
 
-/* 代码复制按钮样式 */
-.markdown-container :deep(.clickable-image:hover) {
-  transform: scale(1.01);
+:deep(.md-editor-v3-html) {
+  @apply bg-transparent;
 }
 
-/* 代码复制按钮样式 */
-.markdown-container :deep(pre) {
-  position: relative;
-}
-
-.markdown-container :deep(.code-copy-button) {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  padding: 0.25rem;
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
-  border-radius: 0.25rem;
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.2s, background-color 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #e2e8f0;
-}
-
-.markdown-container :deep(pre:hover .code-copy-button) {
-  opacity: 0.8;
-}
-
-.markdown-container :deep(.code-copy-button:hover) {
-  opacity: 1;
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.markdown-container :deep(.code-copy-button.copied) {
-  background: rgba(52, 211, 153, 0.2);
-  color: #34d399;
-  opacity: 1;
-}
-
-/* 暗色模式样式调整 */
-.dark .markdown-container :deep(.code-copy-button) {
-  background: rgba(0, 0, 0, 0.2);
-  color: #d1d5db;
-}
-
-.dark .markdown-container :deep(.code-copy-button:hover) {
-  background: rgba(0, 0, 0, 0.4);
-}
-
-/* 代码复制按钮样式 */
-.markdown-container :deep(.code-block-wrapper) {
-  position: relative;
-  margin: 1.5rem 0;
-  border-radius: 0.5rem;
-  overflow: hidden;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-  background: #f8f9fa;
-}
-
-.dark .markdown-container :deep(.code-block-wrapper) {
-  background: #1a202c;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-}
-
-.markdown-container :deep(.code-block-header) {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: rgba(0, 0, 0, 0.1);
-  padding: 0.5rem 1rem;
-  font-size: 0.8rem;
-  font-family: monospace;
-  border-bottom: 1px solid rgba(0,0,0,0.05);
-}
-
-.dark .markdown-container :deep(.code-block-header) {
-  background: rgba(0, 0, 0, 0.3);
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-}
-
-.markdown-container :deep(.code-language) {
-  color: #718096;
-  font-weight: 500;
-}
-
-.dark .markdown-container :deep(.code-language) {
-  color: #a0aec0;
-}
-
-.markdown-container :deep(.copy-code-button) {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  border-radius: 0.25rem;
-  padding: 0.25rem 0.5rem;
-  color: #4a5568;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 0.75rem;
-}
-
-.markdown-container :deep(.copy-code-button:hover) {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-.markdown-container :deep(.copy-code-button.copied) {
-  background: rgba(72, 187, 120, 0.2);
-  color: #48bb78;
-}
-
-.dark .markdown-container :deep(.copy-code-button) {
-  color: #a0aec0;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.dark .markdown-container :deep(.copy-code-button:hover) {
-  background: rgba(255, 255, 255, 0.15);
-}
-
-.dark .markdown-container :deep(.copy-code-button.copied) {
-  background: rgba(72, 187, 120, 0.2);
-  color: #4ade80;
-}
-
-.markdown-container :deep(.code-block-wrapper pre) {
-  margin: 0;
-  border-radius: 0;
-  background-color: transparent;
-}
-
-/* 移除旧的样式 */
-.markdown-container :deep(.code-copy-button) {
-  display: none;
-}
-
-/* 代码复制按钮样式 */
-.markdown-container :deep(pre) {
-  position: relative;
-  border-radius: 8px;
-}
-
-.markdown-container :deep(.code-copy-container) {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  z-index: 10;
-  opacity: 0;
-  transition: all 0.3s ease;
-  transform: translateY(-5px);
-}
-
-.markdown-container:hover :deep(.code-copy-container),
-.markdown-container :deep(.code-copy-container):hover,
-.markdown-container :deep(.code-copy-container):focus {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.markdown-container :deep(.code-copy-btn) {
-  background: rgba(30, 144, 255, 0.8);
-  border: none;
-  border-radius: 4px;
-  color: white;
-  cursor: pointer;
-  padding: 6px 10px;
-  font-size: 12px;
-  font-weight: 500;
-  backdrop-filter: blur(4px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.markdown-container :deep(.code-copy-btn:hover) {
-  background: rgba(30, 144, 255, 1);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.markdown-container :deep(.code-copy-btn:active) {
-  transform: translateY(0);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-}
-
-.markdown-container :deep(.code-copy-btn.copied) {
-  background: rgba(46, 204, 113, 0.9);
-  animation: pulse 0.5s ease;
-}
-
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7);
+/* 响应式调整 md-editor-v3 */
+@media (max-width: 768px) {
+  :deep(.md-editor-v3) {
+    @apply rounded-none;
   }
-  70% {
-    transform: scale(1.05);
-    box-shadow: 0 0 0 6px rgba(46, 204, 113, 0);
+
+  :deep(.md-editor-v3-preview) {
+    @apply px-0;
   }
-  100% {
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(46, 204, 113, 0);
-  }
-}
-
-.markdown-container :deep(.code-copy-btn) {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background: rgba(255, 255, 255, 0.1);
-  color: #e2e8f0;
-  border: none;
-  border-radius: 4px;
-  padding: 4px 8px;
-  font-size: 12px;
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.2s, background-color 0.2s;
-}
-
-.markdown-container :deep(pre:hover .code-copy-btn) {
-  opacity: 0.8;
-}
-
-.markdown-container :deep(.code-copy-btn:hover) {
-  opacity: 1;
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.markdown-container :deep(.code-copy-btn.copied) {
-  background: rgba(52, 211, 153, 0.2);
-  color: #34d399;
-  opacity: 1;
-}
-
-/* 暗色模式适配 */
-.dark .markdown-container :deep(.code-copy-btn) {
-  background: rgba(0, 0, 0, 0.3);
-  color: #d1d5db;
-}
-
-.dark .markdown-container :deep(.code-copy-btn:hover) {
-  background: rgba(0, 0, 0, 0.5);
-}
-
-.dark .markdown-container :deep(.code-copy-btn.copied) {
-  background: rgba(52, 211, 153, 0.2);
-  color: #34d399;
-}
-
-/* 移除旧的样式 */
-.markdown-container :deep(.code-block-wrapper),
-.markdown-container :deep(.code-block-header),
-.markdown-container :deep(.copy-code-button) {
-  display: none;
 }
 </style>
