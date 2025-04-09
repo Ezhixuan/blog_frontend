@@ -386,6 +386,14 @@ onMounted(() => {
             <span class="status-label">保存为草稿</span>
           </label>
         </div>
+        <div class="form-actions" :class="{ 'visible-actions': formVisible, 'hidden-actions': !formVisible }">
+      <button type="button" class="cancel-button" @click="handleCancel">
+        取消
+      </button>
+      <button type="button" :disabled="isSubmitting" class="submit-button" @click="handleSubmit">
+        <span>{{ isSubmitting ? '提交中...' : '提交博客' }}</span>
+      </button>
+    </div>
       </div>
     </div>
   </div>
@@ -400,14 +408,6 @@ onMounted(() => {
           :footers="['markdownTotal', '=', 0, 'scrollSwitch']" />
       </div>
     </transition>
-    <div class="form-actions" :class="{ 'visible-actions': formVisible, 'hidden-actions': !formVisible }">
-      <button type="button" class="cancel-button" @click="handleCancel">
-        取消
-      </button>
-      <button type="button" :disabled="isSubmitting" class="submit-button" @click="handleSubmit">
-        <span>{{ isSubmitting ? '提交中...' : '提交博客' }}</span>
-      </button>
-    </div>
   </div>
 </template>
 
