@@ -1,4 +1,4 @@
-import { ref, reactive, onMounted } from "vue";
+import { ref, reactive, onMounted, watch, nextTick } from "vue";
 import { useRouter } from "vue-router";
 import message from "@/utils/message";
 import {
@@ -26,7 +26,7 @@ export function useArticleForm() {
   const status = ref(1); // 默认发布状态: 1-发布, 0-草稿
   const coverUrl = ref(""); // 封面图片URL
   const articleId = ref<number | undefined>(undefined); // 文章ID，编辑时使用
-
+  const wordCount = ref(0); // 字数统计
   // 分类相关状态
   const categories = ref<API.ArticleCategoryVO[]>([]);
   const newCategoryName = ref("");
@@ -280,11 +280,13 @@ const handleImageUpload = async (options: any) => {
       tagIds: tagIds.value.join(","),
       status: status.value,
       cover: coverUrl.value, // 添加封面图片URL
+      wordCount: wordCount.value,
     });
   };
 
   // 取消操作
   const handleCancel = () => {
+    // 返回上一页
     router.back();
   };
 
@@ -391,6 +393,16 @@ const handleImageUpload = async (options: any) => {
     });
   };
 
+  watch(content, async () => {
+    await nextTick(); // 等待 DOM 更新
+    const footerSpan = document.querySelector(".md-editor-footer-item span");
+    if (footerSpan) {
+      console.log("footerSpan", footerSpan);
+      const match = footerSpan.textContent?.match(/\d+/);
+      wordCount.value = match ? parseInt(match[0]) : 0;
+    }
+  });
+
   // 页面加载时初始化
   onMounted(() => {
     fetchCategories();
@@ -453,6 +465,6 @@ const handleImageUpload = async (options: any) => {
     handleCancel,
     deleteTagFunction,
     deleteCategoryFunction,
-    initArticleData,
+    initArticleData
   };
 }

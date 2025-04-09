@@ -69,6 +69,7 @@ declare namespace API {
     tagIds?: string;
     status?: number;
     content?: string;
+    wordCount?: number;
   };
 
   type ArticleTagCountVO = {

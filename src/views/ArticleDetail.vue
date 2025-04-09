@@ -137,7 +137,6 @@ import MarkdownPreview from '@/components/MarkdownPreview.vue';
 const route = useRoute();
 const router = useRouter();
 const userStore = useUserStore();
-const { currentTheme } = useTheme();
 
 const articleId = ref<string | null>(null);
 const article = ref<any>(null);
@@ -207,32 +206,6 @@ const calculateReadingProgress = () => {
   const scrollHeight = document.documentElement.scrollHeight;
   const clientHeight = document.documentElement.clientHeight;
   readingProgress.value = Math.min(100, Math.max(0, (scrollTop / (scrollHeight - clientHeight)) * 100));
-};
-
-const updateActiveTocItem = () => {
-  const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
-  let closestHeading = null;
-  let minDistance = Infinity;
-
-  headings.forEach((heading) => {
-    if (!heading.id) return;
-
-    const rect = heading.getBoundingClientRect();
-    const distance = Math.abs(rect.top - 100); // 100px是考虑顶部偏移
-
-    if (rect.top <= 100 && distance < minDistance) {
-      minDistance = distance;
-      closestHeading = heading.id;
-    }
-  });
-
-  if (closestHeading && closestHeading !== currentActiveAnchor.value) {
-    currentActiveAnchor.value = closestHeading;
-    tocItems.value.forEach(item => {
-      item.active = item.anchor === currentActiveAnchor.value;
-    });
-    scrollTocToActiveItem();
-  }
 };
 
 const scrollTocToActiveItem = () => {
@@ -362,15 +335,6 @@ const updateTocActiveState = (anchor: string) => {
     };
   });
   scrollTocToActiveItem();
-};
-
-const updateFloatingToc = () => {
-  if (!floatingTocRef.value) return;
-  const viewportHeight = window.innerHeight;
-  const tocContent = floatingTocRef.value.querySelector('.toc-content') as HTMLElement | null;
-  if (tocContent) {
-    tocContent.style.maxHeight = `${viewportHeight - 160}px`;
-  }
 };
 
 const scrollToAnchor = (anchorId: string) => {

@@ -4,7 +4,6 @@
       v-model="text" 
       :preview-only="true"
       :theme="theme"
-      :language="language"
       class="full-height-editor"
     />
   </div>
@@ -22,8 +21,6 @@
   
   const props = defineProps<{
     content: string;
-    theme: string;
-    language: string;
   }>();
   
   const text = ref(props.content);

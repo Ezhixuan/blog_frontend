@@ -1,115 +1,235 @@
 <template>
     <div>
-      <div class="editor-header">
-        <button
-          type="button"
-          class="ai-generate-button"
-          @click="$emit('generate-content')"
-          :disabled="isGenerating || !title"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="button-icon"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-          >
-            <path d="M13 10V3L4 14h7v7l9-11h-7z" />
-          </svg>
-          <span>{{ isGenerating ? "生成中..." : "AI生成内容" }}</span>
-        </button>
-      </div>
-      <div class="editor-container">
-        <MdEditor
-          v-model="content"
-          :style="{ height: '500px' }"
-          :theme="theme"
-          class="markdown-editor"
-          @onUploadImg="handleUploadImage"
-          :footers="['markdownTotal', '=', 0, 'scrollSwitch']"
-        >
-        <template #defToolbars>
-      </template>
-        <template #defFooters>
-        <NormalFooterToolbar>{{ parseTime(new Date()) }}</NormalFooterToolbar>
-        </template>
-        </MdEditor>
-      </div>
+        <div class="editor-header">
+            <button type="button" class="ai-generate-button" @click="$emit('generate-content')"
+                :disabled="isGenerating || !title">
+                <svg xmlns="http://www.w3.org/2000/svg" class="button-icon" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+                    <path d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <span>{{ isGenerating ? "生成中..." : "AI生成内容" }}</span>
+            </button>
+        </div>
+        <div class="editor-container">
+            <MdEditor v-model="content" :style="{ height: '500px' }" :theme="theme" class="markdown-editor"
+                @onUploadImg="handleUploadImage" :formatCopiedText="formatCopiedText" :showToolbarName = "true"
+                :footers="['markdownTotal', '=', 0, 'scrollSwitch']" :toolbars="toolbars">
+                <template #defToolbars>
+                </template>
+                <template #defFooters>
+                    <NormalFooterToolbar>{{ parseTime(new Date()) }}</NormalFooterToolbar>
+                </template>
+            </MdEditor>
+        </div>
     </div>
-  </template>
-  
-  <script setup lang="ts">
-  import { ref, watch, computed } from "vue";
-  import { MdEditor, NormalFooterToolbar } from "md-editor-v3";
-  import "md-editor-v3/lib/style.css";
-  import parseTime from "@/utils/time";
-  import { useTheme } from '../utils/theme'
-  const props = defineProps({
+</template>
+
+<script setup lang="ts">
+import { ref, watch, computed, nextTick } from "vue";
+import { MdEditor, NormalFooterToolbar } from "md-editor-v3";
+import "md-editor-v3/lib/style.css";
+import parseTime from "@/utils/time";
+import { useTheme } from '../utils/theme'
+const props = defineProps({
     modelValue: {
-      type: String,
-      required: true,
+        type: String,
+        required: true,
     },
     title: {
-      type: String,
-      default: "",
+        type: String,
+        default: "",
     },
     isGenerating: {
-      type: Boolean,
-      default: false,
+        type: Boolean,
+        default: false,
     },
-    isDark: {
-      type: Boolean,
-      default: false,
+    showToolbarName: {
+        type: Boolean,
+        default: true,
     },
-  });
-  
-  const emit = defineEmits([
+
+});
+
+const formatCopiedText = (text) => {
+  return `${text}  - from md-editor-v3`;
+};
+
+const emit = defineEmits([
     'update:modelValue',
     'upload-image',
-    'generate-content'
-  ]);
-  
-  const content = ref(props.modelValue);
-  
-  // 根据传入的 isDark 属性计算主题
-  const { currentTheme } = useTheme();
-  const theme = computed(() => currentTheme.value);
-  
-  // 监听内容变化
-  watch(content, (newValue) => {
-    emit('update:modelValue', newValue);
-  });
+    'generate-content',
+]);
 
-  const handleUploadImage = async (files: File[], callback: (urls: string[]) => void) => {
+const content = ref(props.modelValue);
+
+// 根据传入的 isDark 属性计算主题
+const { currentTheme } = useTheme();
+const theme = computed(() => currentTheme.value);
+
+const footerWordCount = ref(0);
+
+
+// 监听内容变化
+watch(content, async () => {
+    emit("update:modelValue", content.value);
+});
+
+const handleUploadImage = async (files: File[], callback: (urls: string[]) => void) => {
     const urls: string[] = [];
-    
-    for (const file of files) {
-      try {
-        emit("upload-image", file, (url: string) => {
-          urls.push(url);
-          if (urls.length === files.length) {
-            callback(urls);
-          }
-        });
-      } catch (error) {
-        console.error("图片上传失败", error);
-      }
-    }
-  };
 
-  </script>
-  
-  <style scoped>
-  .editor-header {
+    for (const file of files) {
+        try {
+            emit("upload-image", file, (url: string) => {
+                urls.push(url);
+                if (urls.length === files.length) {
+                    callback(urls);
+                }
+            });
+        } catch (error) {
+            console.error("图片上传失败", error);
+        }
+    }
+};
+
+const toolbars = [
+    'bold',
+    'underline',
+    'italic',
+    '-',
+    'strikeThrough',
+    'title',
+    'sub',
+    'sup',
+    'quote',
+    'unorderedList',
+    'orderedList',
+    'task', // ^2.4.0
+    '-',
+    'codeRow',
+    'code',
+    'link',
+    'image',
+    'table',
+    'mermaid',
+    'katex',
+    '=',
+    'pageFullscreen',
+    'fullscreen',
+    'preview',
+    'htmlPreview',
+    'catalog',
+];
+
+export interface ToolbarTips {
+    bold?: string;
+    underline?: string;
+    italic?: string;
+    strikeThrough?: string;
+    title?: string;
+    sub?: string;
+    sup?: string;
+    quote?: string;
+    unorderedList?: string;
+    orderedList?: string;
+    task?: string; // ^2.4.0
+    codeRow?: string;
+    code?: string;
+    link?: string;
+    image?: string;
+    table?: string;
+    mermaid?: string;
+    katex?: string;
+    revoke?: string;
+    next?: string;
+    save?: string;
+    prettier?: string;
+    pageFullscreen?: string;
+    fullscreen?: string;
+    catalog?: string;
+    preview?: string;
+    htmlPreview?: string;
+    github?: string;
+    '-'?: string;
+    '='?: string;
+}
+
+export interface StaticTextDefaultValue {
+    // 工具栏hover提示
+    toolbarTips?: ToolbarTips;
+    // 标题下拉框内容
+    titleItem?: {
+        h1?: string;
+        h2?: string;
+        h3?: string;
+        h4?: string;
+        h5?: string;
+        h6?: string;
+    };
+    imgTitleItem?: {
+        link: string;
+        upload: string;
+        clip2upload: string;
+    };
+    // 添加链接或图片时弹窗提示
+    linkModalTips?: {
+        linkTitle?: string;
+        imageTitle?: string;
+        descLabel?: string;
+        descLabelPlaceHolder?: string;
+        urlLabel?: string;
+        urlLabelPlaceHolder?: string;
+        buttonOK?: string;
+    };
+    // 裁剪图片弹窗提示，v1.2.0
+    clipModalTips?: {
+        title?: string;
+        buttonUpload?: string;
+    };
+    // 预览代码中复制代码提示
+    copyCode?: {
+        text?: string;
+        successTips?: string;
+        failTips?: string;
+    };
+    mermaid?: {
+        // 流程图
+        flow?: string;
+        // 时序图
+        sequence?: string;
+        // 甘特图
+        gantt?: string;
+        // 类图
+        class?: string;
+        // 状态图
+        state?: string;
+        // 饼图
+        pie?: string;
+        // 关系图
+        relationship?: string;
+        // 旅程图
+        journey?: string;
+    };
+    katex?: {
+        // 行内公式
+        inline: string;
+        // 块级公式
+        block: string;
+    };
+    footer?: {
+        markdownTotal: string;
+        scrollAuto: string;
+    };
+}
+</script>
+
+<style scoped>
+.editor-header {
     display: flex;
     justify-content: flex-end;
     margin-bottom: 0.5rem;
-  }
-  
-  .ai-generate-button {
+}
+
+.ai-generate-button {
     display: inline-flex;
     align-items: center;
     padding-left: 0.75rem;
@@ -129,64 +249,62 @@
     transform: var(--tw-transform);
     outline: 2px solid transparent;
     outline-offset: 2px;
-    --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width)
-      var(--tw-ring-offset-color);
-    --tw-ring-shadow: var(--tw-ring-inset) 0 0 0
-      calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+    --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+    --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
     box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow),
-      var(--tw-shadow, 0 0 #0000);
+        var(--tw-shadow, 0 0 #0000);
     overflow: hidden;
-  }
-  
-  .dark .ai-generate-button {
+}
+
+.dark .ai-generate-button {
     background-image: linear-gradient(to right, #4f46e5, #7c3aed);
-  }
-  
-  .ai-generate-button:hover {
+}
+
+.ai-generate-button:hover {
     background-image: linear-gradient(to right, #4f46e5, #7c3aed);
     transform: var(--tw-transform);
     --tw-scale-x: 1.05;
     --tw-scale-y: 1.05;
     --tw-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
     --tw-shadow-colored: 0 4px 6px -1px var(--tw-shadow-color),
-      0 2px 4px -2px var(--tw-shadow-color);
+        0 2px 4px -2px var(--tw-shadow-color);
     box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000),
-      var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
-  }
-  
-  .dark .ai-generate-button:hover {
+        var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+
+.dark .ai-generate-button:hover {
     background-image: linear-gradient(to right, #4338ca, #6d28d9);
-  }
-  
-  .ai-generate-button:disabled {
+}
+
+.ai-generate-button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-  }
-  
-  .button-icon {
+}
+
+.button-icon {
     height: 0.75rem;
     width: 0.75rem;
     margin-right: 0.25rem;
-  }
+}
 
-  /* 新增工具栏图标样式 */
+/* 新增工具栏图标样式 */
 :deep(.md-editor-toolbar) {
-  --md-badge-icon-size: 20px;
-  --md-editor-icon-size: 20px;
+    --md-badge-icon-size: 20px;
+    --md-editor-icon-size: 20px;
 }
 
 :deep(.md-editor-toolbar-item svg) {
-  width: 20px;
-  height: 20px;
+    width: 20px;
+    height: 20px;
 }
 
 /* 调整工具栏整体高度 */
 :deep(.md-editor-toolbar-wrapper) {
-  height: 42px;
+    height: 42px;
 }
 
 /* 调整工具栏按钮间距 */
 :deep(.md-editor-toolbar-item) {
-  padding: 10px 6px;
+    padding: 10px 6px;
 }
-  </style>
+</style>

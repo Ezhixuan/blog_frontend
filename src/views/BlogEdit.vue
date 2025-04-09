@@ -83,7 +83,6 @@ const {
   handleGenerateContent,
   handleSubmit,
   handleCancel,
-
   // 初始化文章数据方法
   initArticleData
 } = useArticleForm();
@@ -397,7 +396,8 @@ onMounted(() => {
       leave-from-class="opacity-100 max-h-[600px] overflow-hidden" leave-to-class="opacity-0 max-h-0 overflow-hidden">
       <div v-if="contentExpanded">
         <MarkdownEditor v-model="content" :title="title" :is-generating="isGenerating"
-          @upload-image="handleUploadImage2" @generate-content="handleGenerateContent" />
+          @upload-image="handleUploadImage2" @generate-content="handleGenerateContent"
+          :footers="['markdownTotal', '=', 0, 'scrollSwitch']" />
       </div>
     </transition>
     <div class="form-actions" :class="{ 'visible-actions': formVisible, 'hidden-actions': !formVisible }">
