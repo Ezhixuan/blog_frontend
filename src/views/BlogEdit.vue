@@ -414,13 +414,21 @@ onMounted(() => {
 <style scoped>
 /* 基础容器样式 */
 .blog-edit-container {
+  width: 100%;
   max-width: 80rem;
-  margin-left: auto;
-  margin-right: auto;
-  padding-top: 2rem;
-  padding-bottom: 2rem;
-  padding-left: 1rem;
-  padding-right: 1rem;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+@media (max-width: 640px) {
+  .blog-edit-container {
+    padding: 1rem 0.5rem;
+  }
+  
+  .form-container {
+    padding: 1rem;
+    border-radius: 0.75rem;
+  }
 }
 
 .loading-container {
@@ -615,8 +623,14 @@ onMounted(() => {
 /* 网格布局 */
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* 部分头部样式 */
@@ -939,10 +953,31 @@ onMounted(() => {
 
 /* 封面图片上传样式 */
 .cover-upload-container {
-  margin-top: 0.25rem;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .cover-upload-container {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+.cover-image, 
+.cover-upload-placeholder {
+  width: 100%;
+  height: auto;
+  max-height: 200px;
+}
+
+@media (min-width: 640px) {
+  .cover-image,
+  .cover-upload-placeholder {
+    width: 12rem;
+    height: 8rem;
+  }
 }
 
 .cover-image-container {
