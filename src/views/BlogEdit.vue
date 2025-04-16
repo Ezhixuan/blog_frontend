@@ -222,6 +222,7 @@ onMounted(() => {
           </div>
         </div>
       </div>
+      <p></p>
 
       <div class="form-section"
         :class="{ 'translate-y-0 opacity-100': animations.title, 'translate-y-4 opacity-0': !animations.title }"
@@ -232,7 +233,7 @@ onMounted(() => {
         <input id="title" type="text" v-model="title" class="form-input"
           :class="{ 'active-input': activeSection === 'title' }" placeholder="请输入博客标题" />
       </div>
-
+      <p></p>
       <div class="form-section"
         :class="{ 'translate-y-0 opacity-100': animations.summary, 'translate-y-4 opacity-0': !animations.summary }"
         @mouseenter="activeSection = 'summary'" @mouseleave="activeSection = ''">
@@ -242,6 +243,7 @@ onMounted(() => {
         <textarea id="summary" v-model="summary" rows="3" class="form-textarea"
           :class="{ 'active-input': activeSection === 'summary' }" placeholder="请输入博客摘要"></textarea>
       </div>
+      <p></p>
 
       <div class="form-grid">
         <div class="form-section"
@@ -358,7 +360,7 @@ onMounted(() => {
           </div>
         </div>
       </div>
-
+      <p></p>
       <div class="form-section"
         :class="{ 'translate-y-0 opacity-100': animations.status, 'translate-y-4 opacity-0': !animations.status }"
         @mouseenter="activeSection = 'status'" @mouseleave="activeSection = ''">
@@ -387,13 +389,13 @@ onMounted(() => {
           </label>
         </div>
         <div class="form-actions" :class="{ 'visible-actions': formVisible, 'hidden-actions': !formVisible }">
-      <button type="button" class="cancel-button" @click="handleCancel">
-        取消
-      </button>
-      <button type="button" :disabled="isSubmitting" class="submit-button" @click="handleSubmit">
-        <span>{{ isSubmitting ? '提交中...' : '提交博客' }}</span>
-      </button>
-    </div>
+          <button type="button" class="cancel-button" @click="handleCancel">
+            取消
+          </button>
+          <button type="button" :disabled="isSubmitting" class="submit-button" @click="handleSubmit">
+            <span>{{ isSubmitting ? '提交中...' : '提交博客' }}</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -424,7 +426,7 @@ onMounted(() => {
   .blog-edit-container {
     padding: 1rem 0.5rem;
   }
-  
+
   .form-container {
     padding: 1rem;
     border-radius: 0.75rem;
@@ -965,7 +967,7 @@ onMounted(() => {
   }
 }
 
-.cover-image, 
+.cover-image,
 .cover-upload-placeholder {
   width: 100%;
   height: auto;
@@ -973,6 +975,7 @@ onMounted(() => {
 }
 
 @media (min-width: 640px) {
+
   .cover-image,
   .cover-upload-placeholder {
     width: 12rem;
