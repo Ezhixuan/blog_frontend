@@ -52,7 +52,12 @@ const popularArticles = [
     title: "热门文章2：TypeScript 在前端开发中的应用",
     summary: "了解 TypeScript 如何提升前端开发的效率和可维护性。",
     link: "#"
-  }
+  },
+  {
+    title: "热门文章1：Vue 3 性能优化技巧",
+    summary: "探索 Vue 3 的性能优化技巧，让你的应用更加流畅。",
+    link: "#"
+  },
 ];
 
 // 模拟最新项目数据

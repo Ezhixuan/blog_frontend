@@ -1,23 +1,603 @@
+<template>
+  <div class="blog-edit-container">
+    <div v-if="isLoading" class="loading-container">
+      <div class="loading-spinner"></div>
+      <span class="loading-text">加载文章中...</span>
+    </div>
+    <div
+      v-else
+      class="form-container"
+      :class="{
+        'scale-100 opacity-100': formVisible,
+        'scale-95 opacity-0': !formVisible,
+      }"
+    >
+      <h1 class="form-title">
+        <span
+          class="title-text"
+          :class="{
+            'translate-x-0 opacity-100': formVisible,
+            '-translate-x-full opacity-0': !formVisible,
+          }"
+        >
+          {{ articleId ? "编辑博客" : "新建博客" }}
+        </span>
+        <div
+          class="title-divider"
+          :class="{ 'scale-x-100': formVisible, 'scale-x-0': !formVisible }"
+        ></div>
+      </h1>
+
+      <div class="form-content">
+        <!-- 封面图片上传 -->
+        <div
+          class="form-section"
+          :class="{
+            'translate-y-0 opacity-100': animations.title,
+            'translate-y-4 opacity-0': !animations.title,
+          }"
+          @mouseenter="activeSection = 'cover'"
+          @mouseleave="activeSection = ''"
+        >
+          <label
+            class="section-label"
+            :class="{ 'active-label': activeSection === 'cover' }"
+          >
+            博客封面
+          </label>
+
+          <div class="cover-upload-container">
+            <div v-if="coverUrl" class="cover-image-container">
+              <img :src="coverUrl" alt="封面图片" class="cover-image" />
+              <div class="cover-image-overlay">
+                <button @click="removeCoverImage" class="cover-remove-button">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-5 w-5"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div v-if="!coverUrl" class="cover-upload-placeholder">
+              <button
+                type="button"
+                @click="showPictureModal"
+                class="cover-upload-button"
+              >
+                <div class="cover-upload-icon-container">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="cover-upload-icon"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
+                  </svg>
+                  <p class="cover-upload-text">点击选择封面图片</p>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- 添加图片选择模态窗口 -->
+          <a-modal
+            v-model:visible="isPictureModalVisible"
+            :title="coverUrl === '' ? '插入图片' : '选择封面图片'"
+            width="800px"
+            :footer="null"
+          >
+            <div v-if="isFetchingPictures" class="loading-container">
+              <a-spin size="large" />
+            </div>
+            <div v-else class="picture-grid">
+              <div
+                v-for="picture in pictureList"
+                :key="picture.id"
+                class="picture-item"
+                @click="picture.url && selectPicture(picture.url)"
+              >
+                <img
+                  :src="picture.url"
+                  :alt="picture.name"
+                  class="picture-thumbnail"
+                />
+                <div class="picture-name">{{ picture.name }}</div>
+              </div>
+            </div>
+            <div class="upload-section">
+              <a-upload
+                :customRequest="handleImageUpload"
+                :showUploadList="false"
+                accept="image/*"
+                :disabled="isUploading"
+              >
+                <a-button type="primary" :loading="isUploading">
+                  <upload-outlined />
+                  上传新图片
+                </a-button>
+              </a-upload>
+            </div>
+          </a-modal>
+
+          <div v-if="isUploading" class="uploading-indicator">
+            <svg
+              class="uploading-spinner"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              ></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+            上传中...
+          </div>
+        </div>
+      </div>
+      <p></p>
+
+      <div
+        class="form-section"
+        :class="{
+          'translate-y-0 opacity-100': animations.title,
+          'translate-y-4 opacity-0': !animations.title,
+        }"
+        @mouseenter="activeSection = 'title'"
+        @mouseleave="activeSection = ''"
+      >
+        <label
+          for="title"
+          class="section-label"
+          :class="{ 'active-label': activeSection === 'title' }"
+        >
+          标题
+        </label>
+        <input
+          id="title"
+          type="text"
+          v-model="title"
+          class="form-input"
+          :class="{ 'active-input': activeSection === 'title' }"
+          placeholder="请输入博客标题"
+        />
+      </div>
+      <p></p>
+      <div
+        class="form-section"
+        :class="{
+          'translate-y-0 opacity-100': animations.summary,
+          'translate-y-4 opacity-0': !animations.summary,
+        }"
+        @mouseenter="activeSection = 'summary'"
+        @mouseleave="activeSection = ''"
+      >
+        <label
+          for="summary"
+          class="section-label"
+          :class="{ 'active-label': activeSection === 'summary' }"
+        >
+          摘要
+        </label>
+        <textarea
+          id="summary"
+          v-model="summary"
+          rows="3"
+          class="form-textarea"
+          :class="{ 'active-input': activeSection === 'summary' }"
+          placeholder="请输入博客摘要"
+        ></textarea>
+      </div>
+      <p></p>
+
+      <div class="form-grid">
+        <div
+          class="form-section"
+          :class="{
+            'translate-y-0 opacity-100': animations.category,
+            'translate-y-4 opacity-0': !animations.category,
+          }"
+          @mouseenter="activeSection = 'category'"
+          @mouseleave="activeSection = ''"
+        >
+          <div class="section-header">
+            <label
+              for="category"
+              class="section-label"
+              :class="{ 'active-label': activeSection === 'category' }"
+            >
+              分类
+            </label>
+            <button
+              type="button"
+              class="add-button blue-button"
+              @click="showCategoryForm = !showCategoryForm"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="button-icon"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              新增分类
+            </button>
+          </div>
+
+          <!-- 新增分类表单 -->
+          <div v-if="showCategoryForm" class="add-form-container blue-form">
+            <div class="add-form-content">
+              <input
+                type="text"
+                v-model="newCategoryName"
+                placeholder="输入新分类名称"
+                class="add-form-input"
+              />
+              <button
+                type="button"
+                :disabled="isAddingCategory || !newCategoryName.trim()"
+                class="add-form-submit blue-submit"
+                @click="addNewCategory"
+              >
+                <span v-if="isAddingCategory">添加中...</span>
+                <span v-else>添加</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 分类选择 -->
+          <a-select
+            id="category"
+            v-model:value="categoryId"
+            :loading="isLoadingCategories"
+            show-search
+            placeholder="请选择或搜索分类"
+            :filter-option="filterOption"
+            class="w-full transition-all duration-300"
+            :class="{ 'ant-select-focused': activeSection === 'category' }"
+          >
+            <a-select-option
+              v-if="
+                categoryId &&
+                categoryName &&
+                !categories.some((c) => c.id === categoryId)
+              "
+              :key="categoryId"
+              :value="categoryId"
+              :label="categoryName"
+            >
+              <div class="select-option">
+                <span>{{ categoryName }}</span>
+              </div>
+            </a-select-option>
+            <a-select-option
+              v-for="category in categories"
+              :key="category.id"
+              :value="category.id"
+              :label="category.name"
+            >
+              <div class="select-option">
+                <span>{{ category.name }}</span>
+                <button
+                  @click.stop="deleteCategoryFunction(category.id)"
+                  class="delete-button"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="delete-icon"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </a-select-option>
+          </a-select>
+          <div v-if="isLoadingCategories" class="loading-indicator">
+            加载分类中...
+          </div>
+        </div>
+
+        <div
+          class="form-section"
+          :class="{
+            'translate-y-0 opacity-100': animations.tags,
+            'translate-y-4 opacity-0': !animations.tags,
+          }"
+          @mouseenter="activeSection = 'tags'"
+          @mouseleave="activeSection = ''"
+        >
+          <div class="section-header">
+            <label
+              class="section-label"
+              :class="{ 'active-label': activeSection === 'tags' }"
+            >
+              标签
+            </label>
+            <button
+              type="button"
+              class="add-button green-button"
+              @click="showTagForm = !showTagForm"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="button-icon"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              新增标签
+            </button>
+          </div>
+
+          <!-- 新增标签表单 -->
+          <div v-if="showTagForm" class="add-form-container green-form">
+            <div class="add-form-content">
+              <input
+                type="text"
+                v-model="newTagName"
+                placeholder="输入新标签名称"
+                class="add-form-input"
+              />
+              <button
+                type="button"
+                :disabled="isAddingTag || !newTagName.trim()"
+                class="add-form-submit green-submit"
+                @click="addNewTag"
+              >
+                <span v-if="isAddingTag">添加中...</span>
+                <span v-else>添加</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="tags-container">
+            <div v-if="isLoadingTags" class="loading-indicator">
+              加载标签中...
+            </div>
+
+            <!-- 标签选择 -->
+            <a-select
+              v-model:value="tagIds"
+              mode="multiple"
+              :loading="isLoadingTags"
+              show-search
+              placeholder="请选择或搜索标签"
+              :filter-option="filterOption"
+              class="w-full transition-all duration-300"
+              :class="{ 'ant-select-focused': activeSection === 'tags' }"
+              style="min-height: 38px"
+            >
+              <template v-for="(tagId, index) in tagIds" :key="`temp-${index}`">
+                <a-select-option
+                  v-if="
+                    tagId &&
+                    !tags.some((t) => t.id === tagId) &&
+                    tagNames[index]
+                  "
+                  :key="`temp-${tagId}`"
+                  :value="tagId"
+                  :label="tagNames[index]"
+                >
+                  <div class="select-option">
+                    <span>{{ tagNames[index] }}</span>
+                  </div>
+                </a-select-option>
+              </template>
+              <a-select-option
+                v-for="tag in tags"
+                :key="tag.id"
+                :value="tag.id"
+                :label="tag.name"
+              >
+                <div class="select-option">
+                  <span>{{ tag.name }}</span>
+                  <button
+                    v-if="!tagIds.includes(tag.id)"
+                    @click.stop="deleteTagFunction(tag.id)"
+                    class="delete-button"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="delete-icon"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </a-select-option>
+            </a-select>
+          </div>
+        </div>
+      </div>
+      <p></p>
+      <div
+        class="form-section"
+        :class="{
+          'translate-y-0 opacity-100': animations.status,
+          'translate-y-4 opacity-0': !animations.status,
+        }"
+        @mouseenter="activeSection = 'status'"
+        @mouseleave="activeSection = ''"
+      >
+        <div class="section-header">
+          <label
+            class="section-label"
+            :class="{ 'active-label': activeSection === 'status' }"
+          >
+            发布状态
+          </label>
+          <button
+            type="button"
+            class="add-button purple-button"
+            @click="contentExpanded = !contentExpanded"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="button-icon"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                v-if="contentExpanded"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M5 15l7-7 7 7"
+              />
+              <path
+                v-else
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+            {{ contentExpanded ? "收起" : "展开" }}
+          </button>
+        </div>
+        <div class="status-options">
+          <label class="status-option">
+            <input
+              type="radio"
+              v-model="status"
+              :value="1"
+              class="status-radio"
+            />
+            <span class="status-label">立即发布</span>
+          </label>
+          <label class="status-option">
+            <input
+              type="radio"
+              v-model="status"
+              :value="0"
+              class="status-radio"
+            />
+            <span class="status-label">草稿保存</span>
+          </label>
+        </div>
+        <div
+          class="form-actions"
+          :class="{
+            'visible-actions': formVisible,
+            'hidden-actions': !formVisible,
+          }"
+        >
+          <button type="button" class="cancel-button" @click="handleCancel">
+            取消
+          </button>
+          <button
+            type="button"
+            :disabled="isSubmitting"
+            class="submit-button"
+            @click="handleSubmit"
+          >
+            <span>{{ isSubmitting ? "提交中..." : "提交博客" }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div>
+    <transition
+      enter-active-class="transition-all duration-500 ease-out"
+      leave-active-class="transition-all duration-500 ease-in"
+      enter-from-class="opacity-0 max-h-0 overflow-hidden"
+      enter-to-class="opacity-100 max-h-[600px] overflow-hidden"
+      leave-from-class="opacity-100 max-h-[600px] overflow-hidden"
+      leave-to-class="opacity-0 max-h-0 overflow-hidden"
+    >
+      <div v-if="contentExpanded">
+        <MarkdownEditor
+          v-model="content"
+          :title="title"
+          :is-generating="isGenerating"
+          @upload-image="handleUploadImage2"
+          @generate-content="handleGenerateContent"
+          :footers="['markdownTotal', '=', 0, 'scrollSwitch']"
+        />
+      </div>
+    </transition>
+  </div>
+</template>
+
 <script setup lang="ts">
-import { useArticleForm } from '@/composables/useArticleForm';
-import { useRoute } from 'vue-router';
-import { ref, onMounted } from 'vue';
-import { getArticleInfo } from '@/api/articleController';
+import { useArticleForm } from "@/composables/useArticleForm";
+import { useRoute } from "vue-router";
+import { ref, onMounted } from "vue";
+import { getArticleInfo } from "@/api/articleController";
 import message from "@/utils/message";
-import { UploadOutlined } from '@ant-design/icons-vue';
-import MarkdownEditor from '@/components/MarkdownEdit.vue';
-import { useTheme } from '@/utils/theme'
+import { UploadOutlined } from "@ant-design/icons-vue";
+import MarkdownEditor from "@/components/MarkdownEdit.vue";
+import { useTheme } from "@/utils/theme";
 
 // 获取路由参数
 const route = useRoute();
-const articleId = route.query.id ? route.query.id : undefined;
+const articleId = route.query.id ? String(route.query.id) : undefined;
 const categoryName = route.query.categoryName as string;
-const tagNames = route.query.tagNames ? (route.query.tagNames as string).split(',') : [];
+// 注释掉，不再使用这个局部变量，而是使用从useArticleForm中导入的tagNames
+// const tagNames = route.query.tagNames
+//   ? (route.query.tagNames as string).split(",")
+//   : [];
 const isLoading = ref(false);
 
 const { currentTheme } = useTheme();
 
-console.log(currentTheme.value)
+console.log(currentTheme.value);
 
 // 定义类型
 interface SelectOption {
@@ -50,6 +630,7 @@ const {
 
   // 标签相关
   tags,
+  tagNames,
   newTagName,
   showTagForm,
   isLoadingTags,
@@ -68,7 +649,6 @@ const {
   showPictureModal,
   selectPicture,
 
-
   // UI状态
   contentExpanded,
   formVisible,
@@ -84,14 +664,14 @@ const {
   handleSubmit,
   handleCancel,
   // 初始化文章数据方法
-  initArticleData
+  initArticleData,
 } = useArticleForm();
 
 // 从API获取文章详情
-const fetchArticleDetail = async (id: number) => {
+const fetchArticleDetail = async (id: string) => {
   isLoading.value = true;
   try {
-    const res = await getArticleInfo({ id: id.toString() });
+    const res = await getArticleInfo({ id: id });
     if (res.data?.code === 0 && res.data?.data) {
       const article = res.data.data;
 
@@ -133,285 +713,6 @@ onMounted(() => {
   }
 });
 </script>
-
-<template>
-  <div class="blog-edit-container">
-    <div v-if="isLoading" class="loading-container">
-      <div class="loading-spinner"></div>
-      <span class="loading-text">加载文章中...</span>
-    </div>
-    <div v-else class="form-container"
-      :class="{ 'scale-100 opacity-100': formVisible, 'scale-95 opacity-0': !formVisible }">
-      <h1 class="form-title">
-        <span class="title-text"
-          :class="{ 'translate-x-0 opacity-100': formVisible, '-translate-x-full opacity-0': !formVisible }">
-          {{ articleId ? '编辑博客' : '新建博客' }}
-        </span>
-        <div class="title-divider" :class="{ 'scale-x-100': formVisible, 'scale-x-0': !formVisible }"></div>
-      </h1>
-
-      <div class="form-content">
-        <!-- 封面图片上传 -->
-        <div class="form-section"
-          :class="{ 'translate-y-0 opacity-100': animations.title, 'translate-y-4 opacity-0': !animations.title }"
-          @mouseenter="activeSection = 'cover'" @mouseleave="activeSection = ''">
-          <label class="section-label" :class="{ 'active-label': activeSection === 'cover' }">
-            博客封面
-          </label>
-
-          <div class="cover-upload-container">
-            <div v-if="coverUrl" class="cover-image-container">
-              <img :src="coverUrl" alt="封面图片" class="cover-image" />
-              <div class="cover-image-overlay">
-                <button @click="removeCoverImage" class="cover-remove-button">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd"
-                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                      clip-rule="evenodd" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            <div v-if="!coverUrl" class="cover-upload-placeholder">
-              <button type="button" @click="showPictureModal" class="cover-upload-button">
-                <div class="cover-upload-icon-container">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="cover-upload-icon" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  <p class="cover-upload-text">点击选择封面图片</p>
-                </div>
-              </button>
-            </div>
-          </div>
-
-          <!-- 添加图片选择模态窗口 -->
-          <a-modal v-model:visible="isPictureModalVisible" :title="coverUrl === '' ? '插入图片' : '选择封面图片'" width="800px"
-            :footer="null">
-            <div v-if="isFetchingPictures" class="loading-container">
-              <a-spin size="large" />
-            </div>
-            <div v-else class="picture-grid">
-              <div v-for="picture in pictureList" :key="picture.id" class="picture-item"
-                @click="selectPicture(picture.url)">
-                <img :src="picture.url" :alt="picture.name" class="picture-thumbnail" />
-                <div class="picture-name">{{ picture.name }}</div>
-              </div>
-            </div>
-            <div class="upload-section">
-              <a-upload :customRequest="handleImageUpload" :showUploadList="false" accept="image/*"
-                :disabled="isUploading">
-                <a-button type="primary" :loading="isUploading">
-                  <upload-outlined />
-                  上传新图片
-                </a-button>
-              </a-upload>
-            </div>
-          </a-modal>
-
-          <div v-if="isUploading" class="uploading-indicator">
-            <svg class="uploading-spinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-              </path>
-            </svg>
-            上传中...
-          </div>
-        </div>
-      </div>
-      <p></p>
-
-      <div class="form-section"
-        :class="{ 'translate-y-0 opacity-100': animations.title, 'translate-y-4 opacity-0': !animations.title }"
-        @mouseenter="activeSection = 'title'" @mouseleave="activeSection = ''">
-        <label for="title" class="section-label" :class="{ 'active-label': activeSection === 'title' }">
-          标题
-        </label>
-        <input id="title" type="text" v-model="title" class="form-input"
-          :class="{ 'active-input': activeSection === 'title' }" placeholder="请输入博客标题" />
-      </div>
-      <p></p>
-      <div class="form-section"
-        :class="{ 'translate-y-0 opacity-100': animations.summary, 'translate-y-4 opacity-0': !animations.summary }"
-        @mouseenter="activeSection = 'summary'" @mouseleave="activeSection = ''">
-        <label for="summary" class="section-label" :class="{ 'active-label': activeSection === 'summary' }">
-          摘要
-        </label>
-        <textarea id="summary" v-model="summary" rows="3" class="form-textarea"
-          :class="{ 'active-input': activeSection === 'summary' }" placeholder="请输入博客摘要"></textarea>
-      </div>
-      <p></p>
-
-      <div class="form-grid">
-        <div class="form-section"
-          :class="{ 'translate-y-0 opacity-100': animations.category, 'translate-y-4 opacity-0': !animations.category }"
-          @mouseenter="activeSection = 'category'" @mouseleave="activeSection = ''">
-          <div class="section-header">
-            <label for="category" class="section-label" :class="{ 'active-label': activeSection === 'category' }">
-              分类
-            </label>
-            <button type="button" class="add-button blue-button" @click="showCategoryForm = !showCategoryForm">
-              <svg xmlns="http://www.w3.org/2000/svg" class="button-icon" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-              </svg>
-              新增分类
-            </button>
-          </div>
-
-          <!-- 新增分类表单 -->
-          <div v-if="showCategoryForm" class="add-form-container blue-form">
-            <div class="add-form-content">
-              <input type="text" v-model="newCategoryName" placeholder="输入新分类名称" class="add-form-input" />
-              <button type="button" :disabled="isAddingCategory || !newCategoryName.trim()"
-                class="add-form-submit blue-submit" @click="addNewCategory">
-                <span v-if="isAddingCategory">添加中...</span>
-                <span v-else>添加</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- 分类选择 -->
-          <a-select id="category" v-model:value="categoryId" :loading="isLoadingCategories" show-search
-            placeholder="请选择或搜索分类" :filter-option="filterOption" class="w-full transition-all duration-300"
-            :class="{ 'ant-select-focused': activeSection === 'category' }">
-            <a-select-option v-if="categoryId && categoryName && !categories.some(c => c.id === categoryId)"
-              :key="categoryId" :value="categoryId" :label="categoryName">
-              <div class="select-option">
-                <span>{{ categoryName }}</span>
-              </div>
-            </a-select-option>
-            <a-select-option v-for="category in categories" :key="category.id" :value="category.id"
-              :label="category.name">
-              <div class="select-option">
-                <span>{{ category.name }}</span>
-                <button @click.stop="deleteCategoryFunction(category.id)" class="delete-button">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="delete-icon" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </button>
-              </div>
-            </a-select-option>
-          </a-select>
-          <div v-if="isLoadingCategories" class="loading-indicator">加载分类中...</div>
-        </div>
-
-        <div class="form-section"
-          :class="{ 'translate-y-0 opacity-100': animations.tags, 'translate-y-4 opacity-0': !animations.tags }"
-          @mouseenter="activeSection = 'tags'" @mouseleave="activeSection = ''">
-          <div class="section-header">
-            <label class="section-label" :class="{ 'active-label': activeSection === 'tags' }">
-              标签
-            </label>
-            <button type="button" class="add-button green-button" @click="showTagForm = !showTagForm">
-              <svg xmlns="http://www.w3.org/2000/svg" class="button-icon" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-              </svg>
-              新增标签
-            </button>
-          </div>
-
-          <!-- 新增标签表单 -->
-          <div v-if="showTagForm" class="add-form-container green-form">
-            <div class="add-form-content">
-              <input type="text" v-model="newTagName" placeholder="输入新标签名称" class="add-form-input" />
-              <button type="button" :disabled="isAddingTag || !newTagName.trim()" class="add-form-submit green-submit"
-                @click="addNewTag">
-                <span v-if="isAddingTag">添加中...</span>
-                <span v-else>添加</span>
-              </button>
-            </div>
-          </div>
-
-          <div class="tags-container">
-            <div v-if="isLoadingTags" class="loading-indicator">加载标签中...</div>
-
-            <!-- 标签选择 -->
-            <a-select v-model:value="tagIds" mode="multiple" :loading="isLoadingTags" show-search placeholder="请选择或搜索标签"
-              :filter-option="filterOption" class="w-full transition-all duration-300"
-              :class="{ 'ant-select-focused': activeSection === 'tags' }" style="min-height: 38px;">
-              <template v-for="(tagId, index) in tagIds" :key="`temp-${index}`">
-                <a-select-option v-if="tagId && !tags.some(t => t.id === tagId) && tagNames[index]"
-                  :key="`temp-${tagId}`" :value="tagId" :label="tagNames[index]">
-                  <div class="select-option">
-                    <span>{{ tagNames[index] }}</span>
-                  </div>
-                </a-select-option>
-              </template>
-              <a-select-option v-for="tag in tags" :key="tag.id" :value="tag.id" :label="tag.name">
-                <div class="select-option">
-                  <span>{{ tag.name }}</span>
-                  <button @click.stop="deleteTagFunction(tag.id)" class="delete-button">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="delete-icon" fill="none" viewBox="0 0 24 24"
-                      stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
-                </div>
-              </a-select-option>
-            </a-select>
-          </div>
-        </div>
-      </div>
-      <p></p>
-      <div class="form-section"
-        :class="{ 'translate-y-0 opacity-100': animations.status, 'translate-y-4 opacity-0': !animations.status }"
-        @mouseenter="activeSection = 'status'" @mouseleave="activeSection = ''">
-        <div class="section-header">
-          <label class="section-label" :class="{ 'active-label': activeSection === 'status' }">
-            发布状态
-          </label>
-          <button type="button" class="add-button purple-button" @click="contentExpanded = !contentExpanded">
-            <svg xmlns="http://www.w3.org/2000/svg" class="button-icon" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path v-if="contentExpanded" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M5 15l7-7 7 7" />
-              <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-            {{ contentExpanded ? '收起' : '展开' }}
-          </button>
-        </div>
-        <div class="status-options">
-          <label class="status-option">
-            <input type="radio" v-model="status" :value="1" class="status-radio" />
-            <span class="status-label">立即发布</span>
-          </label>
-          <label class="status-option">
-            <input type="radio" v-model="status" :value="0" class="status-radio" />
-            <span class="status-label">保存为草稿</span>
-          </label>
-        </div>
-        <div class="form-actions" :class="{ 'visible-actions': formVisible, 'hidden-actions': !formVisible }">
-          <button type="button" class="cancel-button" @click="handleCancel">
-            取消
-          </button>
-          <button type="button" :disabled="isSubmitting" class="submit-button" @click="handleSubmit">
-            <span>{{ isSubmitting ? '提交中...' : '提交博客' }}</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div>
-    <transition enter-active-class="transition-all duration-500 ease-out"
-      leave-active-class="transition-all duration-500 ease-in" enter-from-class="opacity-0 max-h-0 overflow-hidden"
-      enter-to-class="opacity-100 max-h-[600px] overflow-hidden"
-      leave-from-class="opacity-100 max-h-[600px] overflow-hidden" leave-to-class="opacity-0 max-h-0 overflow-hidden">
-      <div v-if="contentExpanded">
-        <MarkdownEditor v-model="content" :title="title" :is-generating="isGenerating"
-          @upload-image="handleUploadImage2" @generate-content="handleGenerateContent"
-          :footers="['markdownTotal', '=', 0, 'scrollSwitch']" />
-      </div>
-    </transition>
-  </div>
-</template>
 
 <style scoped>
 /* 基础容器样式 */
@@ -469,8 +770,11 @@ onMounted(() => {
   background-color: rgb(255 255 255 / var(--tw-bg-opacity));
   border-radius: 1.5rem;
   --tw-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --tw-shadow-colored: 0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);
-  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+  --tw-shadow-colored:
+    0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000),
+    var(--tw-shadow);
   padding: 2rem;
   transition-property: all;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
@@ -485,9 +789,14 @@ onMounted(() => {
 }
 
 .form-container:hover {
-  --tw-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-  --tw-shadow-colored: 0 20px 25px -5px var(--tw-shadow-color), 0 8px 10px -6px var(--tw-shadow-color);
-  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+  --tw-shadow:
+    0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --tw-shadow-colored:
+    0 20px 25px -5px var(--tw-shadow-color),
+    0 8px 10px -6px var(--tw-shadow-color);
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000),
+    var(--tw-shadow);
 }
 
 /* 标题样式 */
@@ -575,7 +884,9 @@ onMounted(() => {
   border-width: 1px;
   --tw-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --tw-shadow-colored: 0 1px 2px 0 var(--tw-shadow-color);
-  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000),
+    var(--tw-shadow);
   padding: 0.75rem;
   border-color: rgb(209 213 219 / var(--tw-border-opacity));
   transition-property: all;
@@ -609,8 +920,11 @@ onMounted(() => {
   --tw-border-opacity: 1;
   border-color: rgb(147 197 253 / var(--tw-border-opacity));
   --tw-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --tw-shadow-colored: 0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);
-  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+  --tw-shadow-colored:
+    0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000),
+    var(--tw-shadow);
 }
 
 .dark .active-input {
@@ -661,9 +975,13 @@ onMounted(() => {
   transform: var(--tw-transform);
   outline: 2px solid transparent;
   outline-offset: 2px;
-  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
-  --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
-  box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0
+    var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+  --tw-ring-shadow: var(--tw-ring-inset) 0 0 0
+    calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+  box-shadow:
+    var(--tw-ring-offset-shadow), var(--tw-ring-shadow),
+    var(--tw-shadow, 0 0 #0000);
 }
 
 .add-button:hover {
@@ -781,7 +1099,9 @@ onMounted(() => {
   border-width: 1px;
   --tw-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --tw-shadow-colored: 0 1px 2px 0 var(--tw-shadow-color);
-  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000),
+    var(--tw-shadow);
   padding: 0.5rem;
   --tw-border-opacity: 1;
   border-color: rgb(209 213 219 / var(--tw-border-opacity));
@@ -816,9 +1136,13 @@ onMounted(() => {
   transition-duration: 300ms;
   outline: 2px solid transparent;
   outline-offset: 2px;
-  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
-  --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
-  box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0
+    var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+  --tw-ring-shadow: var(--tw-ring-inset) 0 0 0
+    calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+  box-shadow:
+    var(--tw-ring-offset-shadow), var(--tw-ring-shadow),
+    var(--tw-shadow, 0 0 #0000);
 }
 
 .add-form-submit:disabled {
@@ -975,7 +1299,6 @@ onMounted(() => {
 }
 
 @media (min-width: 640px) {
-
   .cover-image,
   .cover-upload-placeholder {
     width: 12rem;
@@ -1171,9 +1494,13 @@ onMounted(() => {
   transform: var(--tw-transform);
   outline: 2px solid transparent;
   outline-offset: 2px;
-  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
-  --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
-  box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0
+    var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+  --tw-ring-shadow: var(--tw-ring-inset) 0 0 0
+    calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+  box-shadow:
+    var(--tw-ring-offset-shadow), var(--tw-ring-shadow),
+    var(--tw-shadow, 0 0 #0000);
   overflow: hidden;
 }
 
@@ -1187,8 +1514,11 @@ onMounted(() => {
   --tw-scale-x: 1.05;
   --tw-scale-y: 1.05;
   --tw-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --tw-shadow-colored: 0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);
-  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+  --tw-shadow-colored:
+    0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000),
+    var(--tw-shadow);
 }
 
 .dark .ai-generate-button:hover {
@@ -1236,9 +1566,13 @@ onMounted(() => {
   transition-duration: 300ms;
   outline: 2px solid transparent;
   outline-offset: 2px;
-  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
-  --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
-  box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0
+    var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+  --tw-ring-shadow: var(--tw-ring-inset) 0 0 0
+    calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+  box-shadow:
+    var(--tw-ring-offset-shadow), var(--tw-ring-shadow),
+    var(--tw-shadow, 0 0 #0000);
   transform: var(--tw-transform);
 }
 
@@ -1256,8 +1590,11 @@ onMounted(() => {
   --tw-scale-x: 1.05;
   --tw-scale-y: 1.05;
   --tw-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --tw-shadow-colored: 0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);
-  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+  --tw-shadow-colored:
+    0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000),
+    var(--tw-shadow);
 }
 
 .dark .cancel-button:hover {
@@ -1285,9 +1622,13 @@ onMounted(() => {
   transition-duration: 300ms;
   outline: 2px solid transparent;
   outline-offset: 2px;
-  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
-  --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
-  box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0
+    var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+  --tw-ring-shadow: var(--tw-ring-inset) 0 0 0
+    calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+  box-shadow:
+    var(--tw-ring-offset-shadow), var(--tw-ring-shadow),
+    var(--tw-shadow, 0 0 #0000);
   overflow: hidden;
   transform: var(--tw-transform);
 }
@@ -1302,8 +1643,11 @@ onMounted(() => {
   --tw-scale-x: 1.05;
   --tw-scale-y: 1.05;
   --tw-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --tw-shadow-colored: 0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);
-  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+  --tw-shadow-colored:
+    0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000),
+    var(--tw-shadow);
 }
 
 .dark .submit-button:hover {
@@ -1332,7 +1676,6 @@ onMounted(() => {
 }
 
 @keyframes pulse {
-
   0%,
   100% {
     opacity: 1;

@@ -25,7 +25,7 @@ export function useArticleForm() {
   const tagIds = ref<number[]>([]);
   const status = ref(1); // 默认发布状态: 1-发布, 0-草稿
   const coverUrl = ref(""); // 封面图片URL
-  const articleId = ref<number | undefined>(undefined); // 文章ID，编辑时使用
+  const articleId = ref<string | undefined>(undefined); // 文章ID，编辑时使用
   const wordCount = ref(0); // 字数统计
   // 分类相关状态
   const categories = ref<API.ArticleCategoryVO[]>([]);
@@ -36,6 +36,7 @@ export function useArticleForm() {
   const tags = ref<API.ArticleTagVO[]>([]);
   const newTagName = ref("");
   const showTagForm = ref(false);
+  const tagNames = ref<string[]>([]);  // 添加标签名称数组
 
   // UI状态
   const contentExpanded = ref(false);
@@ -196,7 +197,7 @@ const handleImageUpload = async (options: any) => {
       
       // 添加到图片列表
       pictureList.value.unshift({
-        id: Date.now().toString(),
+        id: Date.now(),
         url: imageUrl,
         name: file.name
       });
@@ -347,7 +348,7 @@ const handleImageUpload = async (options: any) => {
   };
 
   // 初始化文章数据（编辑模式）
-  const initArticleData = (id: number, data: any) => {
+  const initArticleData = (id: string, data: any) => {
     articleId.value = id;
     title.value = data.title || "";
     content.value = data.content || "";
@@ -356,6 +357,9 @@ const handleImageUpload = async (options: any) => {
     tagIds.value = data.tagIds || [];
     status.value = data.status || 1;
     coverUrl.value = data.coverUrl || "";
+
+    // 保存标签名称，用于显示
+    tagNames.value = data.tagNames || [];
 
     // 如果有分类名称和标签名称，预先处理选择项
     const categoryName = data.categoryName;
@@ -431,6 +435,7 @@ const handleImageUpload = async (options: any) => {
 
     // 标签相关
     tags,
+    tagNames,  // 添加到返回对象
     newTagName,
     showTagForm,
     isLoadingTags,
