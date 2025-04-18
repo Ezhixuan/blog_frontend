@@ -1,3 +1,4 @@
+import messageService from '@/utils/message';
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 
 // 创建axios实例
@@ -42,6 +43,9 @@ service.interceptors.response.use(
     }
     // 处理其他状态码
     console.error('Response error:', res.data.message || 'Error')
+    if (res.data.code !== 40100 || res.data.message !== "未登录") {
+      messageService.error(res.data.message || 'Error')
+    }
     return Promise.reject(new Error(res.data.message || 'Error'))
   },
   (error) => {

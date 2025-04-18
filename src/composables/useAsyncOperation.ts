@@ -1,5 +1,5 @@
 import { ref } from 'vue';
-import message from '@/utils/message';
+import messageService from '@/utils/message';
 
 interface UseAsyncOperationOptions {
   successMessage?: string;
@@ -17,12 +17,12 @@ export function useAsyncOperation<T>(
       isLoading.value = true;
       const result = await operation(...args);
       if (options.successMessage) {
-        message.success(options.successMessage);
+        messageService.success(options.successMessage);
       }
       return result;
     } catch (error: any) {
       const errorMsg = error?.response?.data?.message || options.errorMessage || '操作失败';
-      message.error(errorMsg);
+      messageService.error(errorMsg);
       return null;
     } finally {
       isLoading.value = false;

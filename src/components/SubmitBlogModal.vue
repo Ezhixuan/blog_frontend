@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue';
-import message from '@/utils/message';
+import messageService from '@/utils/message';
 import { doSubmitArticle, getArticleCategoryList, getArticleTagList } from '@/api/articleController';
 import { mockGenerateBlogContent } from '@/api/ai';
 
@@ -36,7 +36,7 @@ const fetchCategories = async () => {
       categories.value = res.data.data;
     }
   } catch (error: any) {
-    message.error(error?.response?.data?.description || '获取分类列表失败');
+    messageService.error(error?.response?.data?.description || '获取分类列表失败');
   } finally {
     isLoadingCategories.value = false;
   }
@@ -51,7 +51,7 @@ const fetchTags = async () => {
       tags.value = res.data.data;
     }
   } catch (error: any) {
-    message.error(error?.response?.data?.description || '获取标签列表失败');
+    messageService.error(error?.response?.data?.description || '获取标签列表失败');
   } finally {
     isLoadingTags.value = false;
   }
@@ -90,7 +90,7 @@ const closeModal = () => {
 // 使用AI生成博客内容简述
 const generateContent = async () => {
   if (!title.value) {
-    message.warning('请先填写博客标题');
+    messageService.warning('请先填写博客标题');
     return;
   }
   
@@ -99,12 +99,12 @@ const generateContent = async () => {
     const response = await mockGenerateBlogContent(title.value);
     if (response.data.code === 0) {
       content.value = response.data.data;
-      message.success('内容生成成功，请根据需要修改完善');
+      messageService.success('内容生成成功，请根据需要修改完善');
     } else {
-      message.error(response.data.description || 'AI生成内容失败');
+      messageService.error(response.data.description || 'AI生成内容失败');
     }
   } catch (error: any) {
-    message.error(error?.response?.data?.description || 'AI生成内容失败');
+    messageService.error(error?.response?.data?.description || 'AI生成内容失败');
   } finally {
     isGenerating.value = false;
   }
@@ -112,12 +112,12 @@ const generateContent = async () => {
 
 const handleSubmit = async () => {
   if (!title.value || !content.value) {
-    message.warning('请填写完整信息');
+    messageService.warning('请填写完整信息');
     return;
   }
 
   if (!categoryId.value) {
-    message.warning('请选择博客分类');
+    messageService.warning('请选择博客分类');
     return;
   }
 
@@ -131,11 +131,11 @@ const handleSubmit = async () => {
       tagIds: tagIds.value.join(','),
       status: status.value
     });
-    message.success('博客提交成功');
+    messageService.success('博客提交成功');
     emit('blogSubmitted');
     closeModal();
   } catch (error: any) {
-    message.error(error?.response?.data?.description || '博客提交失败');
+    messageService.error(error?.response?.data?.description || '博客提交失败');
   } finally {
     isLoading.value = false;
   }

@@ -62,7 +62,7 @@
             </div>
 
             <div class="article-actions">
-              <button class="action-btn like-btn">
+              <button class="action-btn like-btn" @click="handleThumb">
                 <span>点赞</span>
                 <span>{{ article.likeCount || 0 }}</span>
               </button>
@@ -124,16 +124,15 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick, onUnmounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { getArticleInfo } from '../api/articleController';
+import { getArticleInfo, doThumb } from '../api/articleController';
 import BackToTop from '../components/BackToTop.vue';
 import ImageViewer from '../components/ImageViewer.vue';
 import 'md-editor-v3/lib/style.css';
 import { useUserStore } from '@/stores/user';
 import { getPageState } from '@/utils/pageMemory';
-import { useTheme } from '@/utils/theme';
 import 'md-editor-v3/lib/preview.css';
 import MarkdownPreview from '@/components/MarkdownPreview.vue';
-
+import messageService from '@/utils/message';
 const route = useRoute();
 const router = useRouter();
 const userStore = useUserStore();
@@ -167,6 +166,17 @@ interface TocItem {
 
 const goBack = () => router.back();
 const formatDate = (dateStr?: string) => dateStr ? new Date(dateStr).toLocaleDateString('zh-CN') : '';
+
+const handleThumb = async () => {
+  if (!article.value) return;
+  const res = await doThumb({ id: articleId.value });
+  console.log("res", res);
+  if (res.data.code === 0) {
+    article.value.likeCount = res.data.data ? article.value.likeCount + 1 : article.value.likeCount - 1;
+  } else {
+    messageService.error(res.data.message || '点赞失败');
+  }
+}
 
 const handleEditArticle = () => {
   if (!article.value) return;

@@ -6,7 +6,7 @@ import { HomeIcon, UserIcon, DocumentTextIcon, CodeBracketIcon, UserGroupIcon, E
 import { RouterLink, useRouter } from 'vue-router';
 import { doLogout, getLoginUserInfo } from '@/api/sysUserController';
 import { on } from '@/utils/eventBus';
-import message from '@/utils/message';
+import messageService from '@/utils/message';
 import { useTheme } from '@/utils/theme';
 import { useUserStore } from '@/stores/user'; // 导入用户状态存储
 
@@ -113,13 +113,13 @@ const handleMouseEnter = () => {
 const handleLogout = async () => {
   try {
     await doLogout();
-    message.info('退出登录成功, 期待您下次再来');
+    messageService.info('退出登录成功, 期待您下次再来');
   } catch (error: any) {
     // 如果是token过期，静默处理
     if (error?.response?.data?.code === 40100) {
       console.log('Token已过期');
     } else {
-      message.error('退出登录失败');
+      messageService.error('退出登录失败');
       return;
     }
   }

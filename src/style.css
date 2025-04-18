@@ -279,3 +279,106 @@ body {
   -ms-overflow-style: none; /* 隐藏滚动条 */
 }
 
+/* 消息通知样式 - 全局添加，支持明暗模式 */
+.modern-notification {
+  animation: slide-in 0.3s ease-out forwards;
+  transform-origin: top right;
+  position: relative;
+}
+
+.modern-notification::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: -1;
+  border-radius: inherit;
+  opacity: 0.4;
+  transition: opacity 0.3s ease;
+  background-image: radial-gradient(circle at top right, rgba(255, 255, 255, 0.8), transparent 80%);
+}
+
+.modern-notification::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.05;
+  border-radius: inherit;
+  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='currentColor' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+}
+
+.modern-notification .ant-notification-notice-message {
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 4px;
+}
+
+.modern-notification .ant-notification-notice-description {
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.modern-notification .ant-notification-notice-close {
+  opacity: 0.5;
+  transition: opacity 0.2s ease;
+}
+
+.modern-notification .ant-notification-notice-close:hover {
+  opacity: 1;
+  background: transparent;
+}
+
+/* 动画效果 */
+@keyframes slide-in {
+  0% {
+    transform: translateX(100%) scale(0.8);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* 深色模式覆盖 */
+.dark .modern-notification {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3) !important;
+}
+
+.dark .modern-notification::before {
+  background-image: radial-gradient(circle at top right, rgba(255, 255, 255, 0.1), transparent 80%);
+}
+
+.dark .modern-notification .ant-notification-notice-message {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.dark .modern-notification .ant-notification-notice-description {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.dark .modern-notification .ant-notification-notice-close {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.dark .modern-notification[class*="ant-notification-notice-success"] {
+  background: linear-gradient(145deg, rgba(20, 83, 45, 0.95), rgba(22, 101, 52, 0.95)) !important;
+}
+
+.dark .modern-notification[class*="ant-notification-notice-info"] {
+  background: linear-gradient(145deg, rgba(30, 58, 138, 0.95), rgba(29, 78, 216, 0.95)) !important;
+}
+
+.dark .modern-notification[class*="ant-notification-notice-warning"] {
+  background: linear-gradient(145deg, rgba(146, 64, 14, 0.95), rgba(180, 83, 9, 0.95)) !important;
+}
+
+.dark .modern-notification[class*="ant-notification-notice-error"] {
+  background: linear-gradient(145deg, rgba(153, 27, 27, 0.95), rgba(185, 28, 28, 0.95)) !important;
+}
+

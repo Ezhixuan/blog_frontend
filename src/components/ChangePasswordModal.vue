@@ -2,7 +2,7 @@
 import { ref } from 'vue';
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue';
 import { editUserInfo } from '@/api/sysUserController';
-import message from '@/utils/message';
+import messageService from '@/utils/message';
 
 const props = defineProps<{
   isOpen: boolean
@@ -31,17 +31,17 @@ const closeModal = () => {
 
 const handleSubmit = async () => {
   if (!oldPassword.value || !newPassword.value || !confirmPassword.value) {
-    message.warning('请填写完整信息');
+    messageService.warning('请填写完整信息');
     return;
   }
 
   if (oldPassword.value === newPassword.value && newPassword.value === confirmPassword.value) {
-    message.warning('新密码不能与旧密码相同');
+    messageService.warning('新密码不能与旧密码相同');
     return;
   }
 
   if (newPassword.value !== confirmPassword.value) {
-    message.warning('两次输入的新密码不一致');
+    messageService.warning('两次输入的新密码不一致');
     return;
   }
 
@@ -51,11 +51,11 @@ const handleSubmit = async () => {
       password: newPassword.value,
       oldPassword: oldPassword.value
     });
-    message.success('密码修改成功');
+    messageService.success('密码修改成功');
     emit('passwordChanged');
     closeModal();
   } catch (error: any) {
-    message.error(error?.response?.data?.description || '密码修改失败');
+    messageService.error(error?.response?.data?.description || '密码修改失败');
   } finally {
     isLoading.value = false;
   }
