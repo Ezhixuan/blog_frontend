@@ -17,9 +17,9 @@ export async function editUserInfo(
   });
 }
 
-/** 此处后端没有提供注释 GET /user/linfo */
+/** 此处后端没有提供注释 GET /user/info */
 export async function getLoginUserInfo(options?: { [key: string]: any }) {
-  return request<API.BaseResponseUserInfoVO>("/user/linfo", {
+  return request<API.BaseResponseUserInfoVO>("/user/info", {
     method: "GET",
     ...(options || {}),
   });
