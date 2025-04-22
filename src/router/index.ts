@@ -65,4 +65,10 @@ const router = createRouter({
   ]
 })
 
+// 添加全局前置守卫，用于调试路由跳转
+router.beforeEach((to, from) => {
+  // 路由守卫保留基本功能，但移除调试日志
+  return true; // 必须返回true以允许路由继续
+});
+
 export default router

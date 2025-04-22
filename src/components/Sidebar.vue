@@ -3,7 +3,7 @@ import { ref, onMounted, computed } from 'vue';
 import ChangePasswordModal from './ChangePasswordModal.vue';
 import SubmitBlogModal from './SubmitBlogModal.vue';
 import { HomeIcon, UserIcon, DocumentTextIcon, CodeBracketIcon, UserGroupIcon, EnvelopeIcon } from '@heroicons/vue/24/outline';
-import { RouterLink, useRouter } from 'vue-router';
+import { RouterLink, useRouter, useRoute, LocationQueryValue } from 'vue-router';
 import { doLogout, getLoginUserInfo } from '@/api/sysUserController';
 import { on } from '@/utils/eventBus';
 import messageService from '@/utils/message';
@@ -32,6 +32,7 @@ const getRoleColorClass = (role?: string) => {
 };
 
 const router = useRouter();
+const route = useRoute();
 const isLoggedIn = ref(false);
 const showLoginDialog = ref(false);
 const isLoading = ref(true);
@@ -51,6 +52,14 @@ const userAvatar = computed(() => {
   }
   return userInfo.value.avatar;
 });
+
+// 定义重定向信息的接口
+interface RedirectInfo {
+  path: string;
+  query: Record<string, LocationQueryValue | LocationQueryValue[]>;
+  timestamp: number;
+  scrollPosition?: number;
+}
 
 // 检查登录状态
 const checkLoginStatus = async () => {
@@ -88,7 +97,39 @@ const handleAvatarError = () => {
 
 // 处理导航
 const handleNavigation = (path: string) => {
-  router.push(path);
+  // 仅在登录和注册页面时记录当前路由信息
+  if (path === '/login' || path === '/register') {
+    // 记录当前路由信息，以便登录后返回
+    const currentPath = route.path;
+    const currentQuery = { ...route.query };
+    
+    // 避免从登录/注册页面导航到登录/注册页面时保存重定向
+    if (currentPath !== '/login' && currentPath !== '/register') {
+      // 将重定向信息编码到URL查询参数中
+      const redirectInfo: RedirectInfo = {
+        path: currentPath,
+        query: currentQuery,
+        timestamp: new Date().getTime()
+      };
+      
+      // 如果是文章页面，记录滚动位置
+      if (currentPath.startsWith('/article/') || currentPath.startsWith('/blog/')) {
+        redirectInfo.scrollPosition = window.scrollY;
+      }
+      
+      // 使用URL参数传递重定向信息
+      const redirectPath = `${path}?redirect=${encodeURIComponent(JSON.stringify(redirectInfo))}`;
+      
+      // 跳转到登录/注册页面，带上重定向信息
+      router.push(redirectPath);
+    } else {
+      router.push(path);
+    }
+  } else {
+    // 不是导航到登录/注册页面，直接跳转
+    router.push(path);
+  }
+  
   showLoginDialog.value = false;
   if (hideTimeout.value !== null) {
     clearTimeout(hideTimeout.value);
@@ -184,6 +225,43 @@ onMounted(() => {
       role: userData.role
     });
     userStore.setToken(token);
+    
+    // 登录成功后，检查是否需要重定向回之前的页面
+    const redirectInfoStr = localStorage.getItem('loginRedirect');
+    if (redirectInfoStr) {
+      try {
+        const redirectInfo = JSON.parse(redirectInfoStr) as RedirectInfo;
+        
+        // 检查存储的时间是否在30分钟内，避免过时的重定向
+        const currentTime = new Date().getTime();
+        const redirectTime = redirectInfo.timestamp || 0;
+        const thirtyMinutesInMs = 30 * 60 * 1000;
+        
+        if (currentTime - redirectTime < thirtyMinutesInMs) {
+          // 重定向到之前的页面
+          router.push({
+            path: redirectInfo.path,
+            query: redirectInfo.query
+          }).then(() => {
+            // 如果有滚动位置信息，恢复滚动位置
+            if (redirectInfo.scrollPosition) {
+              // 使用setTimeout确保页面渲染完成后再滚动
+              setTimeout(() => {
+                window.scrollTo({
+                  top: redirectInfo.scrollPosition,
+                  behavior: 'smooth'
+                });
+              }, 500);
+            }
+          });
+        }
+      } catch (e) {
+        console.error('解析重定向信息失败', e);
+      }
+      
+      // 无论是否重定向成功，都清除存储的信息
+      localStorage.removeItem('loginRedirect');
+    }
   });
 });
 

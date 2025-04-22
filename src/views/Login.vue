@@ -1,14 +1,36 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, onMounted } from 'vue';
+import { useRouter, useRoute, LocationQueryValue } from 'vue-router';
 import { doLogin, getLoginUserInfo } from '@/api/sysUserController';
 import { emit } from '@/utils/eventBus';
 import messageService from '@/utils/message';
 
+// 定义重定向信息的接口
+interface RedirectInfo {
+  path: string;
+  query: Record<string, LocationQueryValue | LocationQueryValue[]>;
+  timestamp: number;
+  scrollPosition?: number;
+}
+
 const router = useRouter();
+const route = useRoute();
 const userAccount = ref('');
 const password = ref('');
 const isLoading = ref(false);
+const redirectInfo = ref<RedirectInfo | null>(null);
+
+// 组件加载时获取URL中的重定向信息
+onMounted(() => {
+  const redirectParam = route.query.redirect;
+  if (redirectParam && typeof redirectParam === 'string') {
+    try {
+      redirectInfo.value = JSON.parse(decodeURIComponent(redirectParam)) as RedirectInfo;
+    } catch (e) {
+      console.error('解析URL重定向参数失败:', e);
+    }
+  }
+});
 
 const handleLogin = async () => {
   if (!userAccount.value || !password.value) {
@@ -26,16 +48,16 @@ const handleLogin = async () => {
     
     if (response.data.code === 0) {
       // 保存令牌信息到本地存储
-      const tokenData = response.data.data as API.TokenInfo;
+      const tokenData = response.data.data as API.SaTokenInfo;
       if (tokenData && typeof tokenData === 'object') {
         if (tokenData.tokenValue) {
-          localStorage.setItem('token', tokenData.tokenValue);
+          localStorage.setItem('token', tokenData.tokenValue.toString());
         }
         if (tokenData.tokenName) {
-          localStorage.setItem('tokenName', tokenData.tokenName);
+          localStorage.setItem('tokenName', tokenData.tokenName.toString());
         }
         if (tokenData.loginId) {
-          localStorage.setItem('loginId', tokenData.loginId);
+          localStorage.setItem('loginId', String(tokenData.loginId));
         }
         if (tokenData.isLogin !== undefined) {
           localStorage.setItem('isLogin', String(tokenData.isLogin));
@@ -47,21 +69,56 @@ const handleLogin = async () => {
         const userInfoResponse = await getLoginUserInfo();
         if (userInfoResponse.data?.code === 0 && userInfoResponse.data?.data) {
           // 触发用户信息更新事件
-          emit('user-login-success', userInfoResponse.data.data);
+          const userInfo = userInfoResponse.data.data as API.UserInfoVO;
+          emit('user-login-success', userInfo);
           // 显示欢迎信息
-          messageService.success(`欢迎回来，${userInfoResponse.data.data.userName || userInfoResponse.data.data.userAccount}！`);
+          messageService.success(`欢迎回来，${userInfo.username || userInfo.userAccount}！`);
         }
       } catch (error) {
-        console.error('Failed to fetch user info:', error);
+        console.error('获取用户信息失败:', error);
       }
       
+      // 处理重定向
+      if (redirectInfo.value) {
+        try {
+          // 检查重定向时间是否在30分钟内
+          const currentTime = new Date().getTime();
+          const redirectTime = redirectInfo.value.timestamp || 0;
+          const thirtyMinutesInMs = 30 * 60 * 1000;
+          
+          if (currentTime - redirectTime < thirtyMinutesInMs) {
+            router.push({
+              path: redirectInfo.value.path,
+              query: redirectInfo.value.query
+            }).then(() => {
+              // 如果有滚动位置信息，恢复滚动位置
+              if (redirectInfo.value?.scrollPosition) {
+                setTimeout(() => {
+                  window.scrollTo({
+                    top: redirectInfo.value?.scrollPosition || 0,
+                    behavior: 'smooth'
+                  });
+                }, 500);
+              }
+            }).catch(() => router.push('/'));
+            return;
+          }
+        } catch (e) {
+          console.error('处理重定向失败:', e);
+        }
+      }
+      
+      // 没有有效的重定向信息，默认跳转到首页
       router.push('/');
     } else {
-      messageService.error(response.data.message || '登录失败，请检查账号密码');
+      const errorMessage = typeof response.data.message === 'string' 
+        ? response.data.message 
+        : '登录失败，请检查账号密码';
+      messageService.error(errorMessage);
     }
   } catch (error) {
     messageService.error('登录失败，请稍后再试');
-    console.error('Login error:', error);
+    console.error('登录失败:', error);
   } finally {
     isLoading.value = false;
   }

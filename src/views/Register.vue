@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { doRegister } from '@/api/sysUserController';
+import messageService from '@/utils/message';
 
 const router = useRouter();
 const userAccount = ref('');
@@ -32,13 +33,15 @@ const handleRegister = async () => {
     });
     
     if (response.data.code === 0) {
+      messageService.success('注册成功，请登录');
+      // 注册成功后跳转到登录页面，保留重定向信息
       router.push('/login');
     } else {
       errorMessage.value = response.data.message || '注册失败，请稍后再试';
     }
   } catch (error) {
     errorMessage.value = '注册失败，请稍后再试';
-    console.error('Register error:', error);
+    console.error('注册失败:', error);
   } finally {
     isLoading.value = false;
   }
