@@ -37,6 +37,9 @@ export const useUserStore = defineStore('user', () => {
     setToken(null);
     setUserInfo(null);
     localStorage.removeItem('token');
+    localStorage.removeItem('tokenName');
+    localStorage.removeItem('loginId');
+    localStorage.removeItem('isLogin');
   }
 
   // 初始化
