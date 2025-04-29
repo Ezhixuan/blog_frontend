@@ -527,15 +527,15 @@ const filterByTag = (tagId?: number) => {
               >
                 <!-- 全部文章选项 -->
                 <div 
-                  class="submenu-item py-2 px-3 text-sm rounded-md cursor-pointer flex items-center justify-between hover:bg-slate-100 transition-colors dark:hover:bg-gray-800"
-                  :class="{ 'text-blue-600 font-medium dark:text-blue-400': $route.path === '/blogs' && !$route.query.categoryId }"
+                  class="submenu-item py-2 px-3 text-sm rounded-md cursor-pointer flex items-center justify-between hover:bg-slate-100 transition-colors dark:hover:bg-gray-800 dark:text-gray-300"
+                  :class="{ 'text-blue-600 font-medium bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400': $route.path === '/blogs' && !$route.query.categoryId }"
                   @click="filterByCategory()"
                 >
                   <span>全部文章</span>
                 </div>
                 
                 <!-- 加载中状态 -->
-                <div v-if="categoriesLoading" class="py-2 px-3 text-sm text-gray-500 italic dark:text-gray-400">
+                <div v-if="categoriesLoading" class="py-2 px-3 text-sm text-gray-500 italic dark:text-gray-300">
                   <span class="flex items-center">
                     <svg class="animate-spin h-4 w-4 mr-2 text-blue-600 dark:text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -549,15 +549,15 @@ const filterByTag = (tagId?: number) => {
                 <div 
                   v-for="category in categories" 
                   :key="category.id"
-                  class="submenu-item py-2 px-3 text-sm rounded-md cursor-pointer flex items-center justify-between hover:bg-slate-100 transition-colors dark:hover:bg-gray-800"
-                  :class="{ 'text-blue-600 font-medium dark:text-blue-400': $route.query.categoryId === String(category.id) }"
+                  class="submenu-item py-2 px-3 text-sm rounded-md cursor-pointer flex items-center justify-between hover:bg-slate-100 transition-colors dark:hover:bg-gray-800 dark:text-gray-300"
+                  :class="{ 'text-blue-600 font-medium bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400': $route.query.categoryId === String(category.id) }"
                   @click="filterByCategory(category.id)"
                 >
                   <span>{{ category.name }}</span>
                 </div>
                 
                 <!-- 无分类提示 -->
-                <div v-if="!categoriesLoading && categories.length === 0" class="py-2 px-3 text-sm text-gray-500 italic dark:text-gray-400">
+                <div v-if="!categoriesLoading && categories.length === 0" class="py-2 px-3 text-sm text-gray-500 italic dark:text-gray-300">
                   暂无分类
                 </div>
               </div>
@@ -619,7 +619,7 @@ const filterByTag = (tagId?: number) => {
           <h3 class="text-lg font-semibold mb-4 dark:text-white">Categories</h3>
           <div class="flex flex-wrap gap-2">
             <!-- 加载中状态 -->
-            <div v-if="categoriesLoading" class="text-sm text-gray-500 italic dark:text-gray-400">
+            <div v-if="categoriesLoading" class="text-sm text-gray-500 italic dark:text-gray-300">
               <span class="flex items-center">
                 <svg class="animate-spin h-4 w-4 mr-2 text-blue-600 dark:text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -632,16 +632,16 @@ const filterByTag = (tagId?: number) => {
             <!-- 分类列表 -->
             <span v-for="category in categories" 
                   :key="category.id"
-                  class="px-3 py-1 bg-slate-100 rounded-full text-sm flex items-center hover:bg-slate-200 transition-colors duration-300 transform hover:scale-105 cursor-pointer dark:bg-gray-800 dark:hover:bg-gray-700"
-                  :class="{ 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200': $route.query.categoryId === String(category.id) }"
+                  class="px-3 py-1 bg-slate-100 rounded-full text-sm flex items-center hover:bg-slate-200 transition-colors duration-300 transform hover:scale-105 cursor-pointer dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-300"
+                  :class="{ 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300': $route.query.categoryId === String(category.id) }"
                   @click="filterByCategory(category.id)"
             >
               {{ category.name }}
-              <span class="ml-2 bg-slate-200 px-2 rounded-full text-xs dark:bg-gray-700">{{ category.count }}</span>
+              <span class="ml-2 bg-slate-200 px-2 rounded-full text-xs dark:bg-gray-700 dark:text-gray-300">{{ category.count }}</span>
             </span>
             
             <!-- 无分类提示 -->
-            <div v-if="!categoriesLoading && categories.length === 0" class="text-sm text-gray-500 italic dark:text-gray-400">
+            <div v-if="!categoriesLoading && categories.length === 0" class="text-sm text-gray-500 italic dark:text-gray-300">
               暂无分类
             </div>
           </div>
@@ -652,7 +652,7 @@ const filterByTag = (tagId?: number) => {
           <h3 class="text-lg font-semibold mb-4 dark:text-white">Tags</h3>
           <div class="flex flex-wrap gap-2">
             <!-- 加载中状态 -->
-            <div v-if="tagsLoading" class="text-sm text-gray-500 italic dark:text-gray-400">
+            <div v-if="tagsLoading" class="text-sm text-gray-500 italic dark:text-gray-300">
               <span class="flex items-center">
                 <svg class="animate-spin h-4 w-4 mr-2 text-blue-600 dark:text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -665,16 +665,16 @@ const filterByTag = (tagId?: number) => {
             <!-- 标签列表 -->
             <span v-for="tag in tags" 
                   :key="tag.id"
-                  class="px-3 py-1 bg-slate-100 rounded-full text-sm flex items-center hover:bg-slate-200 transition-colors duration-300 transform hover:scale-105 cursor-pointer dark:bg-gray-800 dark:hover:bg-gray-700"
-                  :class="{ 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200': $route.query.tagId === String(tag.id) }"
+                  class="px-3 py-1 bg-slate-100 rounded-full text-sm flex items-center hover:bg-slate-200 transition-colors duration-300 transform hover:scale-105 cursor-pointer dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-300"
+                  :class="{ 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300': $route.query.tagId === String(tag.id) }"
                   @click="filterByTag(tag.id)"
             >
               {{ tag.name }}
-              <span class="ml-2 bg-slate-200 px-2 rounded-full text-xs dark:bg-gray-700">{{ tag.count }}</span>
+              <span class="ml-2 bg-slate-200 px-2 rounded-full text-xs dark:bg-gray-700 dark:text-gray-300">{{ tag.count }}</span>
             </span>
             
             <!-- 无标签提示 -->
-            <div v-if="!tagsLoading && tags.length === 0" class="text-sm text-gray-500 italic dark:text-gray-400">
+            <div v-if="!tagsLoading && tags.length === 0" class="text-sm text-gray-500 italic dark:text-gray-300">
               暂无标签
             </div>
           </div>
