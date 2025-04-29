@@ -10,7 +10,7 @@
   </template>
   
   <script setup lang="ts">
-  import { ref, watch, computed } from 'vue';
+  import { ref, watch, computed, onMounted } from 'vue';
   import { MdPreview } from 'md-editor-v3';
   import 'md-editor-v3/lib/style.css';
 
@@ -23,11 +23,18 @@
     content: string;
   }>();
   
+  const emit = defineEmits(['content-updated']);
+  
   const text = ref(props.content);
   
   // 如果内容需要从外部更新
   watch(() => props.content, (newVal) => {
     text.value = newVal;
+  });
+  
+  onMounted(() => {
+    // 在内容渲染完成后触发事件
+    emit('content-updated', text.value);
   });
   </script>
   

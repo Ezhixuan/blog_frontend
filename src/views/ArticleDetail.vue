@@ -56,7 +56,12 @@
                 {{ article.summary }}
               </div>
 
-              <MarkdownPreview v-if="article.content" :content="article.content" />
+              <MarkdownPreview 
+                v-if="article.content" 
+                :content="article.content" 
+                @content-updated="handleContentUpdated"
+                ref="markdownPreviewRef" 
+              />
 
               <p v-if="!article.content" class="no-content-tip">文章详情内容暂未提供</p>
             </div>
@@ -83,7 +88,8 @@
           </div>
         </div>
       </div>
-      <div v-if="hasToc" class="floating-toc-container" ref="floatingTocRef">
+      
+      <div v-if="article && article.content" class="toc-container">
         <div v-if="isMobile" class="toc-mobile-trigger" @click="toggleToc">
           <span>文章目录</span>
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
@@ -91,26 +97,8 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
           </svg>
         </div>
-        <div class="floating-toc">
-          <div class="toc-header">
-            <span>文章目录</span>
-            <button class="toc-close" @click="toggleToc" v-if="isMobile">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-          <div class="toc-content">
-
-
-            <div v-for="item in tocItems" :key="item.uniqueId"
-              :class="['toc-item', `level-${item.level}`, { active: item.active }]"
-              @click="scrollToAnchor(item.anchor)">
-              <div class="toc-item-indicator"></div>
-              <span class="toc-item-text">{{ item.text }}</span>
-            </div>
-          </div>
+        <div :class="['toc-wrapper', { 'show': showToc || !isMobile }]">
+          <Toc v-if="article && article.content" :content="renderedContent" ref="tocComponentRef" />
         </div>
       </div>
     </div>
@@ -122,11 +110,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick, onUnmounted, computed, watch } from 'vue';
+import { ref, onMounted, nextTick, onUnmounted, computed, watch, provide } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { getArticleInfo, doThumb } from '../api/articleController';
 import BackToTop from '../components/BackToTop.vue';
 import ImageViewer from '../components/ImageViewer.vue';
+import Toc from '../components/Toc.vue';  // 引入Toc组件
 import 'md-editor-v3/lib/style.css';
 import { useUserStore } from '@/stores/user';
 import { getPageState } from '@/utils/pageMemory';
@@ -141,34 +130,24 @@ const articleId = ref<string | null>(null);
 const article = ref<any>(null);
 const loading = ref(true);
 const readingProgress = ref(0);
-let observer: IntersectionObserver | null = null;
-const scrollThrottleTimeout = ref<ReturnType<typeof setTimeout> | null>(null);
+const markdownPreviewRef = ref<any>(null);
+const tocComponentRef = ref<any>(null);
+const renderedContent = ref('');
+const showToc = ref(false);
+
+let scrollThrottleTimeout = ref<ReturnType<typeof setTimeout> | null>(null);
 
 const isAuthor = computed(() => userStore.userInfo?.id === article.value?.userId);
-const currentActiveAnchor = ref('');
 const isMobile = computed(() => window.innerWidth < 768);
-
-const floatingTocRef = ref<HTMLElement | null>(null);
-const hasToc = ref(false);
-const tocItems = ref<TocItem[]>([]);
 
 const previewVisible = ref(false);
 const previewImageUrl = ref('');
-
-interface TocItem {
-  level: number;
-  text: string;
-  anchor: string;
-  active: boolean;
-  children?: TocItem[];
-  uniqueId: string;
-}
 
 const goBack = () => router.back();
 const formatDate = (dateStr?: string) => dateStr ? new Date(dateStr).toLocaleDateString('zh-CN') : '';
 
 const handleThumb = async () => {
-  if (!article.value) return;
+  if (!article.value || !articleId.value) return;
   const res = await doThumb({ id: articleId.value });
   console.log("res", res);
   if (res.data.code === 0) {
@@ -183,6 +162,20 @@ const handleEditArticle = () => {
   router.push({
     path: '/blog/edit',
     query: { id: articleId.value }
+  });
+};
+
+const handleContentUpdated = (content: string) => {
+  renderedContent.value = content;
+  
+  // 使用nextTick确保组件更新后再更新目录
+  nextTick(() => {
+    // 如果目录组件存在，延迟一点尝试强制更新目录
+    setTimeout(() => {
+      if (tocComponentRef.value && typeof tocComponentRef.value.generateTOCFromDOM === 'function') {
+        tocComponentRef.value.generateTOCFromDOM();
+      }
+    }, 500);
   });
 };
 
@@ -201,9 +194,6 @@ const fetchArticleDetail = async (id: string) => {
     loading.value = true;
     const res = await getArticleInfo({ id });
     article.value = res.data?.data || null;
-    nextTick(() => {
-      generateTocFromContent();
-    });
   } catch (error) {
     article.value = null;
   } finally {
@@ -218,145 +208,8 @@ const calculateReadingProgress = () => {
   readingProgress.value = Math.min(100, Math.max(0, (scrollTop / (scrollHeight - clientHeight)) * 100));
 };
 
-const scrollTocToActiveItem = () => {
-  requestAnimationFrame(() => {
-    const tocContainer = floatingTocRef.value?.querySelector('.toc-content') as HTMLElement | null;
-    const activeItem = floatingTocRef.value?.querySelector('.active') as HTMLElement | null;
-
-    if (tocContainer && activeItem) {
-      const containerHeight = tocContainer.clientHeight;
-      const itemOffset = activeItem.offsetTop;
-      const itemHeight = activeItem.clientHeight;
-
-      tocContainer.scrollTo({
-        top: itemOffset - containerHeight / 2 + itemHeight / 2,
-        behavior: 'smooth'
-      });
-    }
-  });
-};
-
-const generateStableAnchor = (text: string, existingAnchors: Set<string>, index: number) => {
-  let anchor = text
-    .toLowerCase()
-    .replace(/[^\u4e00-\u9fa5a-zA-Z0-9\- ]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
-
-  if (!anchor) anchor = 'section';
-
-  // 添加索引确保唯一性
-  let uniqueAnchor = `${anchor}-${index}`;
-  let counter = 1;
-  while (existingAnchors.has(uniqueAnchor)) {
-    uniqueAnchor = `${anchor}-${index}-${counter}`;
-    counter++;
-  }
-  existingAnchors.add(uniqueAnchor);
-  return uniqueAnchor;
-};
-
-const generateTocFromContent = () => {
-  nextTick(() => {
-    const existingAnchors = new Set<string>();
-    const articleContent = document.querySelector('.md-editor-preview');
-    const headings = articleContent?.querySelectorAll('h1, h2, h3, h4, h5, h6') || [];
-
-    if (headings.length > 0) {
-      tocItems.value = Array.from(headings).map((h, i) => {
-        const anchor = generateStableAnchor(h.textContent || `heading-${i}`, existingAnchors, i);
-        h.id = anchor;
-
-        return {
-          level: parseInt(h.tagName.substring(1)),
-          text: h.textContent?.trim() || `标题 ${i + 1}`,
-          anchor,
-          active: false,
-          uniqueId: crypto.randomUUID() // 使用更可靠的唯一ID生成方式
-        };
-      });
-
-      hasToc.value = tocItems.value.length > 0;
-      setupIntersectionObserver();
-    }
-  });
-};
-
-const generateUniqueId = () => {
-  return crypto.randomUUID();
-};
-
-const setupIntersectionObserver = () => {
-  if (observer) {
-    observer.disconnect();
-  }
-
-  const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
-  if (headings.length === 0) return;
-
-  observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          // 找到最接近视口顶部的标题
-          const closest = findClosestHeading();
-          if (closest) {
-            currentActiveAnchor.value = closest;
-            updateTocActiveState(closest);
-          }
-        }
-      });
-    },
-    {
-      rootMargin: '-100px 0px -50% 0px',
-      threshold: 0.1
-    }
-  );
-
-  headings.forEach(heading => observer?.observe(heading));
-};
-
-const findClosestHeading = (): string | null => {
-  const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
-  let closestHeading = null;
-  let minDistance = Infinity;
-
-  headings.forEach((heading) => {
-    if (!heading.id) return;
-
-    const rect = heading.getBoundingClientRect();
-    const distance = Math.abs(rect.top - 100); // 100px是考虑顶部偏移
-
-    if (rect.top <= 200 && distance < minDistance) {
-      minDistance = distance;
-      closestHeading = heading.id;
-    }
-  });
-
-  return closestHeading;
-};
-
-const updateTocActiveState = (anchor: string) => {
-  tocItems.value = tocItems.value.map(item => {
-    return {
-      ...item,
-      active: item.anchor === anchor
-    };
-  });
-  scrollTocToActiveItem();
-};
-
-const scrollToAnchor = (anchorId: string) => {
-  const element = document.getElementById(anchorId);
-  if (element) {
-    element.scrollIntoView({ behavior: 'smooth' });
-  }
-};
-
 const toggleToc = () => {
-  if (!floatingTocRef.value) return;
-  floatingTocRef.value.classList.toggle('show');
+  showToc.value = !showToc.value;
 };
 
 const handleBackToList = () => {
@@ -403,12 +256,10 @@ const handleImageClick = (e: Event) => {
 
 const handleScroll = throttle(() => {
   calculateReadingProgress();
-  const closest = findClosestHeading();
-  if (closest && closest !== currentActiveAnchor.value) {
-    currentActiveAnchor.value = closest;
-    updateTocActiveState(closest);
-  }
 }, 100);
+
+// 提供阅读进度给Toc组件
+provide('readingProgress', readingProgress);
 
 onMounted(() => {
   const id = route.params.id;
@@ -420,29 +271,15 @@ onMounted(() => {
   // 添加图片点击事件监听
   document.addEventListener('click', handleImageClick);
 
-
-
   window.addEventListener('scroll', handleScroll, { passive: true });
-  window.addEventListener('resize', handleScroll);
-
-  observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          currentActiveAnchor.value = entry.target.id;
-        }
-      });
-    },
-    {
-      rootMargin: '-100px 0px -50% 0px',
-      threshold: 1.0
+  window.addEventListener('resize', () => {
+    if (!isMobile.value) {
+      showToc.value = true;
     }
-  );
+  });
 });
 
 onUnmounted(() => {
-  observer?.disconnect();
-  observer = null;
   window.removeEventListener('scroll', handleScroll);
   window.removeEventListener('resize', handleScroll);
   document.removeEventListener('click', handleImageClick);
@@ -471,7 +308,7 @@ onUnmounted(() => {
 }
 
 .article-main {
-  @apply flex-[4] w-full;
+  @apply flex-[3] w-full;
 }
 
 .article-card {
@@ -554,21 +391,15 @@ onUnmounted(() => {
   @apply text-center py-8 text-gray-500 dark:text-gray-400 italic;
 }
 
-/* 现代化悬浮目录样式 */
-.floating-toc-container {
+/* TOC 样式 */
+.toc-container {
+  @apply hidden md:block flex-1 ml-6;
   position: relative;
-  width: auto;
-  max-height: none;
-  margin-right: 0;
-  transform: none;
-  order: 2;
-  margin-left: 0;
-  margin-top: 20px;
-  flex: 1;
-  @apply md:ml-6 md:mt-0;
+  min-width: 200px;
+  max-width: 280px;
 }
 
-.floating-toc {
+.toc-wrapper {
   position: sticky;
   top: 20px;
   background: rgba(255, 255, 255, 0.95);
@@ -581,260 +412,51 @@ onUnmounted(() => {
   transition: all 0.3s ease;
 }
 
-.toc-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 14px 16px;
-  background: linear-gradient(135deg, #f6f7f9 0%, #e9ebee 100%);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  font-weight: 600;
-  font-size: 15px;
-  color: #2d3748;
-}
-
-.toc-close {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 4px;
-  opacity: 0.6;
-  transition: opacity 0.2s;
-}
-
-.toc-close:hover {
-  opacity: 1;
-}
-
-.toc-content {
-  max-height: calc(100vh - 220px);
-  overflow-y: auto;
-  padding: 8px 0;
-}
-
-.toc-item::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 4px;
-  height: 0;
-  background: var(--active-color, theme('colors.blue.500'));
-  border-radius: 2px;
-  transition: height 0.2s ease-out;
-}
-
-.toc-item {
-  position: relative;
-  display: flex;
-  align-items: center;
-  padding: 8px 16px 8px 20px;
-  cursor: pointer;
-  animation: fadeIn 0.4s ease-out forwards;
-  animation-delay: calc(var(--item-index) * 50ms);
-  opacity: 0;
-  transition: all 0.2s ease-out;
-}
-
-.toc-item:hover::before {
-  height: 16px;
-}
-
-.toc-item.active::before {
-  height: 24px;
-  background: var(--active-color);
-}
-
-.toc-item::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 3px;
-  height: 0;
-  background: var(--active-color, theme('colors.blue.500'));
-  border-radius: 3px;
-  transition: height 0.3s ease, background 0.3s ease;
-}
-
-.toc-item:hover::after {
-  height: 60%;
-  background: var(--hover-color, theme('colors.blue.400'));
-}
-
-.toc-item.active::after {
-  height: 80%;
-  background: var(--active-color);
-}
-
-/* 暗色模式适配 */
-.dark .toc-item::after {
-  --active-color: theme('colors.blue.400');
-  --hover-color: theme('colors.blue.300');
-}
-
-.toc-item-text {
-  font-weight: calc(600 - var(--level, 0) * 100);
-}
-
-@keyframes fadeIn {
-  to {
-    opacity: 1;
-  }
-}
-
-.toc-item-indicator {
-  position: absolute;
-  left: 0;
-  top: 0;
-  height: 100%;
-  width: 3px;
-  background: #e2e8f0;
-  transform: scaleY(0);
-  transform-origin: top;
-  transition: transform 0.3s ease, background 0.3s ease;
-}
-
-.toc-item-text {
-  transition: all 0.3s ease;
-  font-size: 14px;
-  color: #4a5568;
-  line-height: 1.4;
-}
-
-.toc-item:hover {
-  background: rgba(237, 242, 247, 0.6);
-}
-
-.toc-item:hover .toc-item-text {
-  color: #2d3748;
-}
-
-.toc-item:hover .toc-item-indicator {
-  transform: scaleY(1);
-  background: #cbd5e0;
-}
-
-.toc-item.active {
-  background: rgba(235, 248, 255, 0.6);
-}
-
-.toc-item.active .toc-item-text {
-  color: #3182ce;
-  font-weight: 500;
-}
-
-.toc-item.active .toc-item-indicator {
-  transform: scaleY(1);
-  background: #3182ce;
-}
-
-/* 暗色模式适配 */
-.dark .floating-toc {
+.dark .toc-wrapper {
   background: rgba(26, 32, 44, 0.95);
   border-color: rgba(255, 255, 255, 0.05);
 }
 
-.dark .toc-header {
-  background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
-  color: #e2e8f0;
-  border-bottom-color: rgba(255, 255, 255, 0.05);
-}
-
-.dark .toc-item-text {
-  color: #a0aec0;
-}
-
-.dark .toc-item:hover {
-  background: rgba(45, 55, 72, 0.6);
-}
-
-.dark .toc-item:hover .toc-item-text {
-  color: #e2e8f0;
-}
-
-.dark .toc-item:hover .toc-item-indicator {
-  background: #4a5568;
-}
-
-.dark .toc-item.active {
-  background: rgba(49, 130, 206, 0.1);
-}
-
-.dark .toc-item.active .toc-item-text {
-  color: #63b3ed;
-}
-
-.dark .toc-item.active .toc-item-indicator {
-  background: #63b3ed;
-}
-
-/* 响应式调整 */
-@media (max-width: 1024px) {
-  .article-container {
-    @apply w-[90%];
-  }
-
-  .floating-toc-container {
-    width: auto;
-    margin-right: 0;
-  }
-
-  .floating-toc {
-    top: 15px;
-  }
+/* 移动端样式 */
+.toc-mobile-trigger {
+  display: none;
 }
 
 @media (max-width: 768px) {
-  .article-container {
-    @apply w-[95%];
+  .toc-container {
+    @apply block w-full mt-4 mx-0;
+    max-width: none;
   }
-
+  
   .toc-mobile-trigger {
     display: flex;
+    padding: 10px 15px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(8px);
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    margin-bottom: 10px;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: 500;
+    font-size: 15px;
   }
-
-  .floating-toc-container {
-    width: 100%;
-    margin-top: 20px;
-    transform: none;
-    margin-right: 0;
+  
+  .dark .toc-mobile-trigger {
+    background: rgba(26, 32, 44, 0.95);
+    color: #e2e8f0;
   }
-
-  .floating-toc {
+  
+  .toc-wrapper {
     display: none;
     position: relative;
     top: 0;
   }
-
-  .floating-toc-container.show .floating-toc {
+  
+  .toc-wrapper.show {
     display: block;
-    position: sticky;
-    top: 15px;
   }
-}
-
-.toc-mobile-trigger {
-  display: none;
-  padding: 10px 15px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(8px);
-  border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  cursor: pointer;
-  margin-bottom: 10px;
-  align-items: center;
-  justify-content: space-between;
-  font-weight: 500;
-  font-size: 15px;
-}
-
-/* 暗色模式适配 */
-.dark .toc-mobile-trigger {
-  background: rgba(26, 32, 44, 0.95);
-  color: #e2e8f0;
 }
 
 .back-button {
