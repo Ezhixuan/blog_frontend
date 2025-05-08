@@ -1,5 +1,14 @@
 <template>
   <aside class="w-72 bg-white shadow-lg p-6 fixed top-0 left-0 bottom-0 overflow-y-auto overflow-hidden z-30 transition-colors duration-300 dark:bg-gray-900 dark:border-r dark:border-gray-800">
+    <!-- 添加隐藏的文件上传输入 -->
+    <input 
+      ref="avatarInputRef"
+      type="file"
+      accept="image/jpeg,image/png,image/gif,image/webp"
+      class="hidden"
+      @change="handleAvatarChange"
+    />
+    
     <transition
       name="sidebar-transition"
       mode="out-in"
@@ -11,16 +20,18 @@
             @mouseenter="handleMouseEnter"
             @mouseleave="handleMouseLeave"
           >
+            <!-- 恢复原来的头像样式，移除点击更换功能 -->
             <img
-              :src="userAvatar"
-              alt="Profile"
-              class="profile-avatar"
+              :src="userAvatar" 
+              alt="Profile" 
               @error="handleAvatarError"
-            />
+              class="w-32 h-32 rounded-full mx-auto mb-4 border-4 border-slate-100 hover:rotate-[360deg] transition-transform duration-500 dark:border-gray-700"
+            >
 
             <div
               v-if="showLoginDialog && !isLoggedIn"
-              class="login-dialog"
+              class="absolute left-1/2 transform -translate-x-1/2 mt-2 w-48 bg-white rounded-lg shadow-xl p-4 z-10
+                     animate-fade-in-up border border-gray-200 dark:bg-gray-800 dark:border-gray-700"
               @mouseenter="clearHideTimeout"
               @mouseleave="handleDialogLeave"
             >
@@ -44,74 +55,98 @@
               </div>
             </div>
 
+            <!-- 用户信息弹窗中的头像 -->
             <div
               v-if="showLoginDialog && isLoggedIn"
-              class="user-welcome-dialog"
+              class="absolute left-1/2 transform -translate-x-1/2 mt-2 w-72 backdrop-blur-lg bg-white/90 rounded-lg shadow-2xl p-4 z-10
+                     animate-float border border-transparent hover:border-blue-300/50 transition-all duration-500
+                     bg-gradient-to-br from-white/90 via-white/80 to-blue-50/30
+                     dark:from-gray-900/90 dark:via-gray-900/80 dark:to-blue-900/30 dark:hover:border-blue-500/30"
               @mouseenter="clearHideTimeout"
               @mouseleave="handleDialogLeave"
-              style="transform-style: preserve-3d; perspective: 1000px"
+              style="transform-style: preserve-3d; perspective: 1000px;"
             >
-              <div class="user-welcome-content">
-                <div class="user-info-basic">
-                  <img
-                    :src="userAvatar"
-                    alt="User Avatar"
-                    class="user-info-avatar"
-                    @error="handleAvatarError"
-                  />
-                  <div class="user-info-details">
-                    <h3 class="user-info-name">
+              <div class="space-y-4">
+                <!-- 用户基本信息 -->
+                <div class="flex items-start space-x-4">
+                  <div class="relative group cursor-pointer">
+                    <img 
+                      :src="userAvatar"
+                      alt="User Avatar"
+                      class="w-16 h-16 rounded-full border-2 border-gray-200 dark:border-gray-700 group-hover:opacity-80"
+                      @error="handleAvatarError"
+                      
+                    />
+                    <!-- 悬浮提示 -->
+                    <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div class="text-white text-xs bg-black bg-opacity-50 px-2 py-1 rounded-full" @click="triggerAvatarUpload">更换头像</div>
+                    </div>
+                    
+                    <!-- 上传中状态 -->
+                    <div v-if="isUploadingAvatar" class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 rounded-full">
+                      <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="flex-1">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white">
                       {{ userInfo?.username || userInfo?.userAccount || '用户' }}
                     </h3>
-                    <div class="user-role-tags">
-                      <span
-                        :class="[
-                          'user-role-tag',
-                          getRoleColorClass(userInfo?.role),
-                        ]"
+                    <!-- 角色标签 -->
+                    <div class="flex items-center justify-center space-x-2 my-1">
+                      <span 
+                        :class="[`text-white text-xs px-2 py-0.5 rounded-full`, 
+                                getRoleColorClass(userInfo?.role)]"
                       >
                         {{ userInfo?.role || '普通用户' }}
                       </span>
                     </div>
-                    <p class="user-info-email" :title="userInfo?.email">
+                    <p class="text-sm text-gray-500 truncate dark:text-gray-400" :title="userInfo?.email">
                       {{ userInfo?.email || '未设置邮箱' }}
                     </p>
                   </div>
                 </div>
-
-                <div class="user-profile-section">
-                  <p class="user-profile-text" :title="userInfo?.profile">
+                
+                <!-- 用户简介 -->
+                <div class="text-sm text-gray-600 border-t border-gray-100 pt-3 dark:text-gray-400 dark:border-gray-700">
+                  <p class="line-clamp-2" :title="userInfo?.profile">
                     {{ userInfo?.profile || '这个人很懒，还没有填写简介' }}
                   </p>
                 </div>
-
-                <div class="user-join-time">
-                  加入时间：{{
-                    userInfo?.createTime
-                      ? new Date(userInfo.createTime).toLocaleDateString()
-                      : '未知'
-                  }}
+    
+                <!-- 加入时间 -->
+                <div class="text-xs text-gray-500 border-t border-gray-100 pt-3 dark:text-gray-400 dark:border-gray-700">
+                  加入时间：{{ userInfo?.createTime ? new Date(userInfo.createTime).toLocaleDateString() : '未知' }}
                 </div>
-
-                <div class="user-action-buttons">
+                
+                <!-- 操作按钮 -->
+                <div class="flex space-x-2 pt-2">
                   <button
-                    @click="
-                      userInfo?.role === 'admin'
-                        ? router.push('/blog/edit')
-                        : (showChangePasswordModal = true)
-                    "
-                    class="action-button primary"
+                    @click="userInfo?.role === 'admin' ? router.push('/blog/edit') : showChangePasswordModal = true"
+                    class="flex-1 px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                   >
                     {{ userInfo?.role === 'admin' ? '提交博客' : '修改密码' }}
                   </button>
-                  <button @click="handleLogout" class="action-button secondary">
+                  <button
+                    @click="openEditUserInfoModal"
+                    class="flex-1 px-3 py-2 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                  >
+                    编辑资料
+                  </button>
+                  <button
+                    @click="handleLogout"
+                    class="flex-1 px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+                  >
                     退出登录
                   </button>
                 </div>
               </div>
-
-              <div class="dialog-arrow">
-                <div class="dialog-arrow-inner dark"></div>
+              
+              <!-- Arrow -->
+              <div class="absolute -top-2 left-1/2 transform -translate-x-1/2">
+                <div class="border-8 border-transparent border-b-white dark:border-b-gray-900"></div>
               </div>
             </div>
           </div>
@@ -298,6 +333,111 @@
     v-model:isOpen="showSubmitBlogModal"
   />
 
+  <!-- 编辑用户信息模态框 -->
+  <div v-if="showEditUserInfoModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div 
+      class="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md mx-4 p-6 transform transition-all duration-300 ease-out"
+      :class="{'scale-100 opacity-100': showEditUserInfoModal, 'scale-95 opacity-0': !showEditUserInfoModal}"
+    >
+      <!-- 模态框标题 -->
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-semibold text-gray-900 dark:text-white">编辑个人资料</h3>
+        <button 
+          @click="closeEditUserInfoModal"
+          class="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- 分隔线 -->
+      <div class="border-t border-gray-200 dark:border-gray-700 mb-4"></div>
+
+      <!-- 编辑表单 -->
+      <form @submit.prevent="saveUserInfo">
+        <!-- 用户昵称 -->
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            用户昵称
+          </label>
+          <div class="relative">
+            <input 
+              v-model="editUserForm.username"
+              type="text"
+              class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              placeholder="请输入您的昵称"
+            />
+            <div v-if="editUserErrors.username" class="text-red-500 text-xs mt-1">
+              {{ editUserErrors.username }}
+            </div>
+          </div>
+        </div>
+
+        <!-- 用户邮箱 -->
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            邮箱地址
+          </label>
+          <div class="relative">
+            <input 
+              v-model="editUserForm.email"
+              type="email"
+              class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              placeholder="请输入您的邮箱"
+            />
+            <div v-if="editUserErrors.email" class="text-red-500 text-xs mt-1">
+              {{ editUserErrors.email }}
+            </div>
+          </div>
+        </div>
+
+        <!-- 用户简介 -->
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            个人简介
+          </label>
+          <div class="relative">
+            <textarea 
+              v-model="editUserForm.profile"
+              rows="3"
+              class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none"
+              placeholder="请简单介绍一下自己"
+            ></textarea>
+            <div v-if="editUserErrors.profile" class="text-red-500 text-xs mt-1">
+              {{ editUserErrors.profile }}
+            </div>
+          </div>
+        </div>
+
+        <!-- 保存取消按钮 -->
+        <div class="flex justify-end space-x-3 mt-6">
+          <button 
+            type="button"
+            @click="closeEditUserInfoModal"
+            class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          >
+            取消
+          </button>
+          <button 
+            type="submit"
+            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            :disabled="isSaving"
+          >
+            <span v-if="isSaving" class="flex items-center">
+              <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              保存中...
+            </span>
+            <span v-else>保存</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -306,14 +446,13 @@ import ChangePasswordModal from './ChangePasswordModal.vue';
 import SubmitBlogModal from './SubmitBlogModal.vue';
 import { HomeIcon, UserIcon, DocumentTextIcon, CodeBracketIcon, UserGroupIcon, EnvelopeIcon } from '@heroicons/vue/24/outline';
 import { RouterLink, useRouter, useRoute, LocationQueryValue } from 'vue-router';
-import { doLogout, getLoginUserInfo } from '@/api/sysUserController';
+import { doLogout, getLoginUserInfo, editUserInfo } from '@/api/sysUserController';
 import { on } from '@/utils/eventBus';
 import messageService from '@/utils/message';
 import { useTheme } from '@/utils/theme';
 import { useUserStore } from '@/stores/user';
 import { getCategoryCount, getTagCount } from '@/api/articleController';
-import type { UserInfoVO } from '@/api/types/userController';
-import type { ArticleCategoryCountVO, ArticleTagCountVO } from '@/api/types/articleController';
+import { upload } from '@/api/pictureController';
 
 // --- Stores ---
 const userStore = useUserStore();
@@ -337,6 +476,24 @@ const categories = ref<any[]>([]);
 const categoriesLoading = ref(false);
 const tags = ref<any[]>([]);
 const tagsLoading = ref(false);
+
+// 编辑用户信息相关
+const showEditUserInfoModal = ref(false);
+const isSaving = ref(false);
+const editUserForm = ref({
+  username: '',
+  email: '',
+  profile: '',
+});
+const editUserErrors = ref({
+  username: '',
+  email: '',
+  profile: '',
+});
+
+// 用户头像更换相关
+const avatarInputRef = ref<HTMLInputElement | null>(null);
+const isUploadingAvatar = ref(false);
 
 // --- Constants ---
 const defaultAvatar = "https://avatars.githubusercontent.com/u/46998172?v=4";
@@ -624,6 +781,197 @@ const menuItems = [
   { name: 'Friend', icon: UserGroupIcon, link: '/friend', hasSubmenu: false },
   { name: 'Contact', icon: EnvelopeIcon, link: '/contact', hasSubmenu: false },
 ];
+
+// 打开编辑用户信息模态框
+const openEditUserInfoModal = () => {
+  // 确保已登录且有用户信息
+  if (!isLoggedIn.value || !userInfo.value) {
+    messageService.error('获取用户信息失败，请重新登录');
+    return;
+  }
+  
+  // 初始化表单数据
+  editUserForm.value = {
+    username: userInfo.value.username || userInfo.value.userAccount || '',
+    email: userInfo.value.email || '',
+    profile: userInfo.value.profile || ''
+  };
+  
+  // 清空错误信息
+  editUserErrors.value = { username: '', email: '', profile: '' };
+  
+  // 显示模态框
+  showEditUserInfoModal.value = true;
+};
+
+// 关闭编辑用户信息模态框
+const closeEditUserInfoModal = () => {
+  showEditUserInfoModal.value = false;
+  editUserErrors.value = { username: '', email: '', profile: '' };
+};
+
+// 验证表单数据
+const validateUserInfoForm = () => {
+  let isValid = true;
+  editUserErrors.value = { username: '', email: '', profile: '' };
+
+  // 验证用户名
+  if (!editUserForm.value.username.trim()) {
+    editUserErrors.value.username = '用户昵称不能为空';
+    isValid = false;
+  } else if (editUserForm.value.username.length > 20) {
+    editUserErrors.value.username = '用户昵称不能超过20个字符';
+    isValid = false;
+  }
+
+  // 验证邮箱
+  if (editUserForm.value.email.trim()) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(editUserForm.value.email)) {
+      editUserErrors.value.email = '请输入有效的邮箱地址';
+      isValid = false;
+    }
+  }
+
+  // 验证简介
+  if (editUserForm.value.profile.length > 200) {
+    editUserErrors.value.profile = '个人简介不能超过200个字符';
+    isValid = false;
+  }
+
+  return isValid;
+};
+
+// 保存用户信息
+const saveUserInfo = async () => {
+  if (!validateUserInfoForm()) {
+    return;
+  }
+
+  isSaving.value = true;
+  try {
+    // 调用API更新用户信息
+    const response = await editUserInfo({
+      username: editUserForm.value.username,
+      email: editUserForm.value.email,
+      profile: editUserForm.value.profile
+    });
+    
+    console.log(response);
+    if (response.data?.code === 0 && response.data?.data) {
+      // 更新本地用户信息
+      userInfo.value = response.data.data;
+      
+      // 更新全局用户状态
+      userStore.setUserInfo({
+        id: userInfo.value.id || 0,
+        username: userInfo.value.username || '',
+        avatar: userInfo.value.avatar,
+        email: userInfo.value.email,
+        role: userInfo.value.role
+      });
+      
+      // 显示成功消息
+      messageService.success('个人资料更新成功');
+      
+      // 关闭模态框
+      closeEditUserInfoModal();
+    } else {
+      throw new Error(response.data?.message || '更新失败');
+    }
+  } catch (error: any) {
+    console.error('更新用户信息失败:', error);
+    messageService.error(error.message || '更新失败，请稍后再试');
+  } finally {
+    isSaving.value = false;
+  }
+};
+
+// 触发文件选择
+const triggerAvatarUpload = () => {
+  // 确保用户已登录
+  if (!isLoggedIn.value) {
+    messageService.info('请先登录后再更换头像');
+    return;
+  }
+  console.log(avatarInputRef.value);
+  
+  // 触发点击隐藏的文件输入
+  if (avatarInputRef.value) {
+    avatarInputRef.value.click();
+  }
+};
+
+// 处理头像文件选择
+const handleAvatarChange = async (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  if (!target.files || target.files.length === 0) return;
+  
+  const file = target.files[0];
+  
+  // 验证文件类型
+  const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  if (!validTypes.includes(file.type)) {
+    messageService.error('请上传图片文件 (JPG, PNG, GIF, WEBP)');
+    return;
+  }
+  
+  // 验证文件大小 (最大2MB)
+  const maxSize = 2 * 1024 * 1024; // 2MB
+  if (file.size > maxSize) {
+    messageService.error('图片大小不能超过2MB');
+    return;
+  }
+  
+  try {
+    isUploadingAvatar.value = true;
+    
+    // 第一步：上传图片
+    const uploadResponse = await upload({ type: 3 }, file);
+    
+    if (uploadResponse.data?.code !== 0 || !uploadResponse.data?.data) {
+      throw new Error(uploadResponse.data?.message || '头像上传失败');
+    }
+    
+    const avatarUrl = uploadResponse.data.data;
+    
+    // 第二步：更新用户信息
+    const updateResponse = await editUserInfo({
+      avatar: avatarUrl
+    });
+    
+    if (updateResponse.data?.code !== 0 || !updateResponse.data?.data) {
+      throw new Error(updateResponse.data?.message || '头像更新失败');
+    }
+    
+    // 更新本地用户信息
+    userInfo.value = updateResponse.data.data;
+    
+    // 更新Pinia store中的用户头像
+    userStore.setUserInfo({
+      id: userInfo.value.id || 0,
+      username: userInfo.value.username || userInfo.value.userAccount || '',
+      avatar: avatarUrl,
+      email: userInfo.value.email,
+      role: userInfo.value.role
+    });
+    
+    // 重置头像错误状态
+    avatarError.value = false;
+    
+    // 显示成功消息
+    messageService.success('头像更新成功');
+  } catch (error: any) {
+    console.error('头像更新失败:', error);
+    messageService.error(error.message || '头像更新失败，请稍后再试');
+  } finally {
+    isUploadingAvatar.value = false;
+    // 重置文件输入，允许再次上传相同的文件
+    if (avatarInputRef.value) {
+      avatarInputRef.value.value = '';
+    }
+  }
+};
 </script>
 
 <style scoped>
@@ -649,17 +997,7 @@ const menuItems = [
 }
 
 .profile-avatar {
-  @apply w-32 h-32 rounded-full mx-auto mb-4 border-4 border-slate-100 transition-transform duration-500;
-  /* Dark mode styles */
-  @apply dark:border-gray-700;
-  /* Hover effect */
-  @apply hover:rotate-[360deg];
-  /* Enhanced hover effect from original style block */
-  transition: all 0.5s ease; /* Combined transition */
-}
-.profile-avatar:hover {
-  box-shadow: 0 0 25px rgba(59, 130, 246, 0.3);
-  transform: rotate(360deg) scale(1.05);
+  @apply w-32 h-32 rounded-full mx-auto mb-4 border-4 border-slate-100 hover:rotate-[360deg] transition-transform duration-500 dark:border-gray-700;
 }
 
 /* --- Dialogs (Login & User Welcome) --- */
