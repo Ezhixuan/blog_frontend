@@ -122,23 +122,27 @@
                 </div>
                 
                 <!-- 操作按钮 -->
-                <div class="flex space-x-2 pt-2">
+                <div class="flex space-x-3 pt-4">
                   <button
                     @click="userInfo?.role === 'admin' ? router.push('/blog/edit') : showChangePasswordModal = true"
-                    class="flex-1 px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl shadow-md hover:shadow-lg hover:from-blue-600 hover:to-blue-700 active:shadow-inner active:translate-y-0.5 transform transition-all duration-200"
                   >
+                    <DocumentPlusIcon v-if="userInfo?.role === 'admin'" class="w-4 h-4" />
+                    <KeyIcon v-else class="w-4 h-4" />
                     {{ userInfo?.role === 'admin' ? '提交博客' : '修改密码' }}
                   </button>
                   <button
                     @click="openEditUserInfoModal"
-                    class="flex-1 px-3 py-2 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                    class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium bg-gradient-to-br from-emerald-500 to-green-600 text-white rounded-xl shadow-md hover:shadow-lg hover:from-emerald-600 hover:to-green-700 active:shadow-inner active:translate-y-0.5 transform transition-all duration-200"
                   >
+                    <PencilIcon class="w-4 h-4" />
                     编辑资料
                   </button>
                   <button
                     @click="handleLogout"
-                    class="flex-1 px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+                    class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium bg-gradient-to-br from-gray-200 to-gray-300 text-gray-700 rounded-xl shadow-md hover:shadow-lg hover:from-gray-300 hover:to-gray-400 active:shadow-inner active:translate-y-0.5 transform transition-all duration-200 dark:from-gray-700 dark:to-gray-800 dark:text-gray-200 dark:hover:from-gray-600 dark:hover:to-gray-700"
                   >
+                    <ArrowRightOnRectangleIcon class="w-4 h-4" />
                     退出登录
                   </button>
                 </div>
@@ -444,7 +448,7 @@
 import { ref, onMounted, computed } from 'vue';
 import ChangePasswordModal from './ChangePasswordModal.vue';
 import SubmitBlogModal from './SubmitBlogModal.vue';
-import { HomeIcon, UserIcon, DocumentTextIcon, CodeBracketIcon, UserGroupIcon, EnvelopeIcon } from '@heroicons/vue/24/outline';
+import { HomeIcon, UserIcon, DocumentTextIcon, CodeBracketIcon, UserGroupIcon, EnvelopeIcon, PencilIcon, ArrowRightOnRectangleIcon, DocumentPlusIcon, KeyIcon } from '@heroicons/vue/24/outline';
 import { RouterLink, useRouter, useRoute, LocationQueryValue } from 'vue-router';
 import { doLogout, getLoginUserInfo, editUserInfo } from '@/api/sysUserController';
 import { on } from '@/utils/eventBus';
