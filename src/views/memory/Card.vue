@@ -32,8 +32,21 @@
       </div>
     </div>
 
-    <!-- 小测按钮 -->
-    <div class="mb-4 flex justify-end">
+    <!-- 工具按钮区 -->
+    <div class="mb-4 flex justify-end space-x-3">
+      <!-- 提交卡片按钮 -->
+      <button 
+        @click="openSubmitForm"
+        class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition duration-300 flex items-center"
+        :disabled="loading"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+        </svg>
+        提交卡片
+      </button>
+    
+      <!-- 小测按钮 -->
       <button 
         @click="startQuiz"
         class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-300 flex items-center"
@@ -49,13 +62,18 @@
     <!-- 卡片网格 -->
     <div class="flashcard-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       <Flashcard
-        v-for="card in flashcards"
+        v-for="(card, index) in flashcards"
         :key="card.id"
         :id="card.id"
         :question="card.front"
         :answer="card.back"
         :is-expanded="expandedCardId === card.id"
+        :index="index"
+        :total="flashcards.length"
+        :prev-card="getPrevCard(index)"
+        :next-card="getNextCard(index)"
         @expand="handleCardExpand"
+        @navigate="handleCardNavigate"
       />
       <div v-if="loading" class="col-span-full flex justify-center py-10">
         <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
@@ -150,14 +168,126 @@
         </div>
       </div>
     </teleport>
+
+    <!-- 提交卡片弹窗 -->
+    <teleport to="body" v-if="submitFormActive">
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl w-full max-w-xl mx-auto shadow-2xl overflow-hidden">
+          <!-- 标题栏 -->
+          <div class="flex justify-between items-center p-4 border-b dark:border-gray-700">
+            <h3 class="font-bold text-gray-800 dark:text-white text-lg">
+              {{ isCreatingDeck ? '创建新卡片集' : '提交记忆卡片' }}
+            </h3>
+            <button 
+              @click="closeSubmitForm"
+              class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- 创建卡片集表单 -->
+          <div v-if="isCreatingDeck" class="p-6">
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                卡片集名称
+              </label>
+              <input 
+                v-model="newDeckName" 
+                type="text" 
+                class="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                placeholder="输入卡片集名称"
+              />
+            </div>
+
+            <div class="flex justify-between mt-6">
+              <button 
+                @click="() => isCreatingDeck = false" 
+                class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 transition duration-300"
+              >
+                返回
+              </button>
+              <button 
+                @click="createDeck" 
+                class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition duration-300"
+                :disabled="!newDeckName || submitting"
+              >
+                创建
+              </button>
+            </div>
+          </div>
+
+          <!-- 提交卡片表单 -->
+          <div v-else class="p-6">
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                问题
+              </label>
+              <textarea 
+                v-model="newCardFront" 
+                rows="3"
+                class="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                placeholder="输入卡片正面的问题"
+              ></textarea>
+            </div>
+
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                答案
+              </label>
+              <textarea 
+                v-model="newCardBack" 
+                rows="3"
+                class="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                placeholder="输入卡片背面的答案"
+              ></textarea>
+            </div>
+
+            <div class="mb-4">
+              <div class="flex justify-between">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  选择卡片集
+                </label>
+                <button 
+                  @click="() => isCreatingDeck = true" 
+                  class="text-sm text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
+                >
+                  创建新卡片集
+                </button>
+              </div>
+              <select 
+                v-model="newCardDeckId" 
+                class="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              >
+                <option value="" disabled>请选择卡片集</option>
+                <option v-for="deck in decks" :key="deck.id" :value="deck.id">{{ deck.name }}</option>
+              </select>
+            </div>
+
+            <div class="flex justify-end mt-6">
+              <button 
+                @click="submitCard" 
+                class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition duration-300"
+                :disabled="!newCardFront || !newCardBack || !newCardDeckId || submitting"
+              >
+                提交
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </teleport>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import Flashcard from './Flashcard.vue'; 
-import { listAll } from '@/api/memoDeckController';
+import { listAll, add as addDeck } from '@/api/memoDeckController';
 import { list, test, operate } from '@/api/memoCardCoreController';
+import { add as addCard } from '@/api/memoController';
 
 // 分页参数
 const pageSize = 9; // 每页9条数据
@@ -178,6 +308,15 @@ const quizCards = ref([]);
 const currentQuizIndex = ref(0);
 const showAnswer = ref(false);
 const startTime = ref(0);
+
+// 提交卡片相关数据
+const submitFormActive = ref(false);
+const isCreatingDeck = ref(false);
+const newCardFront = ref('');
+const newCardBack = ref('');
+const newCardDeckId = ref('');
+const newDeckName = ref('');
+const submitting = ref(false);
 
 // 当前小测卡片
 const currentQuizCard = computed(() => {
@@ -242,6 +381,18 @@ const loadCards = async (page) => {
   }
 };
 
+// 获取前一张卡片
+const getPrevCard = (index) => {
+  if (index <= 0 || flashcards.value.length <= 1) return null;
+  return flashcards.value[index - 1];
+};
+
+// 获取后一张卡片
+const getNextCard = (index) => {
+  if (index >= flashcards.value.length - 1 || flashcards.value.length <= 1) return null;
+  return flashcards.value[index + 1];
+};
+
 // 处理卡片展开
 const handleCardExpand = (payload) => {
   if (payload.expand) {
@@ -250,6 +401,13 @@ const handleCardExpand = (payload) => {
     if (expandedCardId.value === payload.id) {
       expandedCardId.value = null;
     }
+  }
+};
+
+// 处理卡片导航
+const handleCardNavigate = (payload) => {
+  if (payload.cardId) {
+    expandedCardId.value = payload.cardId;
   }
 };
 
@@ -333,6 +491,97 @@ const rateCard = async (type) => {
     }
   } catch (error) {
     console.error('提交评价失败:', error);
+  }
+};
+
+// 打开提交卡片表单
+const openSubmitForm = () => {
+  // 重置表单数据
+  newCardFront.value = '';
+  newCardBack.value = '';
+  newCardDeckId.value = selectedDeckId.value || '';
+  isCreatingDeck.value = false;
+  submitFormActive.value = true;
+};
+
+// 关闭提交卡片表单
+const closeSubmitForm = () => {
+  submitFormActive.value = false;
+  isCreatingDeck.value = false;
+};
+
+// 提交新卡片
+const submitCard = async () => {
+  if (!newCardFront.value || !newCardBack.value || !newCardDeckId.value) {
+    alert('请填写完整信息');
+    return;
+  }
+  
+  submitting.value = true;
+  try {
+    const params = {
+      submitDTO: {
+        front: newCardFront.value,
+        back: newCardBack.value,
+        deckId: newCardDeckId.value
+      }
+    };
+    
+    const response = await addCard(params);
+    
+    if (response.data.code === 0) {
+      alert('卡片提交成功！');
+      closeSubmitForm();
+      // 无论查看的是哪个卡片集，都刷新当前卡片列表
+      loadCards(currentPage.value);
+    } else {
+      alert(`提交失败: ${response.data.message || '未知错误'}`);
+    }
+  } catch (error) {
+    console.error('提交卡片失败:', error);
+    alert('提交失败，请稍后重试');
+  } finally {
+    submitting.value = false;
+  }
+};
+
+// 创建新卡片集
+const createDeck = async () => {
+  if (!newDeckName.value) {
+    alert('请输入卡片集名称');
+    return;
+  }
+  
+  submitting.value = true;
+  try {
+    const params = {
+      memoDeckDTO: {
+        name: newDeckName.value,
+        description: ''
+      }
+    };
+    
+    const response = await addDeck(params);
+    
+    if (response.data.code === 0) {
+      alert('卡片集创建成功！');
+      // 重新加载deck列表
+      await loadDecks();
+      // 将新创建的deck设为选中状态
+      const newDeckId = response.data.data;
+      if (newDeckId) {
+        newCardDeckId.value = newDeckId;
+      }
+      // 返回提交卡片表单
+      isCreatingDeck.value = false;
+    } else {
+      alert(`创建失败: ${response.data.message || '未知错误'}`);
+    }
+  } catch (error) {
+    console.error('创建卡片集失败:', error);
+    alert('创建失败，请稍后重试');
+  } finally {
+    submitting.value = false;
   }
 };
 
