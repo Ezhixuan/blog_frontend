@@ -34,8 +34,9 @@
 
     <!-- 工具按钮区 -->
     <div class="mb-4 flex justify-end space-x-3">
-      <!-- 提交卡片按钮 -->
+      <!-- 提交卡片按钮 - 仅当用户已登录且是管理员时显示 -->
       <button 
+        v-if="canSubmitCard"
         @click="openSubmitForm"
         class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition duration-300 flex items-center"
         :disabled="loading"
@@ -288,6 +289,10 @@ import Flashcard from './Flashcard.vue';
 import { listAll, add as addDeck } from '@/api/memoDeckController';
 import { list, test, operate } from '@/api/memoCardCoreController';
 import { add as addCard } from '@/api/memoController';
+import { useUserStore } from '@/stores/user';
+
+// 用户状态
+const userStore = useUserStore();
 
 // 分页参数
 const pageSize = 9; // 每页9条数据
@@ -317,6 +322,11 @@ const newCardBack = ref('');
 const newCardDeckId = ref('');
 const newDeckName = ref('');
 const submitting = ref(false);
+
+// 判断是否有权限提交卡片
+const canSubmitCard = computed(() => {
+  return userStore.isLoggedIn && userStore.userInfo?.role === 'admin';
+});
 
 // 当前小测卡片
 const currentQuizCard = computed(() => {
