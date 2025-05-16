@@ -187,7 +187,7 @@ const handleImageUpload = async (options: any) => {
 
   try {
     const response = await upload(
-      { type: "BLOG_COVER" },
+      { type: 2 },
       file
     );
 
