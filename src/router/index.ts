@@ -61,6 +61,11 @@ const router = createRouter({
       path: '/register',
       name: 'Register',
       component: Register
+    },
+    {
+      path: '/memory',
+      name: 'Memory',
+      component: () => import('../views/memory/card.vue')
     }
   ]
 })

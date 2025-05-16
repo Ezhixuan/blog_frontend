@@ -448,7 +448,7 @@
 import { ref, onMounted, computed } from 'vue';
 import ChangePasswordModal from './ChangePasswordModal.vue';
 import SubmitBlogModal from './SubmitBlogModal.vue';
-import { HomeIcon, UserIcon, DocumentTextIcon, CodeBracketIcon, UserGroupIcon, EnvelopeIcon, PencilIcon, ArrowRightOnRectangleIcon, DocumentPlusIcon, KeyIcon } from '@heroicons/vue/24/outline';
+import { HomeIcon, UserIcon, DocumentTextIcon, CodeBracketIcon, UserGroupIcon, EnvelopeIcon, PencilIcon, ArrowRightOnRectangleIcon, DocumentPlusIcon, KeyIcon, BookOpenIcon } from '@heroicons/vue/24/outline';
 import { RouterLink, useRouter, useRoute, LocationQueryValue } from 'vue-router';
 import { doLogout, getLoginUserInfo, editUserInfo } from '@/api/sysUserController';
 import { on } from '@/utils/eventBus';
@@ -781,6 +781,7 @@ const menuItems = [
   { name: 'Home', icon: HomeIcon, link: '/', hasSubmenu: false },
   { name: 'About', icon: UserIcon, link: '/about', hasSubmenu: false },
   { name: 'Blogs', icon: DocumentTextIcon, link: '/blogs', hasSubmenu: true },
+  { name: 'Memory', icon: BookOpenIcon, link: '/memory', hasSubmenu: false },
   { name: 'Project', icon: CodeBracketIcon, link: '/project', hasSubmenu: false },
   { name: 'Friend', icon: UserGroupIcon, link: '/friend', hasSubmenu: false },
   { name: 'Contact', icon: EnvelopeIcon, link: '/contact', hasSubmenu: false },

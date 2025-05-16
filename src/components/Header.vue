@@ -17,6 +17,7 @@ const isMenuOpen = ref(false);
         <div class="hidden md:flex items-center space-x-8">
           <a href="/" class="nav-link">首页</a>
           <a href="/articles" class="nav-link">文章</a>
+          <a href="/memory" class="nav-link">记忆卡片</a>
           <a href="/about" class="nav-link">关于我</a>
         </div>
 
@@ -33,6 +34,7 @@ const isMenuOpen = ref(false);
       <div v-if="isMenuOpen" class="md:hidden mt-4 space-y-4">
         <a href="/" class="block nav-link">首页</a>
         <a href="/articles" class="block nav-link">文章</a>
+        <a href="/memory" class="block nav-link">记忆卡片</a>
         <a href="/about" class="block nav-link">关于我</a>
       </div>
     </nav>
