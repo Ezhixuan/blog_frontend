@@ -21,17 +21,15 @@ export async function list(
 
 /** 此处后端没有提供注释 POST /memo/operate */
 export async function operate(
-  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
-  params: API.operateParams,
+  body: API.MemoCardOperateDTO,
   options?: { [key: string]: any }
 ) {
   return request<API.BaseResponseString>("/memo/operate", {
     method: "POST",
-    params: {
-      ...params,
-      operateDTO: undefined,
-      ...params["operateDTO"],
+    headers: {
+      "Content-Type": "application/json",
     },
+    data: body,
     ...(options || {}),
   });
 }

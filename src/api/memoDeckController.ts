@@ -3,7 +3,7 @@
 import request from "@/utils/request";
 
 /** 删除 DELETE /deck/del/${param0} */
-export async function del(
+export async function del1(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
   params: API.del1Params,
   options?: { [key: string]: any }
@@ -29,18 +29,16 @@ export async function listAll(options?: { [key: string]: any }) {
 }
 
 /** 新增 POST /deck/update */
-export async function add(
-  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
-  params: API.add1Params,
+export async function add1(
+  body: API.MemoDeckDTO,
   options?: { [key: string]: any }
 ) {
   return request<API.BaseResponseString>("/deck/update", {
     method: "POST",
-    params: {
-      ...params,
-      memoDeckDTO: undefined,
-      ...params["memoDeckDTO"],
+    headers: {
+      "Content-Type": "application/json",
     },
+    data: body,
     ...(options || {}),
   });
 }

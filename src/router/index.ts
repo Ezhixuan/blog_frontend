@@ -65,7 +65,7 @@ const router = createRouter({
     {
       path: '/memory',
       name: 'Memory',
-      component: () => import('../views/memory/card.vue')
+      component: () => import('../views/memory/Card.vue')
     }
   ]
 })

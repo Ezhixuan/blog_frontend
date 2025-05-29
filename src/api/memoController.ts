@@ -22,17 +22,15 @@ export async function del(
 
 /** 新增 POST /memo/update */
 export async function add(
-  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
-  params: API.addParams,
+  body: API.MemoCardSubmitDTO,
   options?: { [key: string]: any }
 ) {
   return request<API.BaseResponseString>("/memo/update", {
     method: "POST",
-    params: {
-      ...params,
-      submitDTO: undefined,
-      ...params["submitDTO"],
+    headers: {
+      "Content-Type": "application/json",
     },
+    data: body,
     ...(options || {}),
   });
 }

@@ -17,6 +17,20 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
           </button>
 
+          <!-- 删除按钮 - 仅管理员可见 -->
+          <button
+            v-if="canDelete"
+            class="absolute top-4 right-16 z-50 p-2 rounded-full bg-red-500/90 hover:bg-red-600 shadow-md text-white"
+            @click.stop="handleDeleteClick" 
+            aria-label="删除卡片"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 6h18"></path>
+              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+            </svg>
+          </button>
+
           <!-- 上一张卡片预览 -->
           <div 
             v-if="hasPrevCard"
@@ -49,17 +63,21 @@
               <!-- 卡片翻转包装器 -->
               <div class="flip-card w-full h-full" :class="{ 'flipped': expandedIsFlipped }">
                 <!-- 正面 - 问题 -->
-                <div class="flip-card-front w-full h-full rounded-xl p-10 flex flex-col justify-center bg-gradient-to-br from-white to-blue-50 dark:from-gray-800 dark:to-gray-900 shadow-xl">
+                <div class="flip-card-front w-full h-full rounded-xl p-10 flex flex-col bg-gradient-to-br from-white to-blue-50 dark:from-gray-800 dark:to-gray-900 shadow-xl">
                   <h3 :id="'question-title-' + id" class="text-2xl font-bold mb-6 text-blue-600 dark:text-blue-400">问题：</h3>
-                  <p class="text-xl leading-relaxed text-gray-800 dark:text-white">{{ question }}</p>
-                  <div class="absolute bottom-6 right-6 text-sm text-gray-500 dark:text-gray-400">点击查看答案</div>
+                  <div class="overflow-y-auto flex-grow">
+                    <p class="text-xl leading-relaxed text-gray-800 dark:text-white whitespace-pre-wrap">{{ question }}</p>
+                  </div>
+                  <div class="pt-4 text-sm text-gray-500 dark:text-gray-400">点击查看答案</div>
                 </div>
                 
                 <!-- 背面 - 答案 -->
-                <div class="flip-card-back w-full h-full rounded-xl p-10 flex flex-col justify-center bg-gradient-to-br from-white to-green-50 dark:from-gray-800 dark:to-gray-900 shadow-xl">
+                <div class="flip-card-back w-full h-full rounded-xl p-10 flex flex-col bg-gradient-to-br from-white to-green-50 dark:from-gray-800 dark:to-gray-900 shadow-xl">
                   <h3 class="text-2xl font-bold mb-6 text-green-600 dark:text-green-400">答案：</h3>
-                  <p class="text-xl leading-relaxed text-gray-800 dark:text-white">{{ answer }}</p>
-                  <div class="absolute bottom-6 right-6 text-sm text-gray-500 dark:text-gray-400">点击返回问题</div>
+                  <div class="overflow-y-auto flex-grow">
+                    <p class="text-xl leading-relaxed text-gray-800 dark:text-white whitespace-pre-wrap">{{ answer }}</p>
+                  </div>
+                  <div class="pt-4 text-sm text-gray-500 dark:text-gray-400">点击返回问题</div>
                 </div>
               </div>
             </div>
@@ -90,7 +108,7 @@
   
     <!-- 卡片普通视图 -->
     <div
-      class="flashcard-container relative h-64 rounded-xl shadow-md cursor-pointer overflow-hidden hover:shadow-lg transition-shadow duration-300"
+      class="flashcard-container relative h-64 rounded-xl shadow-md cursor-pointer overflow-hidden hover:shadow-lg transition-shadow duration-300 group"
       @click="handleClick" 
       @dblclick="handleDoubleClick" 
       role="button"
@@ -98,20 +116,38 @@
       @keydown.enter="handleClick"
       @keydown.space="handleClick"
     >
+      <!-- 删除按钮 - 小卡片视图，仅管理员可见 -->
+      <button
+        v-if="canDelete"
+        class="absolute top-2 right-2 z-20 p-1.5 rounded-full bg-red-500/90 hover:bg-red-600 shadow-md text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+        @click.stop="handleDeleteClick"
+        aria-label="删除卡片"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 6h18"></path>
+          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+        </svg>
+      </button>
+
       <!-- 使用另一种更简单的3D翻转实现 -->
       <div class="flip-card-mini w-full h-full" :class="{ 'flipped': isFlipped }">
         <!-- 正面 - 问题 -->
-        <div class="flip-card-front-mini w-full h-full rounded-xl p-6 flex flex-col justify-center bg-gradient-to-br from-white to-blue-50 dark:from-gray-800 dark:to-gray-900">
+        <div class="flip-card-front-mini w-full h-full rounded-xl p-6 flex flex-col bg-gradient-to-br from-white to-blue-50 dark:from-gray-800 dark:to-gray-900">
           <h3 class="text-lg font-semibold mb-2 text-blue-600 dark:text-blue-400">问题：</h3>
-          <p class="text-gray-700 dark:text-gray-200">{{ question }}</p>
-          <div class="absolute bottom-3 right-3 text-xs text-gray-500 dark:text-gray-400">双击放大</div>
+          <div class="overflow-y-auto flex-grow">
+            <p class="text-gray-700 dark:text-gray-200 whitespace-pre-wrap">{{ question }}</p>
+          </div>
+          <div class="pt-2 text-xs text-gray-500 dark:text-gray-400">双击放大</div>
         </div>
       
         <!-- 背面 - 答案 -->
-        <div class="flip-card-back-mini w-full h-full rounded-xl p-6 flex flex-col justify-center bg-gradient-to-br from-white to-green-50 dark:from-gray-800 dark:to-gray-900">
+        <div class="flip-card-back-mini w-full h-full rounded-xl p-6 flex flex-col bg-gradient-to-br from-white to-green-50 dark:from-gray-800 dark:to-gray-900">
           <h3 class="text-lg font-semibold mb-2 text-green-600 dark:text-green-400">答案：</h3>
-          <p class="text-gray-700 dark:text-gray-200">{{ answer }}</p>
-          <div class="absolute bottom-3 right-3 text-xs text-gray-500 dark:text-gray-400">双击放大</div>
+          <div class="overflow-y-auto flex-grow">
+            <p class="text-gray-700 dark:text-gray-200 whitespace-pre-wrap">{{ answer }}</p>
+          </div>
+          <div class="pt-2 text-xs text-gray-500 dark:text-gray-400">双击放大</div>
         </div>
       </div>
     </div>
@@ -155,11 +191,15 @@
     nextCard: {
       type: Object,
       default: () => ({})
+    },
+    canDelete: {
+      type: Boolean,
+      default: false
     }
   });
   
   // Define events emitted by the component
-  const emit = defineEmits(['expand', 'navigate']);
+  const emit = defineEmits(['expand', 'navigate', 'delete']);
   
   // 卡片翻转状态
   const isFlipped = ref(false);
@@ -258,6 +298,11 @@
       resetSlideState();
     }, 300);
   };
+
+  // 删除卡片处理
+  const handleDeleteClick = () => {
+    emit('delete', { id: props.id });
+  };
   </script>
   
   <style scoped>
@@ -287,6 +332,8 @@
     height: 100%;
     -webkit-backface-visibility: hidden; /* Safari */
     backface-visibility: hidden;
+    display: flex;
+    flex-direction: column;
   }
   
   .flip-card-back {
@@ -310,6 +357,8 @@
     height: 100%;
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
+    display: flex;
+    flex-direction: column;
   }
   
   .flip-card-back-mini {
@@ -388,6 +437,36 @@
     100% {
       transform: translateX(30px);
       opacity: 0;
+    }
+  }
+  
+  /* 内容滚动条美化 */
+  .overflow-y-auto {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+  }
+  
+  .overflow-y-auto::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .overflow-y-auto::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .overflow-y-auto::-webkit-scrollbar-thumb {
+    background-color: rgba(156, 163, 175, 0.5);
+    border-radius: 3px;
+  }
+  
+  /* 暗色模式下滚动条 */
+  @media (prefers-color-scheme: dark) {
+    .overflow-y-auto {
+      scrollbar-color: rgba(75, 85, 99, 0.5) transparent;
+    }
+    
+    .overflow-y-auto::-webkit-scrollbar-thumb {
+      background-color: rgba(75, 85, 99, 0.5);
     }
   }
   

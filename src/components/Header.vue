@@ -15,10 +15,10 @@ const isMenuOpen = ref(false);
         
         <!-- Desktop Navigation -->
         <div class="hidden md:flex items-center space-x-8">
-          <a href="/" class="nav-link">首页</a>
-          <a href="/articles" class="nav-link">文章</a>
-          <a href="/memory" class="nav-link">记忆卡片</a>
-          <a href="/about" class="nav-link">关于我</a>
+          <router-link to="/" class="nav-link">首页</router-link>
+          <router-link to="/articles" class="nav-link">文章</router-link>
+          <router-link to="/memory" class="nav-link">记忆卡片</router-link>
+          <router-link to="/about" class="nav-link">关于我</router-link>
         </div>
 
         <!-- Mobile Menu Button -->
@@ -32,10 +32,10 @@ const isMenuOpen = ref(false);
 
       <!-- Mobile Navigation -->
       <div v-if="isMenuOpen" class="md:hidden mt-4 space-y-4">
-        <a href="/" class="block nav-link">首页</a>
-        <a href="/articles" class="block nav-link">文章</a>
-        <a href="/memory" class="block nav-link">记忆卡片</a>
-        <a href="/about" class="block nav-link">关于我</a>
+        <router-link to="/" class="block nav-link">首页</router-link>
+        <router-link to="/articles" class="block nav-link">文章</router-link>
+        <router-link to="/memory" class="block nav-link">记忆卡片</router-link>
+        <router-link to="/about" class="block nav-link">关于我</router-link>
       </div>
     </nav>
   </header>

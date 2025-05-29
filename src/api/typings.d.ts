@@ -2,12 +2,14 @@ declare namespace API {
   type ArticleCategoryCountVO = {
     id?: number;
     name?: string;
+    description?: string;
     count?: number;
   };
 
   type ArticleCategoryVO = {
     id?: number;
     name?: string;
+    description?: string;
   };
 
   type ArticleInfoVO = {
@@ -62,6 +64,7 @@ declare namespace API {
   };
 
   type ArticleSubmitDTO = {
+    id?: string;
     title?: string;
     summary?: string;
     cover?: string;
@@ -101,6 +104,12 @@ declare namespace API {
     message?: string;
   };
 
+  type BaseResponseBoolean = {
+    code?: number;
+    data?: boolean;
+    message?: string;
+  };
+
   type BaseResponseListArticleCategoryCountVO = {
     code?: number;
     data?: ArticleCategoryCountVO[];
@@ -125,9 +134,33 @@ declare namespace API {
     message?: string;
   };
 
+  type BaseResponseListMemoCardVO = {
+    code?: number;
+    data?: MemoCardVO[];
+    message?: string;
+  };
+
   type BaseResponsePageResponseArticlePageVO = {
     code?: number;
     data?: PageResponseArticlePageVO;
+    message?: string;
+  };
+
+  type BaseResponsePageResponseMemoCardVO = {
+    code?: number;
+    data?: PageResponseMemoCardVO;
+    message?: string;
+  };
+
+  type BaseResponsePageResponseMemoDeckVO = {
+    code?: number;
+    data?: PageResponseMemoDeckVO;
+    message?: string;
+  };
+
+  type BaseResponsePageResponsePictureUploadVO = {
+    code?: number;
+    data?: PageResponsePictureUploadVO;
     message?: string;
   };
 
@@ -149,13 +182,102 @@ declare namespace API {
     message?: string;
   };
 
+  type del1Params = {
+    idOpt: OperationById;
+  };
+
+  type deleteCategoryParams = {
+    id: number;
+  };
+
+  type deleteTagParams = {
+    id: number;
+  };
+
+  type delParams = {
+    idOpt: OperationById;
+  };
+
   type getArticleInfoParams = {
-    id: string;
+    id: number;
+  };
+
+  type listParams = {
+    queryDTO: MemoQueryDTO;
+  };
+
+  type MemoCardOperateDTO = {
+    id?: number;
+    useTime?: number;
+    type?: number;
+  };
+
+  type MemoCardSubmitDTO = {
+    deckId?: number;
+    front?: string;
+    back?: string;
+  };
+
+  type MemoCardVO = {
+    id?: number;
+    deckId?: number;
+    deckName?: string;
+    front?: string;
+    back?: string;
+  };
+
+  type MemoDeckDTO = {
+    id?: number;
+    name?: string;
+  };
+
+  type MemoDeckVO = {
+    id?: number;
+    name?: string;
+  };
+
+  type MemoQueryDTO = {
+    current?: number;
+    pageSize?: number;
+    sortField?: string;
+    sortOrder?: string;
+    deckId?: number;
+  };
+
+  type OperationById = {
+    id?: number;
   };
 
   type PageResponseArticlePageVO = {
     data?: ArticlePageVO[];
     total?: number;
+  };
+
+  type PageResponseMemoCardVO = {
+    data?: MemoCardVO[];
+    total?: number;
+  };
+
+  type PageResponseMemoDeckVO = {
+    data?: MemoDeckVO[];
+    total?: number;
+  };
+
+  type PageResponsePictureUploadVO = {
+    data?: PictureUploadVO[];
+    total?: number;
+  };
+
+  type PictureUploadDTO = {
+    id?: number;
+    /** 图片类型 1.博客内容图片 2.博客封面图片 3.博客用户头像 */
+    type?: number;
+  };
+
+  type PictureUploadVO = {
+    id?: number;
+    url?: string;
+    name?: string;
   };
 
   type SaTokenInfo = {
@@ -178,6 +300,14 @@ declare namespace API {
 
   type submitTagParams = {
     name: string;
+  };
+
+  type testParams = {
+    deckId: number;
+  };
+
+  type uploadParams = {
+    uploadDTO: PictureUploadDTO;
   };
 
   type UserEditDTO = {
@@ -209,9 +339,5 @@ declare namespace API {
     userAccount?: string;
     password?: string;
     confirmPassword?: string;
-  };
-
-  type uploadParams = {
-    [key: string]: string | number | boolean;
   };
 }
