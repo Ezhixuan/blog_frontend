@@ -1,5 +1,8 @@
 <template>
-  <aside class="w-72 bg-white shadow-lg p-6 fixed top-0 left-0 bottom-0 overflow-y-auto overflow-hidden z-30 transition-colors duration-300 dark:bg-gray-900 dark:border-r dark:border-gray-800">
+  <aside class="w-72 bg-white shadow-lg p-6 fixed top-0 left-0 bottom-0 overflow-y-auto overflow-hidden z-50 transition-all duration-300 dark:bg-gray-900 dark:border-r dark:border-gray-800 -translate-x-full lg:translate-x-0" 
+         :class="{ 'translate-x-0': isMobileSidebarOpen }"
+         @click.stop>
+    
     <!-- 添加隐藏的文件上传输入 -->
     <input 
       ref="avatarInputRef"
@@ -170,11 +173,7 @@
                     $route.path === item.link ||
                     (item.hasSubmenu && expandedMenu === item.name),
                 }"
-                @click="
-                  item.hasSubmenu
-                    ? toggleSubmenu(item.name)
-                    : router.push(item.link)
-                "
+                @click="handleNavClick(item)"
               >
                 <component :is="item.icon" class="nav-item-icon" />
                 <span>{{ item.name }}</span>
@@ -457,12 +456,14 @@ import { useTheme } from '@/utils/theme';
 import { useUserStore } from '@/stores/user';
 import { getCategoryCount, getTagCount } from '@/api/articleController';
 import { upload } from '@/api/pictureController';
+import { useSidebar } from '@/composables/useSidebar';
 
 // --- Stores ---
 const userStore = useUserStore();
 
 // --- Composables ---
 const { currentTheme, toggleTheme } = useTheme();
+const { isMobileSidebarOpen, closeMobileSidebar } = useSidebar();
 const router = useRouter();
 const route = useRoute();
 
@@ -514,6 +515,11 @@ const userAvatar = computed(() => {
     return defaultAvatar;
   }
   return userInfo.value.avatar;
+});
+
+// 检测是否为移动端
+const isMobile = computed(() => {
+  return window.innerWidth < 1024; // lg断点
 });
 
 // --- Interfaces ---
@@ -711,6 +717,11 @@ const filterByCategory = (categoryId?: number): void => {
     query.categoryId = String(categoryId);
   }
   router.push({ path: '/blogs', query });
+  
+  // 如果是移动端，导航后自动关闭侧边栏
+  if (isMobile.value) {
+    closeMobileSidebar();
+  }
 };
 
 const filterByTag = (tagId?: number): void => {
@@ -719,6 +730,11 @@ const filterByTag = (tagId?: number): void => {
     query.tagId = String(tagId);
   }
   router.push({ path: '/blogs', query });
+  
+  // 如果是移动端，导航后自动关闭侧边栏
+  if (isMobile.value) {
+    closeMobileSidebar();
+  }
 };
 
 const handleLoginSuccess = (userData: any): void => {
@@ -932,7 +948,7 @@ const handleAvatarChange = async (event: Event) => {
     isUploadingAvatar.value = true;
     
     // 第一步：上传图片
-    const uploadResponse = await upload({ type: 3 }, file);
+    const uploadResponse = await upload({ uploadDTO: { type: 3 } }, file);
     
     if (uploadResponse.data?.code !== 0 || !uploadResponse.data?.data) {
       throw new Error(uploadResponse.data?.message || '头像上传失败');
@@ -974,6 +990,19 @@ const handleAvatarChange = async (event: Event) => {
     // 重置文件输入，允许再次上传相同的文件
     if (avatarInputRef.value) {
       avatarInputRef.value.value = '';
+    }
+  }
+};
+
+// 处理导航项点击，在移动端自动关闭侧边栏
+const handleNavClick = (item: any) => {
+  if (item.hasSubmenu) {
+    toggleSubmenu(item.name);
+  } else {
+    router.push(item.link);
+    // 如果是移动端，导航后自动关闭侧边栏
+    if (isMobile.value) {
+      closeMobileSidebar();
     }
   }
 };
