@@ -65,4 +65,32 @@
   height: 100%;
   border: none;
 }
+
+/* 移动端优化 */
+@media (max-width: 767px) {
+  :deep(.md-editor) {
+    font-size: 16px !important;
+  }
+  
+  :deep(.md-editor-preview) {
+    font-size: 16px !important;
+    line-height: 1.8 !important;
+  }
+  
+  :deep(.md-editor-preview-wrapper) {
+    padding: 0 !important;
+  }
+}
+
+/* 平板端优化 */
+@media (min-width: 768px) and (max-width: 1023px) {
+  :deep(.md-editor) {
+    font-size: 15px !important;
+  }
+  
+  :deep(.md-editor-preview) {
+    font-size: 15px !important;
+    line-height: 1.7 !important;
+  }
+}
   </style>

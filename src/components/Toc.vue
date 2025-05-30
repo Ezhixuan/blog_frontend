@@ -53,6 +53,11 @@
     content: string;
   }>();
   
+  // 定义事件发射
+  const emit = defineEmits<{
+    'item-click': [id: string]
+  }>();
+  
   // 尝试从父组件获取阅读进度
   const readingProgress = ref(0);
   const readingProgressFromParent = inject('readingProgress', 0);
@@ -201,6 +206,9 @@
         behavior: "smooth",
       });
     }
+    
+    // 发射点击事件
+    emit('item-click', id);
   };
   
   // 自动将当前激活项滚动到目录的可见区域中央

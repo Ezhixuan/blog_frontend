@@ -4,6 +4,61 @@
       <div class="reading-progress-bar" :style="{ width: readingProgress + '%' }"></div>
     </div>
 
+    <!-- 移动端目录浮动按钮 -->
+    <button 
+      v-if="article && article.content && isMobile" 
+      class="toc-mobile-button lg:hidden fixed top-4 right-4 z-[55]" 
+      @click="toggleMobileToc"
+      aria-label="打开文章目录"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="8" y1="6" x2="21" y2="6"></line>
+        <line x1="8" y1="12" x2="21" y2="12"></line>
+        <line x1="8" y1="18" x2="21" y2="18"></line>
+        <line x1="3" y1="6" x2="3.01" y2="6"></line>
+        <line x1="3" y1="12" x2="3.01" y2="12"></line>
+        <line x1="3" y1="18" x2="3.01" y2="18"></line>
+      </svg>
+    </button>
+
+    <!-- 移动端目录遮罩层 -->
+    <div 
+      v-if="showMobileToc" 
+      class="toc-mobile-overlay fixed inset-0 bg-black bg-opacity-50 z-[40] lg:hidden"
+      @click="closeMobileToc"
+    ></div>
+
+    <!-- 移动端目录侧边栏 -->
+    <div 
+      class="toc-mobile-sidebar fixed top-0 right-0 h-full w-80 bg-white dark:bg-gray-900 shadow-2xl z-[45] transform transition-transform duration-300 lg:hidden"
+      :class="{ 'translate-x-0': showMobileToc, 'translate-x-full': !showMobileToc }"
+      @click.stop
+    >
+      <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">文章目录</h3>
+        <button 
+          @click="closeMobileToc"
+          class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          aria-label="关闭目录"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="h-full overflow-y-auto pb-20">
+        <div class="p-4">
+          <Toc 
+            v-if="article && article.content" 
+            :content="renderedContent" 
+            ref="tocComponentRef" 
+            @item-click="handleTocItemClick"
+          />
+        </div>
+      </div>
+    </div>
+
     <div class="article-layout">
       <div class="back-button-container">
         <button class="back-button" @click="handleBackToList" aria-label="返回文章列表">
@@ -89,15 +144,9 @@
         </div>
       </div>
       
-      <div v-if="article && article.content" class="toc-container">
-        <div v-if="isMobile" class="toc-mobile-trigger" @click="toggleToc">
-          <span>文章目录</span>
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-          </svg>
-        </div>
-        <div :class="['toc-wrapper', { 'show': showToc || !isMobile }]">
+      <!-- 桌面端目录 (保持原有实现) -->
+      <div v-if="article && article.content" class="toc-container hidden lg:block">
+        <div class="toc-wrapper">
           <Toc v-if="article && article.content" :content="renderedContent" ref="tocComponentRef" />
         </div>
       </div>
@@ -134,11 +183,12 @@ const markdownPreviewRef = ref<any>(null);
 const tocComponentRef = ref<any>(null);
 const renderedContent = ref('');
 const showToc = ref(false);
+const showMobileToc = ref(false);
 
 let scrollThrottleTimeout = ref<ReturnType<typeof setTimeout> | null>(null);
 
 const isAuthor = computed(() => userStore.userInfo?.id === article.value?.userId);
-const isMobile = computed(() => window.innerWidth < 768);
+const isMobile = computed(() => window.innerWidth < 1024);
 
 const previewVisible = ref(false);
 const previewImageUrl = ref('');
@@ -212,6 +262,20 @@ const toggleToc = () => {
   showToc.value = !showToc.value;
 };
 
+const toggleMobileToc = () => {
+  showMobileToc.value = !showMobileToc.value;
+};
+
+const closeMobileToc = () => {
+  showMobileToc.value = false;
+};
+
+const handleTocItemClick = () => {
+  if (isMobile.value) {
+    closeMobileToc();
+  }
+};
+
 const handleBackToList = () => {
   const pageState = getPageState();
 
@@ -221,17 +285,21 @@ const handleBackToList = () => {
       pageSize: pageState.pageSize.toString()
     };
 
-    if (pageState.categoryId) query.categoryId = pageState.categoryId;
-    if (pageState.tagId) query.tagId = pageState.tagId;
+    if (pageState.categoryId && typeof pageState.categoryId === 'string') {
+      query.categoryId = pageState.categoryId;
+    }
+    if (pageState.tagId && typeof pageState.tagId === 'string') {
+      query.tagId = pageState.tagId;
+    }
 
     router.push({
       path: '/blogs',
       query
     });
-    if (pageState.scrollPosition) {
+    if (pageState.scrollPosition && typeof pageState.scrollPosition === 'number') {
       setTimeout(() => {
         window.scrollTo({
-          top: pageState.scrollPosition,
+          top: pageState.scrollPosition as number,
           behavior: 'smooth'
         });
       }, 100);
@@ -275,6 +343,8 @@ onMounted(() => {
   window.addEventListener('resize', () => {
     if (!isMobile.value) {
       showToc.value = true;
+      // 在桌面端时关闭移动端目录
+      showMobileToc.value = false;
     }
   });
 });
@@ -292,7 +362,7 @@ onUnmounted(() => {
 
 <style scoped>
 .article-container {
-  @apply w-[85%] md:w-[80%] lg:w-[75%] mx-auto px-4 py-8;
+  @apply w-[96%] sm:w-[92%] md:w-[80%] lg:w-[75%] mx-auto px-3 sm:px-4 md:px-4 py-8;
 }
 
 .reading-progress-container {
@@ -422,7 +492,7 @@ onUnmounted(() => {
   display: none;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .toc-container {
     @apply block w-full mt-4 mx-0;
     max-width: none;
@@ -526,13 +596,198 @@ onUnmounted(() => {
 }
 
 /* 响应式调整 md-editor-v3 */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   :deep(.md-editor-v3) {
     @apply rounded-none;
   }
 
   :deep(.md-editor-v3-preview) {
     @apply px-0;
+  }
+}
+
+/* 移动端目录相关样式 */
+.toc-mobile-button {
+  @apply w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-200 dark:border-gray-700;
+  @apply flex items-center justify-center text-gray-700 dark:text-gray-300;
+  @apply hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200;
+  @apply active:scale-95 transform;
+}
+
+.toc-mobile-button svg {
+  @apply w-5 h-5;
+}
+
+.toc-mobile-overlay {
+  @apply fixed inset-0 bg-black bg-opacity-50 z-[40];
+}
+
+.toc-mobile-sidebar {
+  @apply fixed top-0 right-0 h-full w-80 z-[45];
+  @apply bg-white dark:bg-gray-900 shadow-2xl transform transition-transform duration-300;
+  @apply border-l border-gray-200 dark:border-gray-700;
+}
+
+.toc-mobile-sidebar.translate-x-full {
+  transform: translateX(100%);
+}
+
+.toc-mobile-sidebar.translate-x-0 {
+  transform: translateX(0);
+}
+
+/* 移动端内容优化 */
+@media (max-width: 767px) {
+  .article-container {
+    padding-left: 0.75rem; /* 12px */
+    padding-right: 0.75rem; /* 12px */
+  }
+  
+  .article-card {
+    @apply px-4 py-6; /* 减少卡片内边距 */
+  }
+  
+  /* 移动端文章标题优化 */
+  .article-title {
+    @apply text-2xl font-bold leading-tight;
+  }
+  
+  /* 移动端文章内容优化 */
+  .article-content {
+    font-size: 16px;
+    line-height: 1.8;
+  }
+}
+
+/* 深度样式 - 针对 md-editor-v3 内容进行移动端优化 */
+@media (max-width: 767px) {
+  :deep(.md-editor-v3-html) {
+    font-size: 16px !important;
+    line-height: 1.8 !important;
+  }
+  
+  :deep(.md-editor-v3-html p) {
+    font-size: 16px !important;
+    line-height: 1.8 !important;
+    margin-bottom: 1.2em !important;
+  }
+  
+  :deep(.md-editor-v3-html h1) {
+    font-size: 24px !important;
+    line-height: 1.4 !important;
+    margin: 1.5em 0 1em 0 !important;
+  }
+  
+  :deep(.md-editor-v3-html h2) {
+    font-size: 22px !important;
+    line-height: 1.4 !important;
+    margin: 1.4em 0 0.9em 0 !important;
+  }
+  
+  :deep(.md-editor-v3-html h3) {
+    font-size: 20px !important;
+    line-height: 1.4 !important;
+    margin: 1.3em 0 0.8em 0 !important;
+  }
+  
+  :deep(.md-editor-v3-html h4) {
+    font-size: 18px !important;
+    line-height: 1.4 !important;
+    margin: 1.2em 0 0.7em 0 !important;
+  }
+  
+  :deep(.md-editor-v3-html h5) {
+    font-size: 17px !important;
+    line-height: 1.4 !important;
+    margin: 1.1em 0 0.6em 0 !important;
+  }
+  
+  :deep(.md-editor-v3-html h6) {
+    font-size: 16px !important;
+    line-height: 1.4 !important;
+    margin: 1em 0 0.5em 0 !important;
+  }
+  
+  :deep(.md-editor-v3-html li) {
+    font-size: 16px !important;
+    line-height: 1.8 !important;
+    margin-bottom: 0.5em !important;
+  }
+  
+  :deep(.md-editor-v3-html blockquote) {
+    font-size: 16px !important;
+    line-height: 1.8 !important;
+    padding: 1em 1.2em !important;
+    margin: 1.5em 0 !important;
+  }
+  
+  :deep(.md-editor-v3-html blockquote p) {
+    margin-bottom: 0.8em !important;
+  }
+  
+  :deep(.md-editor-v3-html code) {
+    font-size: 14px !important;
+    padding: 2px 6px !important;
+  }
+  
+  :deep(.md-editor-v3-html pre) {
+    font-size: 14px !important;
+    line-height: 1.6 !important;
+    padding: 1.2em !important;
+    margin: 1.5em 0 !important;
+    overflow-x: auto !important;
+  }
+  
+  :deep(.md-editor-v3-html table) {
+    font-size: 14px !important;
+    width: 100% !important;
+    overflow-x: auto !important;
+    display: block !important;
+    white-space: nowrap !important;
+  }
+  
+  :deep(.md-editor-v3-html td),
+  :deep(.md-editor-v3-html th) {
+    padding: 8px 12px !important;
+    font-size: 14px !important;
+  }
+  
+  /* 移动端图片优化 */
+  :deep(.md-editor-v3-html img) {
+    max-width: 100% !important;
+    height: auto !important;
+    margin: 1.5em 0 !important;
+  }
+  
+  /* 移动端链接优化 */
+  :deep(.md-editor-v3-html a) {
+    word-break: break-all !important;
+  }
+}
+
+/* 平板端优化 */
+@media (min-width: 768px) and (max-width: 1023px) {
+  :deep(.md-editor-v3-html) {
+    font-size: 15px !important;
+    line-height: 1.7 !important;
+  }
+  
+  :deep(.md-editor-v3-html p) {
+    font-size: 15px !important;
+    line-height: 1.7 !important;
+    margin-bottom: 1.1em !important;
+  }
+  
+  :deep(.md-editor-v3-html h1) {
+    font-size: 26px !important;
+  }
+  
+  :deep(.md-editor-v3-html h2) {
+    font-size: 24px !important;
+  }
+  
+  :deep(.md-editor-v3-html h3) {
+    font-size: 22px !important;
   }
 }
 </style>

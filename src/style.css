@@ -380,5 +380,92 @@ body {
 
 .dark .modern-notification[class*="ant-notification-notice-error"] {
   background: linear-gradient(145deg, rgba(153, 27, 27, 0.95), rgba(185, 28, 28, 0.95)) !important;
+  border-left-color: #dc2626 !important;
+}
+
+/* md-editor-v3 移动端优化 */
+@media (max-width: 767px) {
+  .md-editor-v3 {
+    font-size: 16px !important;
+  }
+  
+  .md-editor-v3-preview-wrapper {
+    font-size: 16px !important;
+    line-height: 1.8 !important;
+  }
+  
+  .md-editor-v3-html {
+    font-size: 16px !important;
+    line-height: 1.8 !important;
+  }
+  
+  .md-editor-v3-html p {
+    font-size: 16px !important;
+    line-height: 1.8 !important;
+    margin-bottom: 1.2em !important;
+  }
+  
+  .md-editor-v3-html h1 {
+    font-size: 24px !important;
+    line-height: 1.4 !important;
+  }
+  
+  .md-editor-v3-html h2 {
+    font-size: 22px !important;
+    line-height: 1.4 !important;
+  }
+  
+  .md-editor-v3-html h3 {
+    font-size: 20px !important;
+    line-height: 1.4 !important;
+  }
+  
+  .md-editor-v3-html h4 {
+    font-size: 18px !important;
+    line-height: 1.4 !important;
+  }
+  
+  .md-editor-v3-html h5 {
+    font-size: 17px !important;
+    line-height: 1.4 !important;
+  }
+  
+  .md-editor-v3-html h6 {
+    font-size: 16px !important;
+    line-height: 1.4 !important;
+  }
+  
+  .md-editor-v3-html li {
+    font-size: 16px !important;
+    line-height: 1.8 !important;
+  }
+  
+  .md-editor-v3-html blockquote {
+    font-size: 16px !important;
+    line-height: 1.8 !important;
+    padding: 1em 1.2em !important;
+  }
+  
+  .md-editor-v3-html code {
+    font-size: 14px !important;
+  }
+  
+  .md-editor-v3-html pre {
+    font-size: 14px !important;
+    line-height: 1.6 !important;
+  }
+}
+
+/* md-editor-v3 平板端优化 */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .md-editor-v3-html {
+    font-size: 15px !important;
+    line-height: 1.7 !important;
+  }
+  
+  .md-editor-v3-html p {
+    font-size: 15px !important;
+    line-height: 1.7 !important;
+  }
 }
 
