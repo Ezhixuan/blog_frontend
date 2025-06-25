@@ -447,7 +447,7 @@
 import { ref, onMounted, computed } from 'vue';
 import ChangePasswordModal from './ChangePasswordModal.vue';
 import SubmitBlogModal from './SubmitBlogModal.vue';
-import { HomeIcon, UserIcon, DocumentTextIcon, CodeBracketIcon, UserGroupIcon, EnvelopeIcon, PencilIcon, ArrowRightOnRectangleIcon, DocumentPlusIcon, KeyIcon, BookOpenIcon } from '@heroicons/vue/24/outline';
+import { HomeIcon, UserIcon, DocumentTextIcon, CodeBracketIcon, UserGroupIcon, EnvelopeIcon, PencilIcon, ArrowRightOnRectangleIcon, DocumentPlusIcon, KeyIcon, BookOpenIcon, WifiIcon } from '@heroicons/vue/24/outline';
 import { RouterLink, useRouter, useRoute, LocationQueryValue } from 'vue-router';
 import { doLogout, getLoginUserInfo, editUserInfo } from '@/api/sysUserController';
 import { on } from '@/utils/eventBus';
@@ -801,6 +801,7 @@ const menuItems = [
   { name: 'Project', icon: CodeBracketIcon, link: '/project', hasSubmenu: false },
   { name: 'Friend', icon: UserGroupIcon, link: '/friend', hasSubmenu: false },
   { name: 'Contact', icon: EnvelopeIcon, link: '/contact', hasSubmenu: false },
+  { name: 'WebSocket', icon: WifiIcon, link: '/websocket-test', hasSubmenu: false },
 ];
 
 // 打开编辑用户信息模态框

@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import Sidebar from './components/Sidebar.vue'
+import WebSocketIndicator from './components/WebSocketIndicator.vue'
 import { onMounted } from 'vue'
 import { initTheme } from './utils/theme'
 import { useSidebar } from './composables/useSidebar'
 import { Bars3Icon } from '@heroicons/vue/24/outline'
+// 导入WebSocket连接
+import { useWebSocketSimple } from './composables/useWebSocketSimple'
 
 // 确保主题初始化
 onMounted(() => {
@@ -12,6 +15,16 @@ onMounted(() => {
 
 // 侧边栏状态管理
 const { isMobileSidebarOpen, toggleMobileSidebar, closeMobileSidebar } = useSidebar()
+
+// 全局WebSocket连接 - 在应用启动时自动建立连接
+const { isConnected, userId } = useWebSocketSimple()
+
+// 在开发模式下显示WebSocket连接状态
+if (import.meta.env.DEV) {
+  console.log('🔌 WebSocket连接已在应用启动时初始化')
+  console.log('📊 WebSocket连接状态:', { isConnected: isConnected.value, userId: userId.value })
+  // 可以在这里添加全局的WebSocket事件处理
+}
 </script>
 
 <template>
@@ -49,5 +62,8 @@ const { isMobileSidebarOpen, toggleMobileSidebar, closeMobileSidebar } = useSide
         </footer>
       </main>
     </div>
+    
+    <!-- WebSocket状态指示器 -->
+    <WebSocketIndicator />
   </div>
 </template>

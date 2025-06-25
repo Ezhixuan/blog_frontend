@@ -66,6 +66,11 @@ const router = createRouter({
       path: '/memory',
       name: 'Memory',
       component: () => import('../views/memory/Card.vue')
+    },
+    {
+      path: '/websocket-test',
+      name: 'WebSocketTest',
+      component: () => import('../components/WebSocketDemo.vue')
     }
   ]
 })
