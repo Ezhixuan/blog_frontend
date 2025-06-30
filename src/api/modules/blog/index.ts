@@ -47,6 +47,13 @@ export function deleteArticle(data: OperationById): Promise<BooleanResponse> {
   return request.delete('/api/article/delete', { data });
 }
 
+/**
+ * 点赞/取消点赞文章
+ */
+export function thumbArticle(data: OperationById): Promise<BooleanResponse> {
+  return request.post('/api/article/thumb', data);
+}
+
 // ============= 分类相关 =============
 /**
  * 获取分类列表

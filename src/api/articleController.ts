@@ -10,7 +10,8 @@ export {
   deleteCategory,
   deleteTag,
   addCategory as submitCategory,
-  addTag as submitTag
+  addTag as submitTag,
+  thumbArticle as doThumb
 } from './modules/blog';
 
 // 需要添加一些还没有实现的函数
@@ -24,10 +25,4 @@ export const getCategoryCount = () => {
 export const getTagCount = () => {
   // 临时实现
   return blogApi.getTagList();
-};
-
-export const doThumb = (_data: { id: string }) => {
-  // 临时实现 - 需要在blog API模块中添加
-  console.warn('doThumb function not implemented yet');
-  return Promise.resolve({ data: { code: 0, data: true } });
 }; 

@@ -190,7 +190,8 @@
           </div>
         </div>
 
-        <nav class="main-navigation">
+        <!-- 导航菜单 - 仅在非文章目录模式下显示 -->
+        <nav v-if="!shouldShowToc" class="main-navigation">
           <transition-group name="nav-item">
             <div
               v-for="item in menuItems"
@@ -264,93 +265,151 @@
           </transition-group>
         </nav>
 
-        <div class="social-links">
-          <a href="https://github.com" class="social-link" target="_blank" rel="noopener noreferrer">
-            <svg class="social-icon" fill="currentColor" viewBox="0 0 24 24">
-              <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"/>
+        <!-- 文章目录部分 -->
+        <div v-if="shouldShowToc" class="toc-section">
+          <!-- 目录模式下的快速导航 -->
+          <div class="toc-quick-nav">
+            <router-link to="/blogs" class="quick-nav-btn">
+              <svg class="quick-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+              </svg>
+              <span>返回博客</span>
+            </router-link>
+            <router-link to="/" class="quick-nav-btn">
+              <svg class="quick-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+              </svg>
+              <span>首页</span>
+            </router-link>
+          </div>
+          
+          <h3 class="section-title">
+            <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <line x1="8" y1="6" x2="21" y2="6"></line>
+              <line x1="8" y1="12" x2="21" y2="12"></line>
+              <line x1="8" y1="18" x2="21" y2="18"></line>
+              <line x1="3" y1="6" x2="3.01" y2="6"></line>
+              <line x1="3" y1="12" x2="3.01" y2="12"></line>
+              <line x1="3" y1="18" x2="3.01" y2="18"></line>
             </svg>
-          </a>
-          <a href="#" class="social-link" target="_blank" rel="noopener noreferrer">
-            <svg class="social-icon" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84"/>
-            </svg>
-          </a>
-        </div>
-
-        <div class="theme-toggle-section">
-          <button
-            @click="toggleTheme"
-            class="theme-toggle-btn"
-            :class="{ dark: currentTheme === 'dark' }"
-          >
-            <svg v-show="currentTheme === 'light'" xmlns="http://www.w3.org/2000/svg" class="theme-icon sun" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"/>
-            </svg>
-            <svg v-show="currentTheme === 'dark'" xmlns="http://www.w3.org/2000/svg" class="theme-icon moon" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/>
-            </svg>
-            <span class="theme-toggle-text">
-              {{ currentTheme === 'light' ? '亮色模式' : '暗色模式' }}
-            </span>
-          </button>
-        </div>
-
-        <div class="categories-section">
-          <h3 class="section-title">Categories</h3>
-          <div class="section-content-wrapper">
-            <div v-if="categoriesLoading" class="loading-placeholder">
-              <span class="loading-indicator">
-                <svg class="loading-spinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                加载中...
-              </span>
-            </div>
-
-            <span
-              v-for="category in categories"
-              :key="category.id"
-              class="category-tag"
-              :class="{ active: $route.query.categoryId === String(category.id) }"
-              @click="filterByCategory(category.id)"
+            文章目录
+          </h3>
+          <div class="toc-wrapper">
+            <Toc 
+              :content="articleContent || ''" 
+              ref="tocRef"
+              class="sidebar-toc"
+            />
+          </div>
+          
+          <!-- 目录模式下的控制按钮 -->
+          <div class="toc-controls">
+            <button
+              @click="toggleTheme"
+              class="control-btn"
+              :class="{ dark: currentTheme === 'dark' }"
+              title="切换主题"
             >
-              {{ category.name }}
-              <span class="category-count">{{ category.count }}</span>
-            </span>
-
-            <div v-if="!categoriesLoading && categories.length === 0" class="empty-placeholder">
-              暂无分类
-            </div>
+              <svg v-show="currentTheme === 'light'" xmlns="http://www.w3.org/2000/svg" class="control-icon" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"/>
+              </svg>
+              <svg v-show="currentTheme === 'dark'" xmlns="http://www.w3.org/2000/svg" class="control-icon" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/>
+              </svg>
+            </button>
           </div>
         </div>
 
-        <div class="tags-section">
-          <h3 class="section-title">Tags</h3>
-          <div class="section-content-wrapper">
-            <div v-if="tagsLoading" class="loading-placeholder">
-              <span class="loading-indicator">
-                <svg class="loading-spinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                加载中...
-              </span>
-            </div>
+        <!-- 其他内容 - 仅在非文章目录模式下显示 -->
+        <div v-if="!shouldShowToc">
+          <div class="social-links">
+            <a href="https://github.com" class="social-link" target="_blank" rel="noopener noreferrer">
+              <svg class="social-icon" fill="currentColor" viewBox="0 0 24 24">
+                <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"/>
+              </svg>
+            </a>
+            <a href="#" class="social-link" target="_blank" rel="noopener noreferrer">
+              <svg class="social-icon" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84"/>
+              </svg>
+            </a>
+          </div>
 
-            <span
-              v-for="tag in tags"
-              :key="tag.id"
-              class="tag-item"
-              :class="{ active: $route.query.tagId === String(tag.id) }"
-              @click="filterByTag(tag.id)"
+          <div class="theme-toggle-section">
+            <button
+              @click="toggleTheme"
+              class="theme-toggle-btn"
+              :class="{ dark: currentTheme === 'dark' }"
             >
-              {{ tag.name }}
-              <span class="tag-count">{{ tag.count }}</span>
-            </span>
+              <svg v-show="currentTheme === 'light'" xmlns="http://www.w3.org/2000/svg" class="theme-icon sun" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"/>
+              </svg>
+              <svg v-show="currentTheme === 'dark'" xmlns="http://www.w3.org/2000/svg" class="theme-icon moon" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/>
+              </svg>
+              <span class="theme-toggle-text">
+                {{ currentTheme === 'light' ? '亮色模式' : '暗色模式' }}
+              </span>
+            </button>
+          </div>
 
-            <div v-if="!tagsLoading && tags.length === 0" class="empty-placeholder">
-              暂无标签
+          <div class="categories-section">
+            <h3 class="section-title">Categories</h3>
+            <div class="section-content-wrapper">
+              <div v-if="categoriesLoading" class="loading-placeholder">
+                <span class="loading-indicator">
+                  <svg class="loading-spinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  加载中...
+                </span>
+              </div>
+
+              <span
+                v-for="category in categories"
+                :key="category.id"
+                class="category-tag"
+                :class="{ active: $route.query.categoryId === String(category.id) }"
+                @click="filterByCategory(category.id)"
+              >
+                {{ category.name }}
+                <span class="category-count">{{ category.count }}</span>
+              </span>
+
+              <div v-if="!categoriesLoading && categories.length === 0" class="empty-placeholder">
+                暂无分类
+              </div>
+            </div>
+          </div>
+
+          <div class="tags-section">
+            <h3 class="section-title">Tags</h3>
+            <div class="section-content-wrapper">
+              <div v-if="tagsLoading" class="loading-placeholder">
+                <span class="loading-indicator">
+                  <svg class="loading-spinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  加载中...
+                </span>
+              </div>
+
+              <span
+                v-for="tag in tags"
+                :key="tag.id"
+                class="tag-item"
+                :class="{ active: $route.query.tagId === String(tag.id) }"
+                @click="filterByTag(tag.id)"
+              >
+                {{ tag.name }}
+                <span class="tag-count">{{ tag.count }}</span>
+              </span>
+
+              <div v-if="!tagsLoading && tags.length === 0" class="empty-placeholder">
+                暂无标签
+              </div>
             </div>
           </div>
         </div>
@@ -475,13 +534,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, inject, watch, onBeforeUnmount } from 'vue';
 import ChangePasswordModal from '@/components/ui/Modal/ChangePasswordModal.vue';
 import SubmitBlogModal from '@/components/ui/Modal/SubmitBlogModal.vue';
+import Toc from '@/components/business/Blog/Toc.vue';
 import { HomeIcon, UserIcon, DocumentTextIcon, CodeBracketIcon, UserGroupIcon, EnvelopeIcon, PencilIcon, ArrowRightOnRectangleIcon, DocumentPlusIcon, KeyIcon, BookOpenIcon, WifiIcon } from '@heroicons/vue/24/outline';
 import { useRouter, useRoute, LocationQueryValue } from 'vue-router';
 import { doLogout, getLoginUserInfo, editUserInfo } from '@/api/sysUserController';
-import { on } from '@/utils/helpers/eventBus';
+import { on, off } from '@/utils/helpers/eventBus';
 import messageService from '@/utils/helpers/message';
 import { useTheme } from '@/utils/helpers/theme';
 import { useUserStore } from '@/stores/user';
@@ -538,6 +598,20 @@ const pictureList = ref<PictureUpload[]>([]);
 const isPictureModalVisible = ref(false);
 const isFetchingPictures = ref(false);
 
+// 文章目录相关 - 使用EventBus监听
+const articleContent = ref<string>('');
+const tocRef = ref<any>(null);
+
+// EventBus事件处理函数
+const handleArticleContentUpdate = (data: { content: string; path: string }) => {
+  console.log('📻 Sidebar接收到EventBus事件 - 文章内容已更新');
+  
+  // 只有在文章详情页面时才更新内容
+  if (data.path.startsWith('/article/')) {
+    articleContent.value = data.content;
+  }
+};
+
 // --- Constants ---
 const defaultAvatar = "https://avatars.githubusercontent.com/u/46998172?v=4";
 const roleColorMap: Record<string, string> = {
@@ -558,6 +632,18 @@ const userAvatar = computed(() => {
 // 检测是否为移动端
 const isMobile = computed(() => {
   return window.innerWidth < 1024; // lg断点
+});
+
+// 检测是否在文章详情页
+const isArticleDetailPage = computed(() => {
+  return route.path.startsWith('/article/') || route.path.startsWith('/blog/');
+});
+
+// 是否显示目录
+const shouldShowToc = computed(() => {
+  const hasContent = articleContent.value && articleContent.value.length > 0;
+  const result = isArticleDetailPage.value && hasContent;
+  return result;
 });
 
 // --- Interfaces ---
@@ -829,6 +915,22 @@ onMounted(() => {
   loadCategories();
 
   on('user-login-success', handleLoginSuccess);
+  
+  // 注册文章内容EventBus监听器
+  on('article-content-updated', handleArticleContentUpdate);
+});
+
+// 监听路由变化，清空非文章页面的内容
+watch(() => route.path, (newPath) => {
+  if (!newPath.startsWith('/article/')) {
+    console.log('🧹 已离开文章页面，清空目录内容');
+    articleContent.value = '';
+  }
+});
+
+onBeforeUnmount(() => {
+  // 取消EventBus监听器
+  off('article-content-updated', handleArticleContentUpdate);
 });
 
 const menuItems = [
@@ -1598,6 +1700,164 @@ const handleNavClick = (item: any) => {
   padding: 1rem 0;
   border-top: 1px solid #e5e7eb;
   margin-top: 1rem;
+}
+
+/* --- 文章目录样式 --- */
+.toc-section {
+  @apply mb-8 animate-fade-slow;
+  animation-delay: 0.15s;
+}
+
+.toc-section .section-title {
+  @apply flex items-center gap-3 text-lg font-semibold mb-4 text-gray-900 dark:text-white;
+  background: linear-gradient(135deg, #1f2937 0%, #4f46e5 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.dark .toc-section .section-title {
+  background: linear-gradient(135deg, #ffffff 0%, #a5b4fc 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.section-icon {
+  @apply w-5 h-5 text-gray-500 dark:text-gray-400 flex-shrink-0;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+.toc-wrapper {
+  @apply bg-gray-50/80 dark:bg-gray-800/50 rounded-xl p-4 border border-gray-200/60 dark:border-gray-700/60;
+  @apply max-h-96 overflow-y-auto;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.toc-wrapper:hover {
+  @apply bg-gray-100/80 dark:bg-gray-700/50;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+  transition: all 0.2s ease;
+}
+
+/* 目录内容样式覆盖 */
+.sidebar-toc {
+  @apply bg-transparent border-0 shadow-none p-0 rounded-none;
+  max-height: none !important;
+  overflow: visible !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.sidebar-toc .toc h3 {
+  @apply hidden; /* 隐藏Toc组件自己的标题 */
+}
+
+.sidebar-toc .reading-progress-bar {
+  @apply hidden; /* 在侧边栏中隐藏进度条 */
+}
+
+/* 适配侧边栏宽度的目录项 */
+.sidebar-toc .toc-item-link {
+  @apply text-sm py-2 px-3;
+  /* 确保目录项在侧边栏中不会太宽 */
+  max-width: 100%;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.sidebar-toc .toc-item-text {
+  @apply text-xs leading-relaxed;
+  /* 在侧边栏中使用更小的字体 */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 滚动条样式 */
+.toc-wrapper::-webkit-scrollbar {
+  width: 4px;
+}
+
+.toc-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.toc-wrapper::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.4);
+  border-radius: 4px;
+}
+
+.toc-wrapper::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(156, 163, 175, 0.6);
+}
+
+/* --- 目录模式下的快速导航 --- */
+.toc-quick-nav {
+  @apply mb-6 flex gap-2;
+}
+
+.quick-nav-btn {
+  @apply flex-1 flex items-center justify-center gap-2 px-3 py-2.5;
+  @apply bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30;
+  @apply text-blue-700 dark:text-blue-300 text-sm font-medium rounded-xl;
+  @apply border border-blue-200/60 dark:border-blue-800/60;
+  @apply transition-all duration-200 hover:scale-105 active:scale-95;
+  @apply hover:from-blue-100 hover:to-indigo-100 dark:hover:from-blue-900/50 dark:hover:to-indigo-900/50;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+  text-decoration: none;
+}
+
+.quick-nav-btn:hover {
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+  transform: translateY(-1px) scale(1.02);
+}
+
+.quick-nav-icon {
+  @apply w-4 h-4;
+}
+
+.quick-nav-btn span {
+  @apply text-xs font-medium;
+}
+
+/* --- 目录模式下的控制按钮 --- */
+.toc-controls {
+  @apply mt-6 flex justify-center;
+}
+
+.control-btn {
+  @apply w-10 h-10 flex items-center justify-center rounded-full;
+  @apply bg-gray-100/80 dark:bg-gray-700/50 hover:bg-gray-200/80 dark:hover:bg-gray-600/50;
+  @apply transition-all duration-200 active:scale-95;
+  @apply border border-gray-200/60 dark:border-gray-600/50;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.control-btn:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.control-btn.dark {
+  @apply bg-gray-600/60 hover:bg-gray-500/60;
+}
+
+.control-icon {
+  @apply w-5 h-5 text-gray-600 dark:text-gray-300;
+  transition: color 0.2s ease;
+}
+
+.control-btn:hover .control-icon {
+  @apply text-gray-800 dark:text-white;
 }
 
 

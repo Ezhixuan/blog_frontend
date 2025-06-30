@@ -183,7 +183,7 @@ export interface Project {
 
 // ============= 通用操作类型 =============
 export interface OperationById {
-  id: number;
+  id: string;
 }
 
 // ============= API响应类型别名 =============
