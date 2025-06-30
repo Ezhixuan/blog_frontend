@@ -34,6 +34,7 @@
     "vue-router": "^4.2.5"
   },
   "devDependencies": {
+    "@types/lodash-es": "^4.17.12",
     "@types/node": "^22.13.14",
     "@umijs/openapi": "^1.13.0",
     "@vitejs/plugin-vue": "^5.1.4",
@@ -43,6 +44,7 @@
     "tslib": "^2.8.1",
     "typescript": "^5.5.3",
     "vite": "^5.4.8",
+    "vite-plugin-vue-devtools": "^7.7.7",
     "vue-tsc": "^2.1.6"
   }
 }

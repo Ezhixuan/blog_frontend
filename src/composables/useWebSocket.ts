@@ -1,6 +1,6 @@
 import { ref, onMounted, onUnmounted, computed, readonly } from 'vue';
 import { useUserStore } from '@/stores/user';
-import { config } from '@/utils/config';
+import { config } from '@/utils/core/config';
 
 export interface WebSocketMessage {
   type: string;
@@ -30,19 +30,31 @@ export function useWebSocket(url?: string) {
     if (url) return url;
     
     // 使用配置的后端地址，而不是前端地址
-    return config.getWebSocketUrl(`/ws/test/${userId.value}`);
+    return config.getWebSocketUrl(`/api/ws/test/${userId.value}`);
   };
 
   // 连接WebSocket
   const connect = () => {
     try {
       const wsUrl = getWebSocketUrl();
-      console.log('正在连接WebSocket:', wsUrl);
+      console.log('🔄 正在连接WebSocket:', wsUrl);
+      console.log('👤 用户ID:', userId.value);
+      console.log('🔧 配置信息:', {
+        apiBaseUrl: config.apiBaseUrl,
+        wsBaseUrl: config.wsBaseUrl,
+        isLoggedIn: userStore.isLoggedIn,
+        userInfo: userStore.userInfo
+      });
       
       socket.value = new WebSocket(wsUrl);
 
       socket.value.onopen = () => {
-        console.log('WebSocket连接已建立');
+        console.log('✅ WebSocket连接已建立');
+        console.log('🔗 连接详情:', {
+          url: wsUrl,
+          userId: userId.value,
+          readyState: socket.value?.readyState
+        });
         isConnected.value = true;
         reconnectAttempts.value = 0;
         
@@ -68,7 +80,13 @@ export function useWebSocket(url?: string) {
       };
 
       socket.value.onclose = (event) => {
-        console.log('WebSocket连接已关闭:', event.code, event.reason);
+        console.log('❌ WebSocket连接已关闭:', event.code, event.reason);
+        console.log('📊 关闭详情:', {
+          code: event.code,
+          reason: event.reason,
+          wasClean: event.wasClean,
+          url: wsUrl
+        });
         isConnected.value = false;
         
         // 如果不是主动关闭，尝试重连
@@ -78,7 +96,13 @@ export function useWebSocket(url?: string) {
       };
 
       socket.value.onerror = (error) => {
-        console.error('WebSocket连接错误:', error);
+        console.error('🚨 WebSocket连接错误:', error);
+        console.error('🔍 错误详情:', {
+          error: error,
+          url: wsUrl,
+          readyState: socket.value?.readyState,
+          userId: userId.value
+        });
         isConnected.value = false;
       };
 

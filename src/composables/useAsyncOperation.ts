@@ -1,5 +1,5 @@
 import { ref } from 'vue';
-import messageService from '@/utils/message';
+import messageService from '@/utils/helpers/message';
 
 interface UseAsyncOperationOptions {
   successMessage?: string;

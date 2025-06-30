@@ -4,8 +4,8 @@ import App from './App.vue'
 import router from './router'
 import Antd from 'ant-design-vue'
 import 'ant-design-vue/dist/reset.css'
-import { useTheme, initTheme } from './utils/theme'
-import { watch, ref } from 'vue'
+import { useTheme, initTheme } from './utils/helpers/theme'
+import { watch } from 'vue'
 import { createPinia } from 'pinia'
 
 // 创建 Pinia 实例

@@ -1,6 +1,6 @@
 import { ref, reactive, onMounted, watch, nextTick } from "vue";
 import { useRouter } from "vue-router";
-import message from "@/utils/message";
+import message from "@/utils/helpers/message";
 import {
   doSubmitArticle,
   getArticleCategoryList,
@@ -13,6 +13,8 @@ import {
 import { upload, getPictureList } from "@/api/pictureController";
 import { mockGenerateBlogContent } from "@/api/ai";
 import { useAsyncOperation } from "./useAsyncOperation";
+import { PICTURE_TYPES } from "@/utils/constants/pictureTypes";
+import type { ArticleCategory, ArticleTag, PictureUpload } from "@/types";
 
 export function useArticleForm() {
   const router = useRouter();
@@ -28,12 +30,12 @@ export function useArticleForm() {
   const articleId = ref<string | undefined>(undefined); // 文章ID，编辑时使用
   const wordCount = ref(0); // 字数统计
   // 分类相关状态
-  const categories = ref<API.ArticleCategoryVO[]>([]);
+  const categories = ref<ArticleCategory[]>([]);
   const newCategoryName = ref("");
   const showCategoryForm = ref(false);
 
   // 标签相关状态
-  const tags = ref<API.ArticleTagVO[]>([]);
+  const tags = ref<ArticleTag[]>([]);
   const newTagName = ref("");
   const showTagForm = ref(false);
   const tagNames = ref<string[]>([]);  // 添加标签名称数组
@@ -54,16 +56,23 @@ export function useArticleForm() {
   // 图片上传相关
   const isUploading = ref(false);
 
-  const pictureList = ref<API.PictureUploadVO[]>([]);
+  const pictureList = ref<PictureUpload[]>([]);
   const isPictureModalVisible = ref(false);
   const isFetchingPictures = ref(false);
+  const currentPictureType = ref<number>(PICTURE_TYPES.COVER); // 当前图片选择的类型
+  
+  const activeUploadHandler = ref<Function | string | null>(null);
 
-  const fetchPictureList = async () => {
+  const fetchPictureList = async (type?: number) => {
     try {
       isFetchingPictures.value = true;
-      const res = await getPictureList();
-      if (res.data?.code === 0 && res.data?.data) {
-        pictureList.value = res.data.data.data || [];
+      const params: any = { current: 1, pageSize: 50 };
+      if (type) {
+        params.type = type;
+      }
+      const res = await getPictureList(params);
+      if (res.data) {
+        pictureList.value = res.data.data || [];
       }
     } catch (error) {
       console.error("获取图片列表失败:", error);
@@ -73,16 +82,17 @@ export function useArticleForm() {
     }
   };
 
-  const showPictureModal = async () => {
+  const showPictureModal = async (type: number = PICTURE_TYPES.COVER) => {
+    currentPictureType.value = type;
     isPictureModalVisible.value = true;
-    await fetchPictureList();
+    await fetchPictureList(type);
   };
 
   // 异步操作封装
   const { isLoading, execute: submitArticle } = useAsyncOperation(
     async (articleData) => {
       const result = await doSubmitArticle(articleData);
-      if (result.data?.code === 0) {
+      if (result.code === 0) {
         router.push("/blogs");
       }
       return result;
@@ -94,8 +104,8 @@ export function useArticleForm() {
     useAsyncOperation(
       async () => {
         const res = await getArticleCategoryList();
-        if (res.data?.code === 0 && res.data?.data) {
-          categories.value = res.data.data;
+        if (res.data) {
+          categories.value = res.data;
         }
         return res;
       },
@@ -105,8 +115,8 @@ export function useArticleForm() {
   const { isLoading: isLoadingTags, execute: fetchTags } = useAsyncOperation(
     async () => {
       const res = await getArticleTagList();
-      if (res.data?.code === 0 && res.data?.data) {
-        tags.value = res.data.data;
+      if (res.data) {
+        tags.value = res.data;
       }
       return res;
     },
@@ -121,9 +131,10 @@ export function useArticleForm() {
           return null;
         }
 
-        const res = await submitCategory({ name });
-        if (res.data?.code === 0 && res.data?.data) {
-          categories.value.push(res.data.data);
+        const res = await submitCategory(name);
+        if (res.code === 0) {
+          // 重新获取分类列表
+          await fetchCategories();
           newCategoryName.value = "";
           showCategoryForm.value = false;
         }
@@ -139,12 +150,13 @@ export function useArticleForm() {
         return null;
       }
 
-      const res = await submitTag({ name });
-      if (res.data?.code === 0 && res.data?.data) {
-        tags.value.push(res.data.data);
-        newTagName.value = "";
-        showTagForm.value = false;
-      }
+                      const res = await submitTag(name);
+        if (res.code === 0) {
+          // 重新获取标签列表
+          await fetchTags();
+          newTagName.value = "";
+          showTagForm.value = false;
+        }
       return res;
     },
     { successMessage: "标签添加成功", errorMessage: "添加标签失败" }
@@ -159,7 +171,7 @@ export function useArticleForm() {
         }
 
         const response = await mockGenerateBlogContent(title);
-        if (response.data.code === 0) {
+        if (response.data && response.data.code === 0) {
           content.value = response.data.data;
         }
         return response;
@@ -180,72 +192,60 @@ export function useArticleForm() {
   const handleGenerateContent = () => generateContent(title.value);
 
   // 上传图片方法
-
-const handleImageUpload = async (options: any) => {
-  const { file } = options;
+const handleImageUpload = async (file: File, type: number = PICTURE_TYPES.CONTENT) => {
   isUploading.value = true;
 
   try {
-    const response = await upload(
-      { type: 2 },
-      file
-    );
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', type.toString());
 
-    if (response.data?.code === 0 && response.data?.data) {
-      const imageUrl = response.data.data;
+    const response = await upload(formData);
+
+    if (response.code === 0 && response.data) {
+      const imageUrl = response.data;
       message.success("图片上传成功");
       
       // 添加到图片列表
       pictureList.value.unshift({
         id: Date.now(),
         url: imageUrl,
-        name: file.name
+        name: file.name,
+        type: type
       });
-
-      // 判断是封面图片还是markdown插入图片
-      if (activeUploadHandler.value) {
-        // 如果是markdown编辑器调用的上传
-        activeUploadHandler.value({
-          url: imageUrl,
-          desc: file.name
-        });
-      } else {
-        // 如果是封面图片上传
-        coverUrl.value = imageUrl;
-      }
       
-      isPictureModalVisible.value = false;
+      return imageUrl;
     } else {
-      message.error("图片上传失败");
+      throw new Error(response.message || "上传失败");
     }
   } catch (error) {
-    console.error("图片上传出错:", error);
+    console.error("图片上传失败:", error);
     message.error("图片上传失败");
+    throw error;
   } finally {
     isUploading.value = false;
-    activeUploadHandler.value = null;
   }
 };
 
-  const activeUploadHandler = ref<Function | null>(null);
-
-  const handleUploadImage2 = async (event: any, insertImage: Function) => {
-    // 保存插入图片的函数
-    activeUploadHandler.value = insertImage;
-    // 显示图片选择模态窗口
+  // 修改为 Markdown 编辑器图片选择处理
+  const handleSelectImageForMarkdown = async () => {
+    // 设置为内容图片类型
+    currentPictureType.value = PICTURE_TYPES.CONTENT;
+    activeUploadHandler.value = 'markdown'; // 标记为markdown插入
     isPictureModalVisible.value = true;
-    await fetchPictureList();
+    await fetchPictureList(PICTURE_TYPES.CONTENT);
   };
   
   // 修改 selectPicture 方法
   const selectPicture = (url: string) => {
-    if (activeUploadHandler.value !== null) {
-      // 如果是markdown编辑器调用的上传
-      if (activeUploadHandler.value) {
-        activeUploadHandler.value({
-          url: url,
-          desc: '图片描述' // 可以修改为可配置
-        });
+    if (activeUploadHandler.value === 'markdown') {
+      // 通过事件通知父组件插入图片到 Markdown 编辑器
+      // 父组件需要通过 ref 调用 MarkdownEditor 的 insertImage 方法
+      if (typeof window !== 'undefined') {
+        // 发送自定义事件到父组件
+        window.dispatchEvent(new CustomEvent('insertImageToMarkdown', { 
+          detail: { url, altText: '图片' } 
+        }));
       }
     } else {
       // 如果是封面图片上传
@@ -318,7 +318,7 @@ const handleImageUpload = async (options: any) => {
     if (tagId === undefined) return;
 
     try {
-      await deleteTag({ id: tagId });
+      await deleteTag(tagId);
       tags.value = tags.value.filter((tag) => tag.id !== tagId);
       // 如果删除的标签正在被选中，也从选择中移除
       tagIds.value = tagIds.value.filter((id) => id !== tagId);
@@ -333,7 +333,7 @@ const handleImageUpload = async (options: any) => {
     if (id === undefined) return;
 
     try {
-      await deleteCategory({ id });
+      await deleteCategory(id);
       categories.value = categories.value.filter(
         (category) => category.id !== id
       );
@@ -445,7 +445,7 @@ const handleImageUpload = async (options: any) => {
     // 图片上传相关
     isUploading,
     handleImageUpload,
-    handleUploadImage2,
+    handleSelectImageForMarkdown,
     removeCoverImage,
     pictureList,
     isPictureModalVisible,

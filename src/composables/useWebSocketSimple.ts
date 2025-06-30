@@ -1,4 +1,3 @@
-import { onMounted } from 'vue';
 import { useWebSocket, type WebSocketMessage } from './useWebSocket';
 
 /**

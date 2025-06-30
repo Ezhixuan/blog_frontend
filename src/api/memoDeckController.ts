@@ -1,44 +1,10 @@
-// @ts-ignore
-/* eslint-disable */
-import request from "@/utils/request";
-
-/** 删除 DELETE /deck/del/${param0} */
-export async function del1(
-  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
-  params: API.del1Params,
-  options?: { [key: string]: any }
-) {
-  const { id: param0, ...queryParams } = params;
-  return request<API.BaseResponseString>(`/deck/del/${param0}`, {
-    method: "DELETE",
-    params: {
-      ...queryParams,
-      idOpt: undefined,
-      ...queryParams["idOpt"],
-    },
-    ...(options || {}),
-  });
-}
-
-/** 列表 GET /deck/list */
-export async function listAll(options?: { [key: string]: any }) {
-  return request<API.BaseResponsePageResponseMemoDeckVO>("/deck/list", {
-    method: "GET",
-    ...(options || {}),
-  });
-}
-
-/** 新增 POST /deck/update */
-export async function add1(
-  body: API.MemoDeckDTO,
-  options?: { [key: string]: any }
-) {
-  return request<API.BaseResponseString>("/deck/update", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    data: body,
-    ...(options || {}),
-  });
-}
+// 临时向后兼容文件 - 重新导出新API模块中的函数
+export { 
+  getDeckList as list,
+  getDeckList as listAll,
+  createDeck as add,
+  createDeck as add1,
+  updateDeck as edit,
+  deleteDeck as del,
+  deleteDeck as del1
+} from './modules/memo'; 

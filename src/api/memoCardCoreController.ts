@@ -1,50 +1,6 @@
-// @ts-ignore
-/* eslint-disable */
-import request from "@/utils/request";
-
-/** 此处后端没有提供注释 GET /memo/list */
-export async function list(
-  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
-  params: API.listParams,
-  options?: { [key: string]: any }
-) {
-  return request<API.BaseResponsePageResponseMemoCardVO>("/memo/list", {
-    method: "GET",
-    params: {
-      ...params,
-      queryDTO: undefined,
-      ...params["queryDTO"],
-    },
-    ...(options || {}),
-  });
-}
-
-/** 此处后端没有提供注释 POST /memo/operate */
-export async function operate(
-  body: API.MemoCardOperateDTO,
-  options?: { [key: string]: any }
-) {
-  return request<API.BaseResponseString>("/memo/operate", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    data: body,
-    ...(options || {}),
-  });
-}
-
-/** 此处后端没有提供注释 POST /memo/test */
-export async function test(
-  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
-  params: API.testParams,
-  options?: { [key: string]: any }
-) {
-  return request<API.BaseResponseListMemoCardVO>("/memo/test", {
-    method: "POST",
-    params: {
-      ...params,
-    },
-    ...(options || {}),
-  });
-}
+// 临时向后兼容文件 - 重新导出新API模块中的函数
+export { 
+  getCardList as list,
+  operateCard as operate,
+  getStudyTest as test
+} from './modules/memo'; 

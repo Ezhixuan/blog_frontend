@@ -1,13 +1,13 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import Home from '../views/Home.vue'
-import About from '../views/About.vue'
-import Blogs from '../views/Blogs.vue'
-import Project from '../views/Project.vue'
-import Friend from '../views/Friend.vue'
-import Contact from '../views/Contact.vue'
-import Login from '../views/Login.vue'
-import Register from '../views/Register.vue'
-import BlogEdit from '../views/BlogEdit.vue'
+import Home from '@/views/common/Home.vue'
+import About from '@/views/common/About.vue'
+import Blogs from '@/views/blog/Blogs.vue'
+import Project from '@/views/common/Project.vue'
+import Friend from '@/views/common/Friend.vue'
+import Contact from '@/views/common/Contact.vue'
+import Login from '@/views/auth/Login.vue'
+import Register from '@/views/auth/Register.vue'
+import BlogEdit from '@/views/blog/BlogEdit.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -45,7 +45,7 @@ const router = createRouter({
     {
       path: '/article/:id',
       name: 'ArticleDetail',
-      component: () => import('../views/ArticleDetail.vue')
+      component: () => import('@/views/blog/ArticleDetail.vue')
     },
     {
       path: '/blog/edit',
@@ -65,18 +65,18 @@ const router = createRouter({
     {
       path: '/memory',
       name: 'Memory',
-      component: () => import('../views/memory/Card.vue')
+      component: () => import('@/views/memo/Card.vue')
     },
     {
       path: '/websocket-test',
       name: 'WebSocketTest',
-      component: () => import('../components/WebSocketDemo.vue')
+      component: () => import('@/components/business/User/WebSocketDemo.vue')
     }
   ]
 })
 
 // 添加全局前置守卫，用于调试路由跳转
-router.beforeEach((to, from) => {
+router.beforeEach(() => {
   // 路由守卫保留基本功能，但移除调试日志
   return true; // 必须返回true以允许路由继续
 });

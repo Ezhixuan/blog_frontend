@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import Sidebar from './components/Sidebar.vue'
-import WebSocketIndicator from './components/WebSocketIndicator.vue'
+import Sidebar from './components/layout/Sidebar/Sidebar.vue'
+import WebSocketIndicator from './components/layout/WebSocketIndicator.vue'
 import { onMounted } from 'vue'
-import { initTheme } from './utils/theme'
+import { initTheme } from './utils/helpers/theme'
 import { useSidebar } from './composables/useSidebar'
 import { Bars3Icon } from '@heroicons/vue/24/outline'
 // 导入WebSocket连接
