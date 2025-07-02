@@ -196,7 +196,28 @@ onMounted(() => {
 
 // 监听路由参数变化
 watch(
-  [() => current.value, () => pageSize.value, () => route.query.categoryId, () => route.query.tagId],
+  [() => route.query.categoryId, () => route.query.tagId],
+  (newParams, oldParams) => {
+    if (route.path !== '/blogs') return;
+    
+    // 检查分类或标签是否真的变化了
+    const [newCategoryId, newTagId] = newParams;
+    const [oldCategoryId, oldTagId] = oldParams || [];
+    
+    if (newCategoryId !== oldCategoryId || newTagId !== oldTagId) {
+      // 只有分类或标签变化时，才重置页码到第一页
+      current.value = 1;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    
+    loadArticles();
+  },
+  { flush: 'sync' }
+);
+
+// 监听页码变化，更新URL
+watch(
+  [() => current.value, () => pageSize.value],
   ([newCurrent, newPageSize]) => {
     if (route.path !== '/blogs') return;
 
@@ -211,12 +232,6 @@ watch(
 
     router.replace({ path: '/blogs', query });
     saveCurrentPageState();
-
-    // 重置页码到第一页当分类或标签变化时
-    current.value = 1;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-
-    loadArticles();
   },
   { flush: 'sync' }
 );
@@ -275,6 +290,7 @@ const changePage = (page: number) => {
   if (current.value === page || loading.value) return;
   current.value = page;
   window.scrollTo({ top: 0, behavior: 'smooth' });
+  loadArticles();
 };
 
 // 图片点击处理

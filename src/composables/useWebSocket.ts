@@ -30,7 +30,7 @@ export function useWebSocket(url?: string) {
     if (url) return url;
     
     // 使用配置的后端地址，而不是前端地址
-    return config.getWebSocketUrl(`/api/ws/test/${userId.value}`);
+    return config.getWebSocketUrl(`/api/ws/link/${userId.value}`);
   };
 
   // 连接WebSocket

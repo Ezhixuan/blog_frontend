@@ -1,8 +1,7 @@
 <!-- Toc.vue -->
 <template>
     <div class="toc" ref="tocContainerRef" :class="{'dark-theme': theme === 'dark'}">
-      <h3>目录</h3>
-      <div class="reading-progress-bar" :style="{ width: `${readingProgress}%` }"></div>
+      <h3>我是目录😁</h3>
       <div class="toc-items-container">
         <div
           v-for="(item, index) in tocItems"
@@ -58,19 +57,9 @@
     'item-click': [id: string]
   }>();
   
-  // 尝试从父组件获取阅读进度
-  const readingProgress = ref(0);
-  const readingProgressFromParent = inject('readingProgress', 0);
   const tocContainerRef = ref<HTMLElement | null>(null);
   const activeItemRef = ref<HTMLElement | null>(null);
   const lastActiveId = ref<string | null>(null);
-  
-  // 监听从父组件注入的阅读进度
-  watch(() => readingProgressFromParent, (newVal) => {
-    if (typeof newVal === 'number') {
-      readingProgress.value = newVal;
-    }
-  }, { immediate: true });
   
   const tocItems = ref<TocItem[]>([]);
   const activeId = ref<string | null>(null);
@@ -211,41 +200,88 @@
     emit('item-click', id);
   };
   
-  // 自动将当前激活项滚动到目录的可见区域中央
+  // 优化的自动滚动函数，确保当前激活项始终在可视区域内
   const scrollActiveItemToCenter = () => {
-    if (!activeId.value || !tocContainerRef.value) return;
+    if (!activeId.value || !tocContainerRef.value) {
+      console.log('滚动跳过：无激活项或容器', { activeId: activeId.value, container: !!tocContainerRef.value });
+      return;
+    }
     
-    // 查找当前激活的DOM元素
-    const activeItem = document.querySelector(`.toc-item.active`) as HTMLElement;
-    if (!activeItem) return;
-    
-    // 保存引用以便在DOM更新后访问
-    activeItemRef.value = activeItem;
-    
-    // 使用nextTick确保DOM已更新
-    nextTick(() => {
-      if (!tocContainerRef.value || !activeItemRef.value) return;
+    // 使用双重延迟确保DOM完全更新
+    setTimeout(() => {
+      if (!tocContainerRef.value) return;
       
-      const container = tocContainerRef.value;
-      const item = activeItemRef.value;
+      // 查找当前激活的目录项元素
+      const activeItem = tocContainerRef.value.querySelector(`.toc-item.active`) as HTMLElement;
+      if (!activeItem) {
+        console.log('未找到激活的目录项元素');
+        return;
+      }
       
-      // 计算滚动位置，使当前项居中
-      const containerHeight = container.clientHeight;
-      const itemHeight = item.offsetHeight;
-      const itemTop = item.offsetTop;
+             const container = tocContainerRef.value;
+       // 使用 getBoundingClientRect 获取实际可见高度
+       const containerRect = container.getBoundingClientRect();
+       const containerHeight = containerRect.height;
+       const containerScrollTop = container.scrollTop;
+       const containerScrollHeight = container.scrollHeight;
       
-      // 设置滚动位置
-      const scrollTo = itemTop - (containerHeight / 2) + (itemHeight / 2);
+      // 获取目录项相对于容器的位置
+      const itemOffsetTop = activeItem.offsetTop;
+      const itemHeight = activeItem.offsetHeight;
       
-      // 使用平滑滚动效果
-      container.scrollTo({
-        top: scrollTo,
-        behavior: 'smooth'
+             console.log('滚动检测:', {
+         itemOffsetTop,
+         itemHeight,
+         containerHeight,
+         containerScrollTop,
+         containerScrollHeight,
+         containerClientHeight: container.clientHeight,
+         activeId: activeId.value
+       });
+      
+      // 检查目录项是否在可视区域内（增加一些边距）
+      const margin = 20;
+      const itemTop = itemOffsetTop;
+      const itemBottom = itemOffsetTop + itemHeight;
+      const viewTop = containerScrollTop + margin;
+      const viewBottom = containerScrollTop + containerHeight - margin;
+      
+      const isVisible = itemTop >= viewTop && itemBottom <= viewBottom;
+      
+      console.log('可视性检查:', {
+        isVisible,
+        itemTop,
+        itemBottom,
+        viewTop,
+        viewBottom
       });
-    });
+      
+      // 如果不在可视区域内，则滚动到合适位置
+      if (!isVisible) {
+        let scrollTo;
+        
+        if (itemTop < viewTop) {
+          // 项目在可视区域上方，滚动到顶部
+          scrollTo = Math.max(0, itemOffsetTop - margin);
+        } else {
+          // 项目在可视区域下方，滚动到底部
+          scrollTo = Math.min(
+            containerScrollHeight - containerHeight,
+            itemOffsetTop - containerHeight + itemHeight + margin
+          );
+        }
+        
+        console.log('执行滚动到:', scrollTo);
+        
+        container.scrollTo({
+          top: scrollTo,
+          behavior: 'smooth'
+        });
+      } else {
+        console.log('目录项已在可视区域内，无需滚动');
+      }
+    }, 150); // 增加延迟时间确保DOM更新
   };
-  
-  // 删除未使用的 _isElementInView 函数
   
   const handleScroll = () => {
     let found = null;
@@ -266,26 +302,9 @@
     
     // 只有当活动项变化时才更新状态
     if (found !== activeId.value) {
+      console.log('页面滚动检测到新的激活项:', { old: activeId.value, new: found });
       lastActiveId.value = activeId.value;
       activeId.value = found;
-      
-      // 当活动项变化时，自动滚动目录
-      if (found) {
-        scrollActiveItemToCenter();
-      }
-    }
-    
-    // 计算目录项的阅读进度
-    if (tocItems.value.length > 0) {
-      if (!found) {
-        // 如果没有找到活动项，进度条为0
-        readingProgress.value = 0;
-      } else {
-        const activeIndex = tocItems.value.findIndex(item => item.id === found);
-        if (activeIndex >= 0) {
-          readingProgress.value = ((activeIndex + 1) / tocItems.value.length) * 100;
-        }
-      }
     }
   };
   
@@ -296,11 +315,10 @@
   
   // 监听活动项变化，保持滚动位置
   watch(() => activeId.value, (newActiveId, oldActiveId) => {
+    console.log('激活项变化:', { from: oldActiveId, to: newActiveId });
     if (newActiveId && newActiveId !== oldActiveId) {
-      // 为动画设置微小延迟
-      setTimeout(() => {
-        scrollActiveItemToCenter();
-      }, 50);
+      // 立即触发滚动检测
+      scrollActiveItemToCenter();
     }
   });
   
@@ -361,17 +379,6 @@
   .toc:hover {
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
     transform: translateY(-2px);
-  }
-  
-  .reading-progress-bar {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 3px;
-    background: linear-gradient(90deg, #3b82f6, #60a5fa);
-    border-radius: 3px;
-    transition: width 0.3s ease;
-    z-index: 10;
   }
   
   .toc h3 {

@@ -292,7 +292,6 @@
               <line x1="3" y1="12" x2="3.01" y2="12"></line>
               <line x1="3" y1="18" x2="3.01" y2="18"></line>
             </svg>
-            文章目录
           </h3>
           <div class="toc-wrapper">
             <Toc 
@@ -534,7 +533,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, inject, watch, onBeforeUnmount } from 'vue';
+import { ref, onMounted, computed, watch, onBeforeUnmount } from 'vue';
 import ChangePasswordModal from '@/components/ui/Modal/ChangePasswordModal.vue';
 import SubmitBlogModal from '@/components/ui/Modal/SubmitBlogModal.vue';
 import Toc from '@/components/business/Blog/Toc.vue';

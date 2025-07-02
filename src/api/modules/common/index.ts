@@ -14,11 +14,8 @@ import type {
  */
 export function uploadPicture(data: FormData | PictureUploadData): Promise<StringResponse> {
   if (data instanceof FormData) {
-    return request.post('/api/pic/upload', data, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    });
+    // 不手动设置Content-Type，让浏览器自动设置multipart/form-data和boundary
+    return request.post('/api/pic/upload', data);
   } else {
     return request.post('/api/pic/upload', data);
   }

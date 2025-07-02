@@ -112,13 +112,21 @@ const handleFileChange = async (event: Event) => {
 
     try {
         isUploading.value = true;
-        const response = await markdownUpload(file);
+        const formData = new FormData();
+        formData.append('file', file);
+        const response = await markdownUpload(formData);
         // 处理响应对象，这里假设后端返回的是 API.BaseResponseString 类型
-        if (response.data && response.data.code === 0 && response.data.data) {
-            content.value = response.data.data;
+        console.log('Response:', response);
+        console.log('Response code type:', typeof response.code, 'value:', response.code);
+        console.log('Response data type:', typeof response.data, 'value:', !!response.data);
+        console.log('Condition result:', response.code === 200 && !!response.data);
+        
+        if (response.code === 0 && response.data) {
+            content.value = response.data;
             message.success('Markdown 文件上传成功');
         } else {
-            message.error(response.data?.message || 'Markdown 文件上传失败');
+            console.log('进入失败分支 - code:', response.code, 'data:', !!response.data);
+            message.error(response.message || 'Markdown 文件上传失败');
         }
     } catch (error: any) {
         message.error(error?.response?.data?.message || 'Markdown 文件上传失败');

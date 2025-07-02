@@ -6,16 +6,51 @@
     </div>
 
     <!-- 顶部导航栏 -->
-    <header class="article-header">
-      <div class="header-container">
-        <button class="back-btn" @click="handleBackToList" aria-label="返回文章列表">
+    <header class="article-header" :class="{
+      'header-scrolled': isHeaderScrolled
+    }">
+      <div class="header-container" :class="{
+        'container-compact': isHeaderScrolled
+      }">
+        <button class="back-btn group" @click="handleBackToList" aria-label="返回文章列表">
           <svg class="back-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H5m7-7l-7 7 7 7"/>
           </svg>
           <span class="back-text">返回</span>
         </button>
         
-        <!-- 目录现在在左侧导航栏中 -->
+        <!-- 文章标题 - 滚动时显示 -->
+        <div class="header-title" :class="{
+          'title-visible': isHeaderScrolled && article?.title
+        }">
+          <h1 v-if="article?.title">{{ article.title }}</h1>
+        </div>
+        
+        <!-- 阅读进度指示器 -->
+        <div class="header-progress" :class="{
+          'progress-visible': isHeaderScrolled
+        }">
+          <div class="progress-circle">
+            <svg class="progress-ring" viewBox="0 0 36 36">
+              <path class="progress-ring-bg"
+                d="M18 2.0845
+                  a 15.9155 15.9155 0 0 1 0 31.831
+                  a 15.9155 15.9155 0 0 1 0 -31.831"
+                stroke="currentColor"
+                stroke-width="2"
+                fill="none" />
+              <path class="progress-ring-fill"
+                :style="{ strokeDasharray: `${readingProgress}, 100` }"
+                d="M18 2.0845
+                  a 15.9155 15.9155 0 0 1 0 31.831
+                  a 15.9155 15.9155 0 0 1 0 -31.831"
+                stroke="currentColor"
+                stroke-width="2"
+                fill="none" />
+            </svg>
+            <span class="progress-text">{{ Math.round(readingProgress) }}%</span>
+          </div>
+        </div>
       </div>
     </header>
 
@@ -84,7 +119,7 @@
 
               <!-- 标签 -->
               <div v-if="article.tagMap && Object.keys(article.tagMap).length > 0" class="article-tags">
-                <span v-for="(value, key) in article.tagMap" :key="key" class="tag">
+                <span v-for="(value, key) in article.tagMap" :key="key" class="tag group">
                   <svg class="tag-icon" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
                   </svg>
@@ -211,6 +246,10 @@ const previewVisible = ref(false);
 const previewImageUrl = ref('');
 const isMobile = ref(false);
 
+// 动态导航栏状态
+const isHeaderScrolled = ref(false);
+const lastScrollY = ref(0);
+
 // 计算属性
 const isAuthor = computed(() => userStore.userInfo?.id === article.value?.userId);
 
@@ -265,8 +304,18 @@ const fetchArticleDetail = async (id: string) => {
     loading.value = true;
     const res = await getArticleInfo(id);
     article.value = res.data || null;
+    
+    // 文章加载完成后，等待DOM更新再滚动到顶部
+    if (article.value) {
+      await nextTick();
+      setTimeout(() => {
+        scrollToTop();
+        console.log('📖 文章内容加载完成，滚动到顶部');
+      }, 150); // 给内容渲染一些时间
+    }
   } catch (error) {
     article.value = null;
+    console.error('文章加载失败:', error);
   } finally {
     loading.value = false;
   }
@@ -277,6 +326,56 @@ const calculateReadingProgress = () => {
   const scrollHeight = document.documentElement.scrollHeight;
   const clientHeight = document.documentElement.clientHeight;
   readingProgress.value = Math.min(100, Math.max(0, (scrollTop / (scrollHeight - clientHeight)) * 100));
+};
+
+// 动态导航栏逻辑
+const handleHeaderScroll = () => {
+  const scrollY = window.scrollY;
+  const scrollThreshold = 100; // 滚动多少像素后开始改变状态
+  
+  // 🔧 添加调试日志
+  console.log('🏝️ 灵动岛滚动检测:', {
+    scrollY,
+    scrollThreshold,
+    isHeaderScrolled: isHeaderScrolled.value,
+    lastScrollY: lastScrollY.value
+  });
+  
+  // 更新是否已滚动状态
+  const shouldBeScrolled = scrollY > scrollThreshold;
+  if (isHeaderScrolled.value !== shouldBeScrolled) {
+    isHeaderScrolled.value = shouldBeScrolled;
+    console.log('🏝️ 灵动岛状态变化:', {
+      state: shouldBeScrolled ? '灵动岛模式' : '正常模式',
+      scrollY,
+      threshold: scrollThreshold
+    });
+    
+    // 🔧 实时CSS调试
+    setTimeout(() => {
+      const header = document.querySelector('.article-header');
+      if (header) {
+        const classList = Array.from(header.classList);
+        const styles = getComputedStyle(header);
+        console.log('🎨 实时CSS状态:', {
+          hasHeaderScrolledClass: classList.includes('header-scrolled'),
+          classList: classList,
+          position: styles.position,
+          top: styles.top,
+          zIndex: styles.zIndex,
+          borderRadius: styles.borderRadius,
+          backgroundColor: styles.backgroundColor,
+          backdropFilter: styles.backdropFilter,
+          minHeight: styles.minHeight,
+          transform: styles.transform,
+          visibility: styles.visibility,
+          display: styles.display
+        });
+      }
+    }, 50); // 等待DOM更新
+  }
+  
+  lastScrollY.value = scrollY;
 };
 
 // 移动端目录相关方法已移除，目录现在在左侧导航栏中
@@ -297,6 +396,7 @@ const handleBackToList = () => {
     }
 
     router.push({ path: '/blogs', query });
+    console.log('🔙 返回文章列表，恢复之前的滚动位置');
     if (pageState.scrollPosition && typeof pageState.scrollPosition === 'number') {
       setTimeout(() => {
         window.scrollTo({
@@ -306,7 +406,12 @@ const handleBackToList = () => {
       }, 100);
     }
   } else {
+    console.log('🔙 返回文章列表，滚动到顶部');
     router.push('/blogs');
+    // 如果没有保存的状态，返回到顶部
+    setTimeout(() => {
+      scrollToTop();
+    }, 100);
   }
 };
 
@@ -335,7 +440,9 @@ const throttle = <T extends (...args: any[]) => any>(fn: T, delay: number) => {
 };
 
 const handleScroll = throttle(() => {
+  console.log('📜 handleScroll被调用, scrollY:', window.scrollY);
   calculateReadingProgress();
+  handleHeaderScroll();
 }, 100);
 
 // 提供阅读进度给Toc组件
@@ -363,11 +470,41 @@ watch(() => renderedContent.value, (newContent: string) => {
 // 保留provide用于Toc组件
 provide('articleContent', computed(() => renderedContent.value));
 
+// 自动滚动到顶部
+const scrollToTop = () => {
+  window.scrollTo({
+    top: 0,
+    left: 0,
+    behavior: 'smooth'
+  });
+  
+  // 重置导航栏状态
+  isHeaderScrolled.value = false;
+  lastScrollY.value = 0;
+  
+  console.log('📜 自动滚动到页面顶部');
+};
+
+// 监听路由参数变化，处理文章切换
+watch(() => route.params.id, (newId, oldId) => {
+  if (newId && typeof newId === 'string' && newId !== oldId) {
+    console.log('🔄 文章ID变化，加载新文章:', newId);
+    articleId.value = newId;
+    
+    // 立即滚动到顶部，然后加载新文章（fetchArticleDetail会在加载完成后再次滚动确保位置正确）
+    scrollToTop();
+    fetchArticleDetail(newId);
+  }
+}, { immediate: false });
+
 // 生命周期
 onMounted(() => {
+  console.log('🚀 ArticleDetail组件挂载开始');
+  
   const id = route.params.id;
   if (id && typeof id === 'string') {
     articleId.value = id;
+    // fetchArticleDetail会处理滚动到顶部
     fetchArticleDetail(id);
   }
 
@@ -375,14 +512,189 @@ onMounted(() => {
   checkMobile();
   window.addEventListener('resize', checkMobile);
   
+  // 🔧 灵动岛初始化调试
+  console.log('🏝️ 灵动岛初始化:', {
+    initialScrollY: window.scrollY,
+    isHeaderScrolled: isHeaderScrolled.value,
+    isMobile: isMobile.value
+  });
+  
+  // 初始化导航栏状态
+  isHeaderScrolled.value = false;
+  lastScrollY.value = window.scrollY || 0;
+  
   document.addEventListener('click', handleImageClick);
   window.addEventListener('scroll', handleScroll, { passive: true });
+  
+  console.log('🔧 滚动事件监听器已添加');
+  
+  // 🔧 移动端白边调试 - 新增
+  if (window.innerWidth <= 768) {
+    console.log('📱 移动端白边调试开始');
+    
+    // 检查视口设置
+    const viewport = document.querySelector('meta[name="viewport"]') as HTMLMetaElement;
+    console.log('📱 视口设置:', viewport ? viewport.content : '未找到viewport meta');
+    
+    // 检查body和html的宽度
+    const bodyRect = document.body.getBoundingClientRect();
+    const htmlRect = document.documentElement.getBoundingClientRect();
+    console.log('📱 Body尺寸:', {
+      width: bodyRect.width,
+      scrollWidth: document.body.scrollWidth,
+      clientWidth: document.body.clientWidth
+    });
+    console.log('📱 HTML尺寸:', {
+      width: htmlRect.width,
+      scrollWidth: document.documentElement.scrollWidth,
+      clientWidth: document.documentElement.clientWidth
+    });
+    
+    // 检查主要容器的宽度
+    setTimeout(() => {
+      const containers = [
+        '.article-page',
+        '.article-main', 
+        '.main-container',
+        '.article-content-wrapper',
+        '.article-content'
+      ];
+      
+      containers.forEach(selector => {
+        const element = document.querySelector(selector) as HTMLElement;
+        if (element) {
+          const rect = element.getBoundingClientRect();
+          const styles = getComputedStyle(element);
+          console.log(`📱 ${selector} 尺寸:`, {
+            width: rect.width,
+            scrollWidth: element.scrollWidth,
+            clientWidth: element.clientWidth,
+            offsetWidth: element.offsetWidth,
+            computedWidth: styles.width,
+            computedMaxWidth: styles.maxWidth,
+            padding: `${styles.paddingLeft} ${styles.paddingRight}`,
+            margin: `${styles.marginLeft} ${styles.marginRight}`,
+            boxSizing: styles.boxSizing,
+            overflowX: styles.overflowX
+          });
+        }
+      });
+      
+      // 检查所有可能溢出的元素
+      const potentialOverflowElements = document.querySelectorAll('pre, table, img, .tag, .meta-item');
+      potentialOverflowElements.forEach((element, index) => {
+        const rect = element.getBoundingClientRect();
+        if (rect.width > window.innerWidth) {
+          console.log(`🚨 发现溢出元素 ${index}:`, {
+            tagName: element.tagName,
+            className: element.className,
+            width: rect.width,
+            viewportWidth: window.innerWidth,
+            overflowAmount: rect.width - window.innerWidth,
+            element: element
+          });
+        }
+      });
+      
+    }, 1000);
+  }
+  
+  // 🔧 添加CSS调试
+  setTimeout(() => {
+    const header = document.querySelector('.article-header');
+    if (header) {
+      const styles = getComputedStyle(header);
+      console.log('🎨 灵动岛CSS调试:', {
+        position: styles.position,
+        top: styles.top,
+        zIndex: styles.zIndex,
+        display: styles.display,
+        visibility: styles.visibility,
+        transform: styles.transform,
+        borderRadius: styles.borderRadius
+      });
+    } else {
+      console.error('❌ 找不到.article-header元素');
+    }
+  }, 1000);
+  
+  // 🔧 添加强制CSS检查函数
+  (window as any).checkDynamicIslandCSS = () => {
+    const header = document.querySelector('.article-header');
+    if (header) {
+      const classList = Array.from(header.classList);
+      const styles = getComputedStyle(header);
+      console.log('💎 强制CSS检查:', {
+        currentScrollY: window.scrollY,
+        hasHeaderScrolledClass: classList.includes('header-scrolled'),
+        classList: classList,
+        position: styles.position,
+        top: styles.top,
+        zIndex: styles.zIndex,
+        borderRadius: styles.borderRadius,
+        backgroundColor: styles.backgroundColor,
+        backdropFilter: styles.backdropFilter,
+        minHeight: styles.minHeight,
+        elementRect: header.getBoundingClientRect()
+      });
+    } else {
+      console.error('❌ 找不到.article-header元素');
+    }
+  };
+  
+  // 🔧 添加移动端白边检查函数
+  (window as any).checkMobileWhiteBorder = () => {
+    if (window.innerWidth <= 768) {
+      console.log('🔍 手动检查移动端白边问题');
+      
+      const bodyScrollWidth = document.body.scrollWidth;
+      const viewportWidth = window.innerWidth;
+      const overflow = bodyScrollWidth - viewportWidth;
+      
+      console.log('📱 页面宽度检查:', {
+        bodyScrollWidth,
+        viewportWidth,
+        overflow,
+        hasHorizontalScroll: overflow > 0
+      });
+      
+      // 查找所有宽度超出视口的元素
+      const allElements = document.querySelectorAll('*');
+      const overflowElements: Array<{
+        element: Element;
+        tagName: string;
+        className: string;
+        width: number;
+        overflow: number;
+      }> = [];
+      
+      allElements.forEach(element => {
+        const rect = element.getBoundingClientRect();
+        if (rect.width > viewportWidth) {
+          overflowElements.push({
+            element,
+            tagName: element.tagName,
+            className: element.className,
+            width: rect.width,
+            overflow: rect.width - viewportWidth
+          });
+        }
+      });
+      
+      console.log('🚨 发现溢出元素:', overflowElements);
+      return overflowElements;
+    }
+  };
 });
 
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll);
   window.removeEventListener('resize', checkMobile);
   document.removeEventListener('click', handleImageClick);
+  
+  // 重置导航栏状态
+  isHeaderScrolled.value = false;
+  lastScrollY.value = 0;
   
   // 清空Sidebar中的文章内容
   emit('article-content-updated', {
@@ -399,8 +711,7 @@ onUnmounted(() => {
   @apply dark:from-slate-900 dark:via-slate-800 dark:to-gray-900;
   background-attachment: fixed;
   position: relative;
-  /* 防止水平溢出 */
-  overflow-x: hidden;
+  /* 移除overflow限制以支持sticky定位 */
   max-width: 100vw;
 }
 
@@ -417,10 +728,15 @@ onUnmounted(() => {
     min-height: 100vh;
     min-height: 100dvh;
     background: linear-gradient(135deg, rgb(248 250 252) 0%, rgb(239 246 255) 50%, rgb(238 242 255) 100%);
-    /* 移动端严格防止溢出 */
+    /* 🔧 修复sticky定位：移动端也不能有overflow-y限制 */
     width: 100%;
     max-width: 100vw;
     overflow-x: hidden;
+    overflow-y: visible; /* 确保垂直方向不限制滚动，支持sticky */
+    /* 强制覆盖可能的overflow简写属性 */
+    overflow: visible;
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
   }
   
   .dark .article-page {
@@ -430,7 +746,7 @@ onUnmounted(() => {
 
 /* ===== 阅读进度条 ===== */
 .reading-progress {
-  @apply fixed top-0 left-0 w-full h-1 bg-gray-200/70 dark:bg-gray-700/70 z-50;
+  @apply fixed top-0 left-0 w-full h-1 bg-gray-200/70 dark:bg-gray-700/70 z-[60];
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
@@ -443,44 +759,185 @@ onUnmounted(() => {
 
 /* ===== 顶部导航 ===== */
 .article-header {
-  @apply sticky top-0 bg-white/85 dark:bg-gray-900/85 backdrop-blur-xl border-b border-gray-200/60 dark:border-gray-700/60 z-40;
+  @apply sticky bg-white/85 dark:bg-gray-900/85 backdrop-blur-xl border-b border-gray-200/60 dark:border-gray-700/60;
+  top: 1px; /* 在阅读进度条下方 */
+  z-index: 60; /* 🔧 提高z-index，确保在侧边栏(z-50)之上 */
   min-height: 64px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
+  transform: translateY(0);
 }
+
+/* 滚动后的导航栏状态 - 类似灵动岛 */
+.article-header.header-scrolled {
+  @apply bg-white/95 dark:bg-gray-900/95;
+  min-height: 56px;
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border-radius: 0 0 24px 24px;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.dark .article-header.header-scrolled {
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* 移除了隐藏状态CSS - 导航栏始终显示 */
 
 .header-container {
   @apply max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between;
   min-height: 64px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 紧凑模式容器 */
+.header-container.container-compact {
+  @apply py-2;
+  min-height: 56px;
 }
 
 .back-btn {
-  @apply flex items-center gap-2 px-4 py-2.5 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white;
-  @apply transition-all duration-200 rounded-xl hover:bg-gray-100/70 dark:hover:bg-gray-800/70;
+  @apply flex items-center gap-3 px-5 py-3 text-gray-700 dark:text-gray-200 font-semibold;
+  @apply bg-gradient-to-r from-white/90 via-gray-50/90 to-white/90;
+  @apply dark:from-gray-800/90 dark:via-gray-700/90 dark:to-gray-800/90;
+  @apply border border-gray-200/70 dark:border-gray-600/70;
+  @apply rounded-2xl transition-all duration-300 ease-out;
+  @apply hover:from-blue-50/95 hover:via-indigo-50/95 hover:to-purple-50/95;
+  @apply dark:hover:from-blue-900/60 dark:hover:via-indigo-900/60 dark:hover:to-purple-900/60;
+  @apply hover:text-blue-700 dark:hover:text-blue-300;
+  @apply hover:border-blue-300/70 dark:hover:border-blue-600/70;
+  @apply hover:shadow-lg hover:shadow-blue-500/20;
   @apply focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2;
-  @apply active:scale-95;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  @apply active:scale-95 relative overflow-hidden;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.back-btn::before {
+  content: '';
+  @apply absolute inset-0 bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10;
+  @apply opacity-0 transition-opacity duration-300;
+  border-radius: inherit;
+}
+
+.back-btn:hover::before {
+  @apply opacity-100;
 }
 
 .back-btn:hover {
-  transform: translateX(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateX(-3px) translateY(-1px);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15), 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .back-icon {
-  @apply w-5 h-5;
-  transition: transform 0.2s ease;
+  @apply w-5 h-5 transition-all duration-300 ease-out;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
 }
 
 .back-btn:hover .back-icon {
-  transform: translateX(-1px);
+  transform: translateX(-2px) scale(1.05);
+  filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.3));
 }
 
 .back-text {
-  @apply text-sm font-medium;
+  @apply text-sm font-semibold tracking-wide transition-all duration-300;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.back-btn:hover .back-text {
+  transform: translateX(-1px);
+  text-shadow: 0 1px 3px rgba(59, 130, 246, 0.2);
+}
+
+/* ===== 动态标题 ===== */
+.header-title {
+  @apply flex-1 mx-6 overflow-hidden;
+  opacity: 0;
+  transform: translateY(10px) scale(0.95);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.header-title.title-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.header-title h1 {
+  @apply text-lg font-bold text-gray-900 dark:text-white truncate;
+  @apply bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900;
+  @apply dark:from-white dark:via-blue-100 dark:to-indigo-100;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0;
+  line-height: 1.3;
+  max-width: 100%;
+}
+
+/* ===== 阅读进度指示器 ===== */
+.header-progress {
+  @apply flex items-center justify-center;
+  opacity: 0;
+  transform: translateX(20px) scale(0.8);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.header-progress.progress-visible {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+}
+
+.progress-circle {
+  @apply relative flex items-center justify-center;
+  width: 40px;
+  height: 40px;
+}
+
+.progress-ring {
+  @apply w-full h-full;
+  transform: rotate(-90deg);
+  transition: all 0.3s ease;
+}
+
+.progress-ring-bg {
+  @apply text-gray-300 dark:text-gray-600;
+  opacity: 0.3;
+}
+
+.progress-ring-fill {
+  @apply text-blue-500 dark:text-blue-400;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.3s ease;
+  filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.4));
+}
+
+.progress-text {
+  @apply absolute inset-0 flex items-center justify-center text-xs font-bold;
+  @apply text-blue-600 dark:text-blue-400;
+  font-size: 10px;
+  line-height: 1;
+}
+
+/* 进度圈悬停效果 */
+.progress-circle:hover {
+  transform: scale(1.1);
+}
+
+.progress-circle:hover .progress-ring-fill {
+  filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.6));
 }
 
 /* 移动端目录按钮已移除，目录现在在左侧导航栏中 */
@@ -488,8 +945,8 @@ onUnmounted(() => {
 /* ===== 主要内容区域 ===== */
 .article-main {
   @apply max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8;
-  min-height: calc(100vh - 64px); /* 减去header高度 */
-  min-height: calc(100dvh - 64px); /* 动态视口高度支持 */
+  min-height: calc(100vh - 65px); /* 减去header高度+进度条高度 */
+  min-height: calc(100dvh - 65px); /* 动态视口高度支持 */
   /* 确保sticky定位正常工作 */
   width: 100%;
   max-width: 100vw;
@@ -725,13 +1182,135 @@ onUnmounted(() => {
 }
 
 .tag {
-  @apply inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-gray-100/80 to-gray-50/80 dark:from-gray-700/50 dark:to-gray-600/50;
-  @apply text-gray-700 dark:text-gray-300 text-sm font-medium rounded-xl border border-gray-200/60 dark:border-gray-600/60;
-  @apply shadow-sm hover:shadow-lg transition-all duration-200 hover:scale-105 hover:bg-gradient-to-r hover:from-gray-200/80 hover:to-gray-100/80 dark:hover:from-gray-600/50 dark:hover:to-gray-500/50;
+  @apply inline-flex items-center gap-2.5 px-4 py-2.5 font-semibold text-sm;
+  @apply transition-all duration-300 ease-out cursor-pointer relative overflow-hidden;
+  @apply rounded-2xl border shadow-md hover:shadow-xl;
+  position: relative;
+  
+  /* 使用CSS变量来实现多种颜色主题 */
+  --tag-from: 59, 130, 246;  /* blue-500 */
+  --tag-to: 99, 102, 241;    /* indigo-500 */
+  --tag-accent: 147, 51, 234; /* purple-500 */
+  
+  background: linear-gradient(135deg, 
+    rgba(var(--tag-from), 0.08) 0%, 
+    rgba(var(--tag-to), 0.12) 50%, 
+    rgba(var(--tag-accent), 0.08) 100%);
+  
+  color: rgb(var(--tag-from));
+  border: 1px solid rgba(var(--tag-from), 0.2);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* 为不同位置的标签分配不同颜色 */
+.tag:nth-child(2) {
+  --tag-from: 16, 185, 129;   /* green-500 */
+  --tag-to: 34, 197, 94;      /* green-500 */
+  --tag-accent: 6, 182, 212;  /* cyan-500 */
+}
+
+.tag:nth-child(3) {
+  --tag-from: 245, 101, 101;  /* red-400 */
+  --tag-to: 251, 113, 133;    /* rose-400 */
+  --tag-accent: 249, 115, 22; /* orange-500 */
+}
+
+.tag:nth-child(4) {
+  --tag-from: 139, 69, 19;    /* amber-800 */
+  --tag-to: 217, 119, 6;      /* amber-600 */
+  --tag-accent: 245, 158, 11; /* amber-500 */
+}
+
+.tag:nth-child(5) {
+  --tag-from: 219, 39, 119;   /* pink-600 */
+  --tag-to: 147, 51, 234;     /* purple-500 */
+  --tag-accent: 168, 85, 247; /* purple-400 */
+}
+
+.tag:nth-child(6) {
+  --tag-from: 14, 165, 233;   /* sky-500 */
+  --tag-to: 6, 182, 212;      /* cyan-500 */
+  --tag-accent: 34, 197, 94;  /* green-500 */
+}
+
+/* 暗色模式调整 */
+.dark .tag {
+  background: linear-gradient(135deg, 
+    rgba(var(--tag-from), 0.15) 0%, 
+    rgba(var(--tag-to), 0.2) 50%, 
+    rgba(var(--tag-accent), 0.15) 100%);
+  
+  color: rgba(var(--tag-from), 0.9);
+  border: 1px solid rgba(var(--tag-from), 0.3);
+}
+
+/* 悬停效果 */
+.tag::before {
+  content: '';
+  @apply absolute inset-0 transition-opacity duration-300 opacity-0;
+  background: linear-gradient(135deg, 
+    rgba(var(--tag-from), 0.15) 0%, 
+    rgba(var(--tag-to), 0.2) 50%, 
+    rgba(var(--tag-accent), 0.15) 100%);
+  border-radius: inherit;
+}
+
+.tag:hover::before {
+  @apply opacity-100;
+}
+
+.dark .tag:hover::before {
+  background: linear-gradient(135deg, 
+    rgba(var(--tag-from), 0.25) 0%, 
+    rgba(var(--tag-to), 0.3) 50%, 
+    rgba(var(--tag-accent), 0.25) 100%);
+}
+
+.tag:hover {
+  transform: translateY(-2px) scale(1.05);
+  border-color: rgba(var(--tag-from), 0.4);
+  
+  box-shadow: 
+    0 10px 25px rgba(var(--tag-from), 0.15),
+    0 4px 12px rgba(var(--tag-to), 0.1),
+    0 0 0 1px rgba(var(--tag-from), 0.1);
+}
+
+.dark .tag:hover {
+  border-color: rgba(var(--tag-from), 0.5);
+  box-shadow: 
+    0 10px 25px rgba(var(--tag-from), 0.2),
+    0 4px 12px rgba(var(--tag-to), 0.15),
+    0 0 0 1px rgba(var(--tag-from), 0.2);
+}
+
+.tag:active {
+  transform: translateY(-1px) scale(1.02);
 }
 
 .tag-icon {
-  @apply w-3.5 h-3.5 opacity-70;
+  @apply w-4 h-4 transition-all duration-300 ease-out;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+  opacity: 0.8;
+}
+
+.tag:hover .tag-icon {
+  transform: rotate(12deg) scale(1.1);
+  opacity: 1;
+  filter: drop-shadow(0 2px 4px rgba(var(--tag-from), 0.3));
+}
+
+/* 标签文字动画 */
+.tag span {
+  @apply relative z-10 transition-all duration-300;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+}
+
+.tag:hover span {
+  transform: translateX(1px);
+  font-weight: 700;
 }
 
 /* ===== 文章摘要 ===== */
@@ -907,14 +1486,56 @@ onUnmounted(() => {
 
 /* ===== 移动端目录已移至左侧导航栏 ===== */
 
+/* ===== 移动端灵动岛效果 ===== */
+@media (max-width: 768px) {
+  /* 移动端导航栏滚动后的灵动岛效果 */
+  .article-header.header-scrolled {
+    @apply bg-white/95 dark:bg-gray-900/95;
+    min-height: 52px;
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    box-shadow: 
+      0 6px 25px rgba(0, 0, 0, 0.1),
+      0 0 0 1px rgba(255, 255, 255, 0.05),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    border-radius: 0 0 20px 20px; /* 移动端稍小的圆角 */
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .dark .article-header.header-scrolled {
+    box-shadow: 
+      0 6px 25px rgba(0, 0, 0, 0.25),
+      0 0 0 1px rgba(255, 255, 255, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  /* 移动端紧凑模式容器 */
+  .header-container.container-compact {
+    @apply py-1.5;
+    min-height: 52px;
+  }
+}
+
 /* ===== 移动端全局保护 ===== */
 @media (max-width: 768px) {
-  /* 全局防溢出保护 - 加强版 */
+  /* 🔧 强制修复移动端sticky定位问题 */
   .article-page {
     max-width: 100vw !important;
     overflow-x: hidden !important;
+    overflow-y: visible !important; /* 🚨 关键修复：必须是visible才能支持sticky */
+    overflow: visible !important; /* 强制覆盖简写属性 */
     position: relative;
   }
+  
+  /* 强制移除所有可能的overflow限制 */
+  .article-page,
+  .article-page * {
+    /* 确保没有任何父容器限制sticky定位 */
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* 全局防溢出保护 - 加强版 */
   
   .article-page * {
     max-width: 100% !important;
@@ -938,14 +1559,21 @@ onUnmounted(() => {
     max-width: 100% !important;
     overflow-x: hidden !important;
   }
+  
+  /* 移动端导航栏确保sticky */
+  .article-header {
+    position: sticky !important;
+    top: 1px !important;
+    z-index: 50 !important;
+  }
 }
 
 /* ===== 响应式设计 - 强化版 ===== */
 @media (max-width: 768px) {
   .article-main {
     @apply px-3 py-4;
-    min-height: calc(100vh - 64px);
-    min-height: calc(100dvh - 64px);
+    min-height: calc(100vh - 65px);
+    min-height: calc(100dvh - 65px);
     /* 移动端溢出保护 */
     width: 100%;
     max-width: 100vw;
@@ -1010,16 +1638,21 @@ onUnmounted(() => {
   }
   
   .article-tags {
-    @apply gap-2 mt-4;
+    @apply gap-2.5 mt-4;
     flex-wrap: wrap;
     width: 100%;
     max-width: 100%;
   }
   
   .tag {
-    @apply px-3 py-1.5 text-xs;
+    @apply px-3 py-2 text-xs;
     max-width: 100%;
     word-wrap: break-word;
+    font-weight: 600;
+  }
+  
+  .tag-icon {
+    @apply w-3.5 h-3.5;
   }
   
   .article-summary {
@@ -1084,9 +1717,60 @@ onUnmounted(() => {
     box-sizing: border-box;
   }
   
+  .header-container.container-compact {
+    @apply py-2;
+    min-height: 52px;
+  }
+  
+  .header-title {
+    @apply mx-3;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  /* 移动端灵动岛模式下的标题优化 */
+  .header-scrolled .header-title {
+    @apply mx-2;
+  }
+  
+  .header-title h1 {
+    @apply text-base;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .header-scrolled .header-title h1 {
+    @apply text-sm;
+  }
+  
+  .progress-circle {
+    width: 32px;
+    height: 32px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  /* 移动端灵动岛模式下的进度圈优化 */
+  .header-scrolled .progress-circle {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .progress-text {
+    font-size: 9px;
+    transition: font-size 0.4s ease;
+  }
+  
+  .header-scrolled .progress-text {
+    font-size: 8px;
+  }
+  
   .back-btn {
     @apply px-3 py-2 text-sm;
     max-width: 100%;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  /* 移动端灵动岛模式下的返回按钮优化 */
+  .header-scrolled .back-btn {
+    @apply px-2.5 py-1.5;
   }
   
   .back-text {
@@ -1095,6 +1779,34 @@ onUnmounted(() => {
 }
 
 @media (max-width: 480px) {
+  /* 超小屏幕灵动岛效果 */
+  .article-header.header-scrolled {
+    @apply bg-white/95 dark:bg-gray-900/95;
+    min-height: 48px;
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    box-shadow: 
+      0 4px 20px rgba(0, 0, 0, 0.08),
+      0 0 0 1px rgba(255, 255, 255, 0.05),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    border-radius: 0 0 16px 16px; /* 超小屏幕更小的圆角 */
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .dark .article-header.header-scrolled {
+    box-shadow: 
+      0 4px 20px rgba(0, 0, 0, 0.2),
+      0 0 0 1px rgba(255, 255, 255, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  /* 超小屏幕紧凑模式容器 */
+  .header-container.container-compact {
+    @apply py-1;
+    min-height: 48px;
+  }
+
   /* 超小屏幕全局保护 - 强化版 */
   * {
     max-width: 100vw !important;
@@ -1106,10 +1818,17 @@ onUnmounted(() => {
     max-width: 100vw !important;
   }
   
+  /* 超小屏幕导航栏确保sticky */
+  .article-header {
+    position: sticky !important;
+    top: 1px !important;
+    z-index: 50 !important;
+  }
+  
   .article-main {
     @apply px-2 py-3;
-    min-height: calc(100vh - 60px);
-    min-height: calc(100dvh - 60px);
+    min-height: calc(100vh - 61px);
+    min-height: calc(100dvh - 61px);
     /* 超小屏幕严格控制 - 强化版 */
     max-width: 100vw !important;
     padding-left: 0.5rem !important;
@@ -1155,12 +1874,75 @@ onUnmounted(() => {
     max-width: 100vw !important;
   }
   
+  .header-container.container-compact {
+    @apply py-1.5;
+    min-height: 48px;
+  }
+  
+  .header-title {
+    @apply mx-2;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  /* 超小屏幕灵动岛模式下的标题优化 */
+  .header-scrolled .header-title {
+    @apply mx-1.5;
+  }
+  
+  .header-title h1 {
+    @apply text-sm;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .header-scrolled .header-title h1 {
+    @apply text-xs;
+  }
+  
+  .progress-circle {
+    width: 28px;
+    height: 28px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  /* 超小屏幕灵动岛模式下的进度圈优化 */
+  .header-scrolled .progress-circle {
+    width: 26px;
+    height: 26px;
+  }
+  
+  .progress-text {
+    font-size: 8px;
+    transition: font-size 0.4s ease;
+  }
+  
+  .header-scrolled .progress-text {
+    font-size: 7px;
+  }
+  
   .back-btn {
+    @apply px-3 py-2 text-xs;
+    gap: 0.5rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  /* 超小屏幕灵动岛模式下的返回按钮优化 */
+  .header-scrolled .back-btn {
     @apply px-2 py-1.5 text-xs;
+    gap: 0.25rem;
   }
   
   .back-text {
     @apply hidden;
+  }
+  
+  .tag {
+    @apply px-2.5 py-1.5 text-xs gap-2;
+    font-weight: 600;
+    max-width: calc(100% - 0.5rem);
+  }
+  
+  .tag-icon {
+    @apply w-3 h-3;
   }
 }
 
@@ -1205,6 +1987,43 @@ onUnmounted(() => {
   }
 }
 
+@keyframes progress-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(0.95);
+  }
+}
+
+/* 性能优化 - 启用硬件加速 */
+.article-header,
+.header-title,
+.header-progress,
+.back-btn {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* 减弱动画对于偏好减少动画的用户 */
+@media (prefers-reduced-motion: reduce) {
+  .article-header,
+  .header-container,
+  .header-title,
+  .header-progress,
+  .back-btn,
+  .progress-circle {
+    transition-duration: 0.1s;
+  }
+  
+  .progress-circle:hover {
+    transform: none;
+  }
+}
+
 /* ===== Markdown 内容样式 ===== */
 :deep(.md-editor-v3) {
   @apply bg-transparent;
@@ -1212,6 +2031,17 @@ onUnmounted(() => {
 
 :deep(.md-editor-v3-preview) {
   @apply bg-transparent p-0;
+}
+
+/* 🔧 修复移动端代码块溢出问题 */
+:deep(.md-editor-code-block) {
+  @apply inline-block;
+  max-width: 100% !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  word-break: break-all !important;
+  white-space: pre-wrap !important;
+  overflow-x: hidden !important;
 }
 
 :deep(.md-editor-v3-html) {
@@ -1466,6 +2296,19 @@ onUnmounted(() => {
   :deep(.md-editor-v3-html) {
     font-size: 16px;
     line-height: 1.7;
+  }
+  
+  /* 🔧 移动端代码块溢出强化修复 */
+  :deep(.md-editor-code-block) {
+    max-width: calc(100vw - 3rem) !important;
+    width: auto !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    word-break: break-all !important;
+    white-space: pre-wrap !important;
+    overflow-x: hidden !important;
+    display: inline-block !important;
+    box-sizing: border-box !important;
   }
   
   :deep(.md-editor-v3-html h1) {
