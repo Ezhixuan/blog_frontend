@@ -43,8 +43,8 @@ export function updateArticle(id: string, data: Partial<ArticleSubmitData>): Pro
 /**
  * 删除文章
  */
-export function deleteArticle(data: OperationById): Promise<BooleanResponse> {
-  return request.delete('/api/article/delete', { data });
+export function deleteArticle(id: number): Promise<BooleanResponse> {
+  return request.delete(`/api/article/${id}`);
 }
 
 /**

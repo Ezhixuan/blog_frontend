@@ -21,12 +21,28 @@
               class="article-content"
               @click="goToArticleDetail(article.id)"
             >
-              <h2 
-                :id="`article-title-${article.id}`"
-                class="article-title"
-              >
-                {{ article.title }}
-              </h2>
+              <div class="article-title-container">
+                <h2 
+                  :id="`article-title-${article.id}`"
+                  class="article-title"
+                >
+                  {{ article.title }}
+                </h2>
+                <div class="article-status-container">
+                  <span 
+                    v-if="article.status === 0" 
+                    class="article-status-draft"
+                  >
+                    草稿
+                  </span>
+                  <span 
+                    v-else-if="article.status === 1" 
+                    class="article-status-published"
+                  >
+                    已发布
+                  </span>
+                </div>
+              </div>
               <p class="article-summary">
                 {{ article.summary || '暂无摘要' }}
               </p>
@@ -442,10 +458,16 @@ const { formatDate, getReadTime } = utils;
   }
 }
 
+.article-title-container {
+  @apply flex items-start justify-between mb-2;
+  @apply gap-2;
+}
+
 .article-title {
-  @apply font-semibold text-lg mb-2;
+  @apply font-semibold text-lg;
   @apply line-clamp-2;
   @apply transition-colors;
+  @apply flex-1;
   color: inherit;
   
   .blog-article:hover & {
@@ -454,6 +476,33 @@ const { formatDate, getReadTime } = utils;
   
   .dark .blog-article:hover & {
     color: #60a5fa;
+  }
+}
+
+.article-status-container {
+  @apply flex-shrink-0;
+  @apply mt-1;
+}
+
+.article-status-draft {
+  @apply px-2 py-1 text-xs font-medium rounded-full;
+  @apply bg-orange-100 text-orange-700;
+  @apply border border-orange-200;
+  
+  .dark & {
+    @apply bg-orange-900 text-orange-300;
+    @apply border-orange-700;
+  }
+}
+
+.article-status-published {
+  @apply px-2 py-1 text-xs font-medium rounded-full;
+  @apply bg-green-100 text-green-700;
+  @apply border border-green-200;
+  
+  .dark & {
+    @apply bg-green-900 text-green-300;
+    @apply border-green-700;
   }
 }
 
@@ -470,7 +519,8 @@ const { formatDate, getReadTime } = utils;
 }
 
 .article-meta {
-  @apply flex items-center text-sm space-x-4;
+  @apply flex items-center text-sm space-x-2;
+  @apply flex-wrap;
   color: #6b7280;
   
   /* 暗色模式元信息颜色 */
@@ -481,14 +531,16 @@ const { formatDate, getReadTime } = utils;
 
 .meta-item {
   @apply flex items-center;
+  @apply whitespace-nowrap;
 }
 
 .meta-icon {
-  @apply h-4 w-4 mr-1;
+  @apply h-3 w-3 mr-1;
 }
 
 .article-category {
-  @apply px-2 py-1 rounded-full text-xs font-medium;
+  @apply px-2 py-0.5 rounded-full text-xs font-medium;
+  @apply whitespace-nowrap;
   background-color: #dbeafe;
   color: #1e40af;
   

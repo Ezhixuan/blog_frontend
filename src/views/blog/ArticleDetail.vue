@@ -98,33 +98,48 @@
                 </div>
                 
                 <div class="meta-row secondary">
-                  <span class="meta-category">
-                    <svg class="category-icon" viewBox="0 0 20 20" fill="currentColor">
-                      <path fill-rule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
-                    </svg>
-                    {{ article.categoryName }}
-                  </span>
-                  <button 
-                    v-if="isAuthor" 
-                    @click="handleEditArticle" 
-                    class="edit-btn"
-                  >
-                    <svg class="edit-icon" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                    </svg>
-                    <span>编辑</span>
-                  </button>
+                  <div class="meta-category-tags">
+                    <span class="meta-category">
+                      <svg class="category-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                      </svg>
+                      {{ article.categoryName }}
+                    </span>
+                    
+                    <!-- 标签 -->
+                    <div v-if="article.tagMap && Object.keys(article.tagMap).length > 0" class="article-tags-inline">
+                      <span v-for="(value, key) in article.tagMap" :key="key" class="tag group">
+                        <svg class="tag-icon" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                        </svg>
+                        {{ value }}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div class="article-actions">
+                    <button 
+                      v-if="isAuthor" 
+                      @click="handleEditArticle" 
+                      class="edit-btn"
+                    >
+                      <svg class="edit-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                      </svg>
+                      <span>编辑</span>
+                    </button>
+                    <button 
+                      v-if="isAdmin" 
+                      @click="handleDeleteArticle" 
+                      class="delete-btn"
+                    >
+                      <svg class="delete-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clip-rule="evenodd" />
+                      </svg>
+                      <span>删除</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
-
-              <!-- 标签 -->
-              <div v-if="article.tagMap && Object.keys(article.tagMap).length > 0" class="article-tags">
-                <span v-for="(value, key) in article.tagMap" :key="key" class="tag group">
-                  <svg class="tag-icon" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
-                  </svg>
-                  {{ value }}
-                </span>
               </div>
             </header>
 
@@ -176,6 +191,13 @@
                   </svg>
                   <span class="action-text">编辑文章</span>
                 </button>
+
+                <button v-if="isAdmin" @click="handleDeleteArticle" class="action-btn delete-action-btn">
+                  <svg class="action-icon" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clip-rule="evenodd" />
+                  </svg>
+                  <span class="action-text">删除文章</span>
+                </button>
               </div>
             </footer>
           </div>
@@ -214,6 +236,41 @@
 
     <!-- 图片预览 -->
     <ImageViewer v-model:visible="previewVisible" :image-url="previewImageUrl" />
+
+    <!-- 删除确认对话框 -->
+    <div v-if="showDeleteConfirm" class="delete-confirm-overlay">
+      <div class="delete-confirm-modal">
+        <div class="delete-confirm-header">
+          <svg class="delete-confirm-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+          <h3>确认删除文章</h3>
+        </div>
+        <div class="delete-confirm-content">
+          <p>您确定要删除文章 <strong>"{{ article?.title }}"</strong> 吗？</p>
+          <p class="delete-warning">此操作不可逆，删除后无法恢复。</p>
+        </div>
+        <div class="delete-confirm-actions">
+          <button 
+            @click="cancelDeleteArticle" 
+            class="cancel-btn"
+            :disabled="deleting"
+          >
+            取消
+          </button>
+          <button 
+            @click="confirmDeleteArticle" 
+            class="confirm-delete-btn"
+            :disabled="deleting"
+          >
+            <svg v-if="deleting" class="loading-spinner" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+            </svg>
+            {{ deleting ? '删除中...' : '确认删除' }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -221,6 +278,7 @@
 import { ref, onMounted, nextTick, onUnmounted, computed, provide, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { getArticleInfo, doThumb } from '@/api/articleController';
+import { deleteArticle } from '@/api/modules/blog';
 import BackToTop from '@/components/layout/BackToTop/BackToTop.vue';
 import ImageViewer from '@/components/ui/ImageViewer/index.vue';
 import 'md-editor-v3/lib/style.css';
@@ -250,8 +308,13 @@ const isMobile = ref(false);
 const isHeaderScrolled = ref(false);
 const lastScrollY = ref(0);
 
+// 删除相关状态
+const showDeleteConfirm = ref(false);
+const deleting = ref(false);
+
 // 计算属性
 const isAuthor = computed(() => userStore.userInfo?.id === article.value?.userId);
+const isAdmin = computed(() => userStore.userInfo?.role === 'admin');
 
 // 检测移动端
 const checkMobile = () => {
@@ -291,6 +354,37 @@ const handleEditArticle = () => {
     path: '/blog/edit',
     query: { id: articleId.value }
   });
+};
+
+const handleDeleteArticle = () => {
+  showDeleteConfirm.value = true;
+};
+
+const confirmDeleteArticle = async () => {
+  if (!article.value || !articleId.value) return;
+  
+  try {
+    deleting.value = true;
+    const res = await deleteArticle(parseInt(articleId.value));
+    
+    if (res.code === 0) {
+      messageService.success('文章删除成功');
+      // 删除成功后返回文章列表
+      router.push('/blogs');
+    } else {
+      messageService.error(res.message || '删除失败');
+    }
+  } catch (error) {
+    console.error('删除文章失败:', error);
+    messageService.error('删除失败，请稍后再试');
+  } finally {
+    deleting.value = false;
+    showDeleteConfirm.value = false;
+  }
+};
+
+const cancelDeleteArticle = () => {
+  showDeleteConfirm.value = false;
 };
 
 const handleContentUpdated = (content: string) => {
@@ -1156,6 +1250,10 @@ onUnmounted(() => {
   @apply w-1 h-1 bg-gray-300 dark:bg-gray-600 rounded-full flex-shrink-0;
 }
 
+.meta-category-tags {
+  @apply flex items-center gap-3 flex-wrap;
+}
+
 .meta-category {
   @apply inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30;
   @apply text-blue-700 dark:text-blue-300 text-sm font-semibold rounded-xl border border-blue-200/60 dark:border-blue-800/60;
@@ -1164,6 +1262,89 @@ onUnmounted(() => {
 
 .category-icon {
   @apply w-4 h-4;
+}
+
+.article-tags-inline {
+  @apply flex flex-wrap gap-2;
+}
+
+.article-tags-inline .tag {
+  @apply inline-flex items-center gap-1.5 px-3 py-1.5 font-medium text-xs;
+  @apply transition-all duration-300 ease-out cursor-pointer relative overflow-hidden;
+  @apply rounded-xl border shadow-sm hover:shadow-lg;
+  position: relative;
+  
+  /* 使用CSS变量来实现多种颜色主题 */
+  --tag-from: 59, 130, 246;  /* blue-500 */
+  --tag-to: 99, 102, 241;    /* indigo-500 */
+  --tag-accent: 147, 51, 234; /* purple-500 */
+  
+  background: linear-gradient(135deg, 
+    rgba(var(--tag-from), 0.08) 0%, 
+    rgba(var(--tag-to), 0.12) 50%, 
+    rgba(var(--tag-accent), 0.08) 100%);
+  
+  color: rgb(var(--tag-from));
+  border: 1px solid rgba(var(--tag-from), 0.2);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.article-tags-inline .tag .tag-icon {
+  @apply w-3 h-3;
+}
+
+/* 为内联标签分配不同颜色 */
+.article-tags-inline .tag:nth-child(2) {
+  --tag-from: 16, 185, 129;   /* green-500 */
+  --tag-to: 34, 197, 94;      /* green-500 */
+  --tag-accent: 6, 182, 212;  /* cyan-500 */
+}
+
+.article-tags-inline .tag:nth-child(3) {
+  --tag-from: 245, 101, 101;  /* red-400 */
+  --tag-to: 251, 113, 133;    /* rose-400 */
+  --tag-accent: 249, 115, 22; /* orange-500 */
+}
+
+.article-tags-inline .tag:nth-child(4) {
+  --tag-from: 139, 69, 19;    /* amber-800 */
+  --tag-to: 217, 119, 6;      /* amber-600 */
+  --tag-accent: 245, 158, 11; /* amber-500 */
+}
+
+.article-tags-inline .tag:nth-child(5) {
+  --tag-from: 219, 39, 119;   /* pink-600 */
+  --tag-to: 147, 51, 234;     /* purple-500 */
+  --tag-accent: 168, 85, 247; /* purple-400 */
+}
+
+/* 暗色模式调整 */
+.dark .article-tags-inline .tag {
+  background: linear-gradient(135deg, 
+    rgba(var(--tag-from), 0.15) 0%, 
+    rgba(var(--tag-to), 0.2) 50%, 
+    rgba(var(--tag-accent), 0.15) 100%);
+  
+  color: rgba(var(--tag-from), 0.9);
+  border: 1px solid rgba(var(--tag-from), 0.3);
+}
+
+/* 悬停效果 */
+.article-tags-inline .tag:hover {
+  transform: translateY(-1px) scale(1.02);
+  border-color: rgba(var(--tag-from), 0.4);
+  
+  box-shadow: 
+    0 4px 12px rgba(var(--tag-from), 0.15),
+    0 2px 6px rgba(var(--tag-to), 0.1);
+}
+
+.dark .article-tags-inline .tag:hover {
+  border-color: rgba(var(--tag-from), 0.5);
+  box-shadow: 
+    0 4px 12px rgba(var(--tag-from), 0.2),
+    0 2px 6px rgba(var(--tag-to), 0.15);
 }
 
 .edit-btn {
@@ -2456,6 +2637,192 @@ onUnmounted(() => {
   :deep(.md-editor-v3-html ul),
   :deep(.md-editor-v3-html ol) {
     @apply pl-4 mb-3;
+  }
+}
+
+/* ===== 删除功能相关样式 ===== */
+
+/* 文章操作按钮容器 */
+.article-actions {
+  @apply flex gap-3 items-center;
+}
+
+/* 小版本删除按钮（meta区域） */
+.delete-btn {
+  @apply inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-50/90 to-rose-50/90;
+  @apply dark:from-red-900/40 dark:to-rose-900/40 text-red-600 dark:text-red-400;
+  @apply text-sm font-semibold rounded-xl border border-red-200/60 dark:border-red-800/60;
+  @apply shadow-sm hover:shadow-lg transition-all duration-200 hover:scale-105;
+  @apply hover:from-red-100/90 hover:to-rose-100/90 dark:hover:from-red-900/60 dark:hover:to-rose-900/60;
+  @apply focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:ring-offset-2;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.delete-btn:hover {
+  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.2);
+}
+
+.delete-icon {
+  @apply w-4 h-4;
+}
+
+/* 大版本删除按钮（底部操作区） */
+.delete-action-btn {
+  @apply bg-gradient-to-r from-red-50/90 to-rose-50/90 dark:from-red-900/40 dark:to-rose-900/40;
+  @apply text-red-600 dark:text-red-400 hover:from-red-100/90 hover:to-rose-100/90;
+  @apply dark:hover:from-red-900/60 dark:hover:to-rose-900/60;
+  @apply border border-red-200/60 dark:border-red-800/60 focus:ring-red-500/50;
+  @apply shadow-lg hover:shadow-xl;
+  box-shadow: 0 8px 25px rgba(239, 68, 68, 0.15);
+}
+
+.delete-action-btn:hover {
+  box-shadow: 0 12px 30px rgba(239, 68, 68, 0.25);
+}
+
+/* 删除确认对话框 */
+.delete-confirm-overlay {
+  @apply fixed inset-0 bg-black/60 dark:bg-black/80 flex items-center justify-center z-[100];
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: overlay-appear 0.3s ease-out;
+}
+
+.delete-confirm-modal {
+  @apply bg-white/95 dark:bg-gray-800/95 rounded-3xl shadow-2xl border border-gray-200/60 dark:border-gray-700/60;
+  @apply max-w-md mx-4 p-6 space-y-6;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  animation: modal-appear 0.3s ease-out;
+  box-shadow: 
+    0 25px 50px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.delete-confirm-header {
+  @apply flex items-center gap-4 text-center;
+  flex-direction: column;
+}
+
+.delete-confirm-icon {
+  @apply w-16 h-16 text-red-500 dark:text-red-400 p-3;
+  @apply bg-red-50/90 dark:bg-red-900/40 rounded-2xl;
+  @apply border border-red-200/60 dark:border-red-800/60;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.delete-confirm-header h3 {
+  @apply text-xl font-bold text-gray-900 dark:text-white;
+}
+
+.delete-confirm-content {
+  @apply space-y-3 text-center;
+}
+
+.delete-confirm-content p {
+  @apply text-gray-700 dark:text-gray-300 leading-relaxed;
+}
+
+.delete-warning {
+  @apply text-red-600 dark:text-red-400 text-sm font-medium !important;
+  @apply bg-red-50/80 dark:bg-red-900/30 px-4 py-2 rounded-xl;
+  @apply border border-red-200/60 dark:border-red-800/60;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.delete-confirm-actions {
+  @apply flex gap-3 justify-end;
+}
+
+.cancel-btn {
+  @apply px-6 py-3 bg-gray-50/90 dark:bg-gray-700/90 text-gray-700 dark:text-gray-300;
+  @apply hover:bg-gray-100/90 dark:hover:bg-gray-600/90 font-semibold rounded-xl;
+  @apply border border-gray-200/60 dark:border-gray-600/60 transition-all duration-200;
+  @apply focus:outline-none focus:ring-2 focus:ring-gray-500/50 focus:ring-offset-2;
+  @apply hover:scale-105 active:scale-95;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.cancel-btn:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+.confirm-delete-btn {
+  @apply px-6 py-3 bg-gradient-to-r from-red-600 to-rose-600;
+  @apply hover:from-red-700 hover:to-rose-700 text-white font-semibold rounded-xl;
+  @apply transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:ring-offset-2;
+  @apply hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl;
+  @apply flex items-center gap-2;
+  box-shadow: 0 8px 25px rgba(239, 68, 68, 0.25);
+}
+
+.confirm-delete-btn:hover {
+  box-shadow: 0 12px 30px rgba(239, 68, 68, 0.35);
+}
+
+.confirm-delete-btn:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+.loading-spinner {
+  @apply w-4 h-4 animate-spin;
+}
+
+/* 动画效果 */
+@keyframes overlay-appear {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modal-appear {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* 移动端优化 */
+@media (max-width: 768px) {
+  .article-actions {
+    @apply flex-col gap-2 items-start;
+  }
+  
+  .delete-btn {
+    @apply text-xs px-3 py-1.5;
+  }
+  
+  .delete-confirm-modal {
+    @apply mx-3 p-5 space-y-5;
+  }
+  
+  .delete-confirm-header h3 {
+    @apply text-lg;
+  }
+  
+  .delete-confirm-icon {
+    @apply w-12 h-12;
+  }
+  
+  .delete-confirm-actions {
+    @apply flex-col gap-2;
+  }
+  
+  .cancel-btn,
+  .confirm-delete-btn {
+    @apply w-full justify-center;
   }
 }
 </style>

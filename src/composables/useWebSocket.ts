@@ -1,10 +1,21 @@
 import { ref, onMounted, onUnmounted, computed, readonly } from 'vue';
 import { useUserStore } from '@/stores/user';
 import { config } from '@/utils/core/config';
+import messageService from '@/utils/helpers/message';
 
 export interface WebSocketMessage {
   type: string;
   data: any;
+  timestamp?: number;
+}
+
+// 定义后端消息格式
+export interface BackendMessage {
+  type?: 'success' | 'info' | 'warning' | 'error';
+  title?: string;
+  content?: string;
+  message?: string;
+  data?: any;
   timestamp?: number;
 }
 
@@ -76,6 +87,14 @@ export function useWebSocket(url?: string) {
           onMessage(message);
         } catch (error) {
           console.error('解析WebSocket消息失败:', error);
+          // 如果解析失败，可能是纯文本消息，直接显示
+          if (typeof event.data === 'string') {
+            displayMessage({
+              type: 'info',
+              title: '系统消息',
+              content: event.data
+            });
+          }
         }
       };
 
@@ -163,9 +182,40 @@ export function useWebSocket(url?: string) {
     }, delay);
   };
 
+  // 消息显示函数
+  const displayMessage = (msg: BackendMessage) => {
+    const messageType = msg.type || 'info';
+    const title = msg.title || msg.message || '系统消息';
+    const content = msg.content || msg.data || '';
+    
+    switch (messageType) {
+      case 'success':
+        messageService.success(title, content);
+        break;
+      case 'warning':
+        messageService.warning(title, content);
+        break;
+      case 'error':
+        messageService.error(title, content);
+        break;
+      case 'info':
+      default:
+        messageService.info(title, content);
+        break;
+    }
+  };
+
   // 消息处理器（可以被外部覆盖）
   let onMessage = (message: WebSocketMessage) => {
     console.log('默认消息处理器:', message);
+    
+    // 尝试解析和显示消息
+    if (message && typeof message === 'object') {
+      // 如果是结构化消息，直接显示
+      if (message.type || message.data) {
+        displayMessage(message as BackendMessage);
+      }
+    }
   };
 
   // 设置消息处理器
@@ -190,6 +240,7 @@ export function useWebSocket(url?: string) {
     disconnect,
     sendMessage,
     setMessageHandler,
+    displayMessage,
     reconnectAttempts: readonly(reconnectAttempts)
   };
 } 
