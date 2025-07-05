@@ -277,7 +277,7 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick, onUnmounted, computed, provide, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { getArticleInfo, doThumb } from '@/api/articleController';
+import { getArticleById as getArticleInfo, thumbArticle as doThumb } from '@/api/modules/blog';
 import { deleteArticle } from '@/api/modules/blog';
 import BackToTop from '@/components/layout/BackToTop/BackToTop.vue';
 import ImageViewer from '@/components/ui/ImageViewer/index.vue';

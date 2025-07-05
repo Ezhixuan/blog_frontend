@@ -580,7 +580,7 @@
 import { useArticleForm } from "@/composables/useArticleForm";
 import { useRoute } from "vue-router";
 import { ref, onMounted, onUnmounted } from "vue";
-import { getArticleInfo } from "@/api/articleController";
+import { getArticleById as getArticleInfo } from "@/api/modules/blog";
 import message from "@/utils/helpers/message";
 import { UploadOutlined } from "@ant-design/icons-vue";
 import MarkdownEditor from "@/components/business/Blog/MarkdownEdit.vue";

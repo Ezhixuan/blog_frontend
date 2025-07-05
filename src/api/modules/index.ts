@@ -3,6 +3,7 @@ export * as authApi from './auth';
 export * as blogApi from './blog';
 export * as memoApi from './memo';
 export * as commonApi from './common';
+export * as projectApi from './project';
 
 // 也可以单独导出具体的函数，方便使用
 export {
@@ -51,4 +52,15 @@ export {
   deletePicture,
   healthCheck,
   getSystemInfo
-} from './common'; 
+} from './common';
+
+export {
+  // 项目相关
+  getProjects,
+  getProject,
+  createProject,
+  updateProject,
+  deleteProject,
+  incrementViews,
+  getTechnologies
+} from './project'; 

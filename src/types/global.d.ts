@@ -3,7 +3,7 @@ declare global {
   interface Window {
     // 扩展window对象类型
   }
-  
+
   // 声明API命名空间，兼容旧代码
   namespace API {
     // 用户相关类型
@@ -20,7 +20,7 @@ declare global {
       loginDeviceType: string;
       tag: string;
     }
-    
+
     interface UserInfoVO {
       id: number;
       userAccount: string;
@@ -31,7 +31,7 @@ declare global {
       createTime: string;
       role: string;
     }
-    
+
     // 文章相关类型
     interface ArticlePageVO {
       id: number;
@@ -60,8 +60,10 @@ export type Undefinable<T> = T | undefined;
 
 // 分页相关类型
 export interface PaginationParams {
-  page: number;
+  current: number;
   pageSize: number;
+  sortOrder: string;
+  sortField: string;
 }
 
 export interface PaginationResult<T> {
@@ -108,4 +110,4 @@ export type ThemeType = 'light' | 'dark';
 // 状态类型
 export type LoadingState = 'idle' | 'loading' | 'success' | 'error';
 
-export {}; 
+export {};

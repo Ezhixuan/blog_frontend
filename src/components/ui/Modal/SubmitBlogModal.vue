@@ -2,7 +2,7 @@
 import { ref, onMounted, watch } from 'vue';
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue';
 import messageService from '@/utils/helpers/message';
-import { doSubmitArticle, getArticleCategoryList, getArticleTagList } from '@/api/articleController';
+import { submitArticle as doSubmitArticle, getCategoryList as getArticleCategoryList, getTagList as getArticleTagList } from '@/api/modules/blog';
 import { mockGenerateBlogContent } from '@/api/ai';
 import type { ArticleCategory, ArticleTag } from '@/types';
 

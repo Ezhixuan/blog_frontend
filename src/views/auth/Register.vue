@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { doRegister } from '@/api/sysUserController';
+import { register as doRegister } from '@/api/modules/auth';
 import messageService from '@/utils/helpers/message';
 
 const router = useRouter();

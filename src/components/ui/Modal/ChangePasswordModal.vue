@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue';
-import { editUserInfo } from '@/api/sysUserController';
+import { updateUserInfo as editUserInfo } from '@/api/modules/auth';
 import messageService from '@/utils/helpers/message';
 
 defineProps<{

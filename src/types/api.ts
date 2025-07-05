@@ -79,8 +79,6 @@ export interface ArticleSubmitData {
 }
 
 export interface ArticleQueryParams extends PaginationParams {
-  sortField?: string;
-  sortOrder?: string;
   title?: string;
   summary?: string;
   categoryName?: string;
@@ -137,8 +135,6 @@ export interface MemoCardOperateData {
 }
 
 export interface MemoQueryParams extends PaginationParams {
-  sortField?: string;
-  sortOrder?: string;
   deckId?: number;
 }
 
@@ -162,23 +158,48 @@ export interface UploadModel {
   desc: string;
 }
 
-// ============= 友链和项目类型 =============
-export interface Friend {
+// ============= 项目相关类型 =============
+export interface ProjectQueryVO {
   id: string;
-  name: string;
-  avatar: string;
+  title: string;
   description: string;
+  longDescription: string;
+  image: string;
   url: string;
+  liveUrl: string;
+  createTime: string;
+  stars: number;
+  views: number;
+  featured: boolean;
+  technologies: string[];
 }
 
-export interface Project {
-  id: string;
-  name: string;
+export interface ProjectQueryDTO extends PaginationParams{
+  featured: boolean;
+  technology: string;
+}
+
+export interface ProjectCreateDTO {
+  title: string;
   description: string;
-  imageUrl?: string;
-  githubUrl?: string;
-  demoUrl?: string;
+  longDescription: string;
+  image: string;
+  url: string;
+  liveUrl: string;
   technologies: string[];
+  featured?: boolean;
+}
+
+export interface ProjectEditDTO {
+  id: string;
+  title: string;
+  description: string;
+  longDescription: string;
+  image: string;
+  url: string;
+  liveUrl: string;
+  technologies: string[];
+  featured?: boolean;
 }
 
 // ============= 通用操作类型 =============
@@ -197,4 +218,5 @@ export type MemoCardListResponse = ApiResponse<PaginationResult<MemoCard>>;
 export type MemoDeckListResponse = ApiResponse<PaginationResult<MemoDeck>>;
 export type PictureListResponse = ApiResponse<PaginationResult<PictureUpload>>;
 export type BooleanResponse = ApiResponse<boolean>;
-export type StringResponse = ApiResponse<string>; 
+export type StringResponse = ApiResponse<string>;
+export type ProjectListResponse = ApiResponse<PaginationResult<ProjectQueryVO>>;

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useRouter, useRoute, LocationQueryValue } from 'vue-router';
-import { doLogin, getLoginUserInfo } from '@/api/sysUserController';
+import { login as doLogin, getUserInfo as getLoginUserInfo } from '@/api/modules/auth';
 import { emit } from '@/utils/helpers/eventBus';
 import messageService from '@/utils/helpers/message';
 

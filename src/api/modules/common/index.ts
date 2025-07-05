@@ -15,9 +15,9 @@ import type {
 export function uploadPicture(data: FormData | PictureUploadData): Promise<StringResponse> {
   if (data instanceof FormData) {
     // 不手动设置Content-Type，让浏览器自动设置multipart/form-data和boundary
-    return request.post('/api/pic/upload', data);
+    return request.post('/picture/upload', data);
   } else {
-    return request.post('/api/pic/upload', data);
+    return request.post('/picture/upload', data);
   }
 }
 
@@ -29,28 +29,28 @@ export function getPictureList(params: {
   pageSize?: number;
   type?: number;
 }): Promise<PictureListResponse> {
-  return request.get('/api/picture/list', { params });
+  return request.get('/picture/list', { params });
 }
 
 /**
  * 删除图片
  */
 export function deletePicture(id: number): Promise<BooleanResponse> {
-  return request.delete(`/api/picture/${id}`);
+  return request.delete(`/picture/${id}`);
 }
 
 /**
  * 获取图片服务列表
  */
 export function getPicServiceList(): Promise<UploadModel[]> {
-  return request.get('/api/picture/service/list');
+  return request.get('/picture/service/list');
 }
 
 /**
  * 注册图片服务
  */
 export function register(model: string): Promise<BooleanResponse> {
-  return request.post('/api/picture/service/register', { model });
+  return request.post('/picture/service/register', { model });
 }
 
 // ============= 系统相关 =============
@@ -58,12 +58,12 @@ export function register(model: string): Promise<BooleanResponse> {
  * 系统健康检查
  */
 export function healthCheck(): Promise<StringResponse> {
-  return request.get('/api/health');
+  return request.get('/health');
 }
 
 /**
  * 获取系统信息
  */
 export function getSystemInfo(): Promise<any> {
-  return request.get('/api/system/info');
+  return request.get('/system/info');
 } 

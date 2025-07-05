@@ -49,6 +49,7 @@ import parseTime from "@/utils/helpers/time";
 import { useTheme } from '@/utils/helpers/theme'
 import { markdownUpload } from "@/api/markdownController";
 import { message } from "ant-design-vue";
+import { PICTURE_TYPES } from "@/utils/constants/pictureTypes";
 
 const props = defineProps({
     modelValue: {
@@ -114,6 +115,7 @@ const handleFileChange = async (event: Event) => {
         isUploading.value = true;
         const formData = new FormData();
         formData.append('file', file);
+        formData.append('type', PICTURE_TYPES.CONTENT.toString());
         const response = await markdownUpload(formData);
         // 处理响应对象，这里假设后端返回的是 API.BaseResponseString 类型
         console.log('Response:', response);

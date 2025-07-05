@@ -135,7 +135,7 @@ import { ref, computed, onMounted, watch } from 'vue';
 import ImageViewer from '@/components/ui/ImageViewer/index.vue';
 import BackToTop from '@/components/layout/BackToTop/BackToTop.vue';
 import { useRouter, useRoute } from 'vue-router';
-import { getArticlePageList } from '@/api/articleController';
+import { getArticleList as getArticlePageList } from '@/api/modules/blog';
 import { savePageState } from '@/utils/helpers/pageMemory';
 
 interface ArticleQueryParams {

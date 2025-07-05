@@ -539,13 +539,13 @@ import SubmitBlogModal from '@/components/ui/Modal/SubmitBlogModal.vue';
 import Toc from '@/components/business/Blog/Toc.vue';
 import { HomeIcon, UserIcon, DocumentTextIcon, CodeBracketIcon, UserGroupIcon, EnvelopeIcon, PencilIcon, ArrowRightOnRectangleIcon, DocumentPlusIcon, KeyIcon, BookOpenIcon, WifiIcon } from '@heroicons/vue/24/outline';
 import { useRouter, useRoute, LocationQueryValue } from 'vue-router';
-import { doLogout, getLoginUserInfo, editUserInfo } from '@/api/sysUserController';
+import { logout as doLogout, getUserInfo as getLoginUserInfo, updateUserInfo as editUserInfo } from '@/api/modules/auth';
 import { on, off } from '@/utils/helpers/eventBus';
 import messageService from '@/utils/helpers/message';
 import { useTheme } from '@/utils/helpers/theme';
 import { useUserStore } from '@/stores/user';
-import { getCategoryCount, getTagCount } from '@/api/articleController';
-import { upload, getPictureList } from '@/api/pictureController';
+import { getCategoryList, getTagList } from '@/api/modules/blog';
+import { uploadPicture as upload, getPictureList } from '@/api/modules/common';
 import { useSidebar } from '@/composables/useSidebar';
 import { PICTURE_TYPES } from "@/utils/constants/pictureTypes";
 import type { PictureUpload } from '@/types';
@@ -797,7 +797,7 @@ const loadCategories = async (): Promise<void> => {
 
   categoriesLoading.value = true;
   try {
-    const res = await getCategoryCount();
+    const res = await getCategoryList();
     if (res.data) {
       categories.value = res.data;
     } else {
@@ -818,7 +818,7 @@ const loadTags = async (): Promise<void> => {
 
   tagsLoading.value = true;
   try {
-    const res = await getTagCount();
+    const res = await getTagList();
     if (res.data) {
       tags.value = res.data;
     } else {

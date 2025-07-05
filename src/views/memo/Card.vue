@@ -541,9 +541,9 @@
 <script setup>
 import { ref, onMounted, computed, onUnmounted } from 'vue';
 import Flashcard from './Flashcard.vue'; 
-import { listAll, add1 as addDeck, del1 as deleteDeck } from '@/api/memoDeckController';
-import { list, test, operate } from '@/api/memoCardCoreController';
-import { add as addCard, del as deleteCard, update as updateCard } from '@/api/memoController';
+import { getDeckList as listAll, createDeck as addDeck, deleteDeck } from '@/api/modules/memo';
+import { getCardList as list, getStudyTest as test, operateCard as operate } from '@/api/modules/memo';
+import { createCard as addCard, deleteCard, updateCard } from '@/api/modules/memo';
 import { useUserStore } from '@/stores/user';
 import messageService from '@/utils/helpers/message';
 

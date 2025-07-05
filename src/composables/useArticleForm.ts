@@ -2,15 +2,15 @@ import { ref, reactive, onMounted, watch, nextTick } from "vue";
 import { useRouter } from "vue-router";
 import message from "@/utils/helpers/message";
 import {
-  doSubmitArticle,
-  getArticleCategoryList,
-  getArticleTagList,
-  submitCategory,
-  submitTag,
+  submitArticle as doSubmitArticle,
+  getCategoryList as getArticleCategoryList,
+  getTagList as getArticleTagList,
+  addCategory as submitCategory,
+  addTag as submitTag,
   deleteTag,
   deleteCategory,
-} from "@/api/articleController";
-import { upload, getPictureList } from "@/api/pictureController";
+} from "@/api/modules/blog";
+import { uploadPicture as upload, getPictureList } from "@/api/modules/common";
 import { mockGenerateBlogContent } from "@/api/ai";
 import { useAsyncOperation } from "./useAsyncOperation";
 import { PICTURE_TYPES } from "@/utils/constants/pictureTypes";
@@ -192,7 +192,10 @@ export function useArticleForm() {
   const handleGenerateContent = () => generateContent(title.value);
 
   // 上传图片方法
-const handleImageUpload = async (file: File, type: number = PICTURE_TYPES.CONTENT) => {
+const handleImageUpload = async (options: any) => {
+  const { file } = options;
+  const type = currentPictureType.value || PICTURE_TYPES.CONTENT;
+  
   isUploading.value = true;
 
   try {
