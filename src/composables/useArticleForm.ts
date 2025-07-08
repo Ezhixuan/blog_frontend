@@ -281,7 +281,7 @@ const handleImageUpload = async (options: any) => {
       content: content.value,
       summary: summary.value,
       categoryId: categoryId.value,
-      tagIds: tagIds.value.join(","),
+      tagIds: tagIds.value,
       status: status.value,
       cover: coverUrl.value, // 添加封面图片URL
       wordCount: wordCount.value,
@@ -356,7 +356,6 @@ const handleImageUpload = async (options: any) => {
     title.value = data.title || "";
     content.value = data.content || "";
     summary.value = data.summary || "";
-    categoryId.value = data.categoryId;
     tagIds.value = data.tagIds || [];
     status.value = data.status || 1;
     coverUrl.value = data.coverUrl || "";
@@ -368,26 +367,84 @@ const handleImageUpload = async (options: any) => {
     const categoryName = data.categoryName;
     const tagNamesList = data.tagNames || [];
 
-    // 当分类和标签数据加载完成后，设置正确的显示
-    if (categoryName && categories.value.length > 0) {
-      // 如果找不到对应的分类ID，但有分类名称，则创建一个临时分类
-      if (!categories.value.some((c) => c.id === categoryId.value)) {
-        console.log(
-          `未找到ID为${categoryId.value}的分类，使用名称${categoryName}进行展示`
+    // 🔧 修复：确保分类数据加载完成后再设置categoryId
+    if (data.categoryId) {
+      // 如果分类列表已经加载完成，直接设置
+      if (categories.value.length > 0) {
+        categoryId.value = data.categoryId;
+        const existingCategory = categories.value.find(c => c.id === data.categoryId);
+        if (existingCategory) {
+          console.log(`成功匹配分类：${existingCategory.name} (ID: ${existingCategory.id})`);
+        } else {
+          console.log(`未找到ID为${data.categoryId}的分类，分类名称：${categoryName}`);
+        }
+      } else {
+        // 如果分类列表还没有加载完成，监听变化
+        console.log('分类数据尚未加载完成，等待加载...');
+        const unwatch = watch(
+          () => categories.value.length,
+          (newLength) => {
+            if (newLength > 0) {
+              // 分类数据加载完成，设置分类ID
+              categoryId.value = data.categoryId;
+              const existingCategory = categories.value.find(c => c.id === data.categoryId);
+              if (existingCategory) {
+                console.log(`成功匹配分类：${existingCategory.name} (ID: ${existingCategory.id})`);
+              } else {
+                console.log(`未找到ID为${data.categoryId}的分类，分类名称：${categoryName}`);
+              }
+              unwatch(); // 停止监听
+            }
+          },
+          { immediate: true }
         );
-        // 这里不添加到categories，只是为了UI展示，实际提交时仍使用服务器的分类ID
       }
     }
 
-    if (
-      tagNamesList.length > 0 &&
-      tagIds.value.length > 0 &&
-      tags.value.length > 0
-    ) {
-      // 如果有标签ID和名称，但在现有标签中找不到，先展示这些名称
-      console.log(
-        `设置标签展示，标签ID:${tagIds.value.join(",")}, 标签名称:${tagNamesList.join(",")}`
-      );
+    // 🔧 修复：确保标签数据加载完成后再处理标签
+    if (tagIds.value.length > 0) {
+      // 如果标签列表已经加载完成，直接验证
+      if (tags.value.length > 0) {
+        const existingTagIds = tagIds.value.filter(tagId => 
+          tags.value.some(tag => tag.id === tagId)
+        );
+        
+        if (existingTagIds.length !== tagIds.value.length) {
+          console.log(
+            `部分标签不存在，原有标签ID:${tagIds.value.join(",")}, 存在的标签ID:${existingTagIds.join(",")}`
+          );
+        }
+        
+        console.log(
+          `设置标签展示，标签ID:${tagIds.value.join(",")}, 标签名称:${tagNamesList.join(",")}`
+        );
+      } else {
+        // 如果标签列表还没有加载完成，监听变化
+        console.log('标签数据尚未加载完成，等待加载...');
+        const unwatch = watch(
+          () => tags.value.length,
+          (newLength) => {
+            if (newLength > 0) {
+              // 标签数据加载完成，验证标签
+              const existingTagIds = tagIds.value.filter(tagId => 
+                tags.value.some(tag => tag.id === tagId)
+              );
+              
+              if (existingTagIds.length !== tagIds.value.length) {
+                console.log(
+                  `部分标签不存在，原有标签ID:${tagIds.value.join(",")}, 存在的标签ID:${existingTagIds.join(",")}`
+                );
+              }
+              
+              console.log(
+                `设置标签展示，标签ID:${tagIds.value.join(",")}, 标签名称:${tagNamesList.join(",")}`
+              );
+              unwatch(); // 停止监听
+            }
+          },
+          { immediate: true }
+        );
+      }
     }
 
     // 展开内容编辑区

@@ -12,7 +12,7 @@
             { 'read': isItemRead(item, index) },
             `level-${item.level}`
           ]"
-          :ref="item.id === activeId ? (el) => { activeItemRef = el as HTMLElement } : undefined"
+
         >
           <div class="toc-item-progress">
             <div class="toc-item-indicator"></div>
@@ -58,12 +58,10 @@
   }>();
   
   const tocContainerRef = ref<HTMLElement | null>(null);
-  const activeItemRef = ref<HTMLElement | null>(null);
-  const lastActiveId = ref<string | null>(null);
-  
   const tocItems = ref<TocItem[]>([]);
   const activeId = ref<string | null>(null);
-  const idMap = new Map<string, number>(); // 用于跟踪ID使用次数
+  const lastActiveId = ref<string | null>(null);
+  const idMap = new Map<string, number>();
   
   // 根据阅读进度判断目录项是否已读
   const isItemRead = (_item: TocItem, index: number): boolean => {
@@ -78,20 +76,12 @@
   
   // 生成唯一ID
   const generateUniqueId = (text: string, index: number): string => {
-    // 清理文本，只保留字母、数字和空格，然后替换空格为连字符
-    const baseId = text
-      .trim()
-      .toLowerCase()
+    const baseId = text.trim().toLowerCase()
       .replace(/[^\w\s\u4e00-\u9fa5]/g, '')
-      .replace(/\s+/g, '-');
-      
-    // 确保基础ID不为空
-    const safeBaseId = baseId || 'heading';
+      .replace(/\s+/g, '-') || 'heading';
     
-    // 使用基础ID、位置索引和计数器生成唯一ID
-    const uniqueId = `${safeBaseId}-${index}`;
+    const uniqueId = `${baseId}-${index}`;
     
-    // 检查ID是否已存在，如果存在则添加计数
     if (idMap.has(uniqueId)) {
       const count = idMap.get(uniqueId)! + 1;
       idMap.set(uniqueId, count);
@@ -102,22 +92,16 @@
     }
   };
   
-  // 从实际渲染的DOM中提取标题
+  // 从DOM中提取标题
   const generateTOCFromDOM = () => {
-    // 重置ID映射
     idMap.clear();
     
-    // 使用setTimeout确保DOM已经完全渲染
     setTimeout(() => {
       const articleContent = document.querySelector('.md-editor-preview');
       if (!articleContent) return;
       
       const headings = articleContent.querySelectorAll('h1, h2, h3, h4, h5, h6');
-      
-      if (headings.length === 0) {
-        console.log('没有找到标题元素');
-        return;
-      }
+      if (headings.length === 0) return;
       
       const items: TocItem[] = [];
       
@@ -126,7 +110,6 @@
         const text = heading.textContent || `标题 ${index+1}`;
         const uniqueId = generateUniqueId(text, index);
         
-        // 为HTML元素设置新的ID
         heading.id = uniqueId;
         
         items.push({
@@ -138,26 +121,26 @@
       });
       
       tocItems.value = items;
-      console.log('生成目录项:', items.length);
+      
+      setTimeout(() => {
+        handleScroll();
+        debouncedScrollActiveItem();
+      }, 800);
     }, 500);
   };
   
-  // 尝试从内容字符串生成目录
+  // 从内容字符串生成目录
   const generateTOCFromContent = () => {
     if (!props.content) return;
     
     try {
-      // 重置ID映射
       idMap.clear();
       
       const parser = new DOMParser();
       const doc = parser.parseFromString(props.content, "text/html");
-      
       const headings = doc.querySelectorAll("h1, h2, h3, h4, h5, h6");
-      if (headings.length === 0) {
-        console.log('解析内容未找到标题');
-        return generateTOCFromDOM(); // 回退到DOM方法
-      }
+      
+      if (headings.length === 0) return generateTOCFromDOM();
       
       const items: TocItem[] = [];
       
@@ -166,7 +149,6 @@
         const text = heading.textContent || `标题 ${index+1}`;
         const uniqueId = generateUniqueId(text, index);
         
-        // 更新元素ID
         heading.id = uniqueId;
         
         items.push({
@@ -178,10 +160,13 @@
       });
       
       tocItems.value = items;
-      console.log('从内容生成目录项:', items.length);
+      
+      setTimeout(() => {
+        handleScroll();
+        debouncedScrollActiveItem();
+      }, 600);
     } catch (error) {
-      console.error('解析内容失败:', error);
-      generateTOCFromDOM(); // 解析失败时，使用DOM方法
+      generateTOCFromDOM();
     }
   };
   
@@ -200,109 +185,132 @@
     emit('item-click', id);
   };
   
-  // 优化的自动滚动函数，确保当前激活项始终在可视区域内
+  // 滚动防抖
+  let scrollTimeout: number | null = null;
+  const debounceScroll = (fn: Function, delay: number = 100) => {
+    return (...args: any[]) => {
+      if (scrollTimeout) clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => fn.apply(null, args), delay) as unknown as number;
+    };
+  };
+
+      // 自动滚动函数，确保当前激活项始终在可视区域的合适位置
   const scrollActiveItemToCenter = () => {
     if (!activeId.value || !tocContainerRef.value) {
-      console.log('滚动跳过：无激活项或容器', { activeId: activeId.value, container: !!tocContainerRef.value });
       return;
     }
     
-    // 使用双重延迟确保DOM完全更新
-    setTimeout(() => {
+    // 使用 nextTick 确保 DOM 完全更新
+    nextTick(() => {
       if (!tocContainerRef.value) return;
       
       // 查找当前激活的目录项元素
-      const activeItem = tocContainerRef.value.querySelector(`.toc-item.active`) as HTMLElement;
-      if (!activeItem) {
-        console.log('未找到激活的目录项元素');
-        return;
+      let activeItem: HTMLElement | null = null;
+      
+      // 优先使用href属性精确查找
+      const allItems = tocContainerRef.value.querySelectorAll('.toc-item');
+      for (const item of allItems) {
+        const link = item.querySelector('.toc-item-link') as HTMLAnchorElement;
+        if (link && link.getAttribute('href') === `#${activeId.value}`) {
+          activeItem = item as HTMLElement;
+          break;
+        }
       }
       
-             const container = tocContainerRef.value;
-       // 使用 getBoundingClientRect 获取实际可见高度
-       const containerRect = container.getBoundingClientRect();
-       const containerHeight = containerRect.height;
-       const containerScrollTop = container.scrollTop;
-       const containerScrollHeight = container.scrollHeight;
+      // 备用方案：使用CSS类查找
+      if (!activeItem) {
+        activeItem = tocContainerRef.value.querySelector('.toc-item.active') as HTMLElement;
+      }
       
-      // 获取目录项相对于容器的位置
+      if (!activeItem) return;
+      
+      // 确定正确的滚动容器
+      let scrollContainer = tocContainerRef.value;
+      const sidebarTocWrapper = document.getElementById('sidebar-toc-container');
+      if (sidebarTocWrapper && sidebarTocWrapper.contains(tocContainerRef.value)) {
+        scrollContainer = sidebarTocWrapper;
+      }
+      
+      // 获取容器和项目的尺寸信息
+      const containerRect = scrollContainer.getBoundingClientRect();
+      const containerScrollTop = scrollContainer.scrollTop;
+      const containerHeight = containerRect.height;
+      const containerScrollHeight = scrollContainer.scrollHeight;
       const itemOffsetTop = activeItem.offsetTop;
       const itemHeight = activeItem.offsetHeight;
       
-             console.log('滚动检测:', {
-         itemOffsetTop,
-         itemHeight,
-         containerHeight,
-         containerScrollTop,
-         containerScrollHeight,
-         containerClientHeight: container.clientHeight,
-         activeId: activeId.value
-       });
+      // 设置理想的边距和中心区域
+      const topMargin = 80;    // 顶部安全边距
+      const bottomMargin = 80; // 底部安全边距
+      const centerZone = containerHeight * 0.4; // 中心区域高度（容器的40%）
+      const centerStart = containerHeight * 0.3; // 中心区域开始位置（容器的30%）
       
-      // 检查目录项是否在可视区域内（增加一些边距）
-      const margin = 20;
+      const visibleTop = containerScrollTop;
+      const visibleBottom = containerScrollTop + containerHeight;
       const itemTop = itemOffsetTop;
       const itemBottom = itemOffsetTop + itemHeight;
-      const viewTop = containerScrollTop + margin;
-      const viewBottom = containerScrollTop + containerHeight - margin;
       
-      const isVisible = itemTop >= viewTop && itemBottom <= viewBottom;
+      // 检查项目是否在理想的中心区域内
+      const itemInCenterZone = 
+        itemTop >= visibleTop + centerStart && 
+        itemBottom <= visibleTop + centerStart + centerZone;
       
-      console.log('可视性检查:', {
-        isVisible,
-        itemTop,
-        itemBottom,
-        viewTop,
-        viewBottom
-      });
+      // 检查项目是否完全可见
+      const itemFullyVisible = 
+        itemTop >= visibleTop + topMargin && 
+        itemBottom <= visibleBottom - bottomMargin;
       
-      // 如果不在可视区域内，则滚动到合适位置
-      if (!isVisible) {
-        let scrollTo;
+      // 只有当项目不在中心区域或不完全可见时才滚动
+      if (!itemInCenterZone || !itemFullyVisible) {
+        // 计算理想滚动位置：将项目放在容器的30%-35%位置（偏上的中心位置）
+        let targetScrollTop = itemOffsetTop - (containerHeight * 0.32);
         
-        if (itemTop < viewTop) {
-          // 项目在可视区域上方，滚动到顶部
-          scrollTo = Math.max(0, itemOffsetTop - margin);
-        } else {
-          // 项目在可视区域下方，滚动到底部
-          scrollTo = Math.min(
-            containerScrollHeight - containerHeight,
-            itemOffsetTop - containerHeight + itemHeight + margin
-          );
-        }
+        // 边界处理：确保不会滚动到容器边界外
+        const maxScroll = Math.max(0, containerScrollHeight - containerHeight);
+        targetScrollTop = Math.max(0, Math.min(maxScroll, targetScrollTop));
         
-        console.log('执行滚动到:', scrollTo);
-        
-        container.scrollTo({
-          top: scrollTo,
+        // 执行平滑滚动
+        scrollContainer.scrollTo({
+          top: targetScrollTop,
           behavior: 'smooth'
         });
-      } else {
-        console.log('目录项已在可视区域内，无需滚动');
       }
-    }, 150); // 增加延迟时间确保DOM更新
+    });
   };
+  
+  const debouncedScrollActiveItem = debounceScroll(scrollActiveItemToCenter, 100);
   
   const handleScroll = () => {
     let found = null;
+    const viewportOffset = 120;
     
-    // 检查所有标题元素
+    // 从下往上遍历，找到最接近视口顶部的标题
     for (let i = tocItems.value.length - 1; i >= 0; i--) {
       const item = tocItems.value[i];
       const el = document.getElementById(item.id);
       if (el) {
         const rect = el.getBoundingClientRect();
-        // 如果标题在视口上方或接近视口顶部，标记为活动项
-        if (rect.top <= 100) {
+        if (rect.top <= viewportOffset) {
           found = item.id;
           break;
         }
       }
     }
     
+    // 如果没有找到合适的项，尝试选择第一个可见的标题
+    if (!found && tocItems.value.length > 0) {
+      const firstItem = tocItems.value[0];
+      const firstEl = document.getElementById(firstItem.id);
+      if (firstEl) {
+        const rect = firstEl.getBoundingClientRect();
+        if (rect.top > 0 && rect.top < window.innerHeight) {
+          found = firstItem.id;
+        }
+      }
+    }
+    
     // 只有当活动项变化时才更新状态
     if (found !== activeId.value) {
-      console.log('页面滚动检测到新的激活项:', { old: activeId.value, new: found });
       lastActiveId.value = activeId.value;
       activeId.value = found;
     }
@@ -315,25 +323,24 @@
   
   // 监听活动项变化，保持滚动位置
   watch(() => activeId.value, (newActiveId, oldActiveId) => {
-    console.log('激活项变化:', { from: oldActiveId, to: newActiveId });
     if (newActiveId && newActiveId !== oldActiveId) {
-      // 立即触发滚动检测
-      scrollActiveItemToCenter();
+      debouncedScrollActiveItem();
     }
   });
   
   onMounted(() => {
-    // 尝试从内容生成目录，如果失败则从DOM生成
     if (props.content) {
       generateTOCFromContent();
     } else {
       generateTOCFromDOM();
     }
     
-    // 如果内容渲染完成后目录仍为空，尝试再次从DOM生成
     setTimeout(() => {
       if (tocItems.value.length === 0) {
         generateTOCFromDOM();
+      } else {
+        handleScroll();
+        debouncedScrollActiveItem();
       }
     }, 1000);
     
@@ -342,6 +349,10 @@
   
   onBeforeUnmount(() => {
     window.removeEventListener("scroll", handleScroll);
+    if (scrollTimeout) {
+      clearTimeout(scrollTimeout);
+      scrollTimeout = null;
+    }
   });
   </script>
   

@@ -5,37 +5,32 @@
       <form class="contact-form">
         <div class="form-group">
           <label for="name" class="form-label">Name</label>
-          <input 
-            type="text" 
-            id="name" 
+          <input
+            type="text"
+            id="name"
             class="form-input"
             placeholder="Your name"
-          >
+          />
         </div>
         <div class="form-group">
           <label for="email" class="form-label">Email</label>
-          <input 
-            type="email" 
-            id="email" 
+          <input
+            type="email"
+            id="email"
             class="form-input"
             placeholder="your@email.com"
-          >
+          />
         </div>
         <div class="form-group">
           <label for="message" class="form-label">Message</label>
-          <textarea 
-            id="message" 
-            rows="4" 
+          <textarea
+            id="message"
+            rows="4"
             class="form-input"
             placeholder="Your message..."
           ></textarea>
         </div>
-        <button 
-          type="submit" 
-          class="submit-button"
-        >
-          Send Message
-        </button>
+        <button type="submit" class="submit-button">Send Message</button>
       </form>
     </div>
   </div>

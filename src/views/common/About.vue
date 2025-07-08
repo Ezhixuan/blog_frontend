@@ -1,10 +1,12 @@
 <template>
   <div class="about-container">
-    <!-- 添加技术轮播图横幅 -->
+    <!-- 星空背景 -->
+    <StarfieldBackground />
+    <!-- 现代化技术轮播图横幅 -->
     <div class="tech-banner">
       <div class="banner-content">
         <div class="banner-text">
-          <h2 class="banner-title">生活明朗</h2>
+          <h1 class="banner-title">生活明朗</h1>
           <h2 class="banner-subtitle">万物可爱。</h2>
           <p class="banner-domain">Ezhixuan.xyz</p>
         </div>
@@ -200,9 +202,13 @@
       </div>
     </div>
 
-    <div class="about-card">
+    <!-- 个人信息卡片 -->
+    <article class="card-base group">
+      <!-- 装饰性发光效果 -->
+      <div class="card-glow-blue"></div>
+
       <!-- 个人信息部分 -->
-      <div class="profile-section">
+      <div class="profile-section relative flex-1 flex flex-col justify-center">
         <div class="avatar-container">
           <img
             src="https://cdn.jsdelivr.net/gh/Ezhixuan/myPic/images202502262314619.jpg"
@@ -211,7 +217,7 @@
           />
         </div>
         <div class="profile-info">
-          <h1 class="name-title">关于我</h1>
+          <h2 class="gradient-title name-title">关于我</h2>
           <p class="job-title">后端java开发工程师</p>
           <p class="about-paragraph">
             你好，我是一名充满激情的开发者，热爱构建后端服务。我喜欢使用现代技术工作，并分享我在开发过程中学到的知识。
@@ -269,150 +275,234 @@
           </div>
         </div>
       </div>
+    </article>
 
-      <!-- 技能部分 -->
-      <h2 class="skills-title">专业技能</h2>
-      <div class="skills-section">
-        <div class="skill-category">
-          <h3 class="skill-heading">前端开发</h3>
-          <div class="skill-items">
-            <div class="skill-item">
-              <div class="skill-name">rabbitmq.js</div>
-              <div class="skill-bar">
-                <div class="skill-level" style="width: 95%"></div>
+    <!-- 技能部分卡片 -->
+    <article class="card-base skills-card group">
+      <!-- 装饰性发光效果 -->
+      <div class="card-glow-green"></div>
+
+      <div class="relative flex-1 flex flex-col justify-center">
+        <h2 class="gradient-title skills-title">专业技能</h2>
+        <div class="skills-section">
+          <div class="skill-category">
+            <h3 class="skill-heading">前端开发</h3>
+            <div class="skill-items">
+              <div class="skill-item">
+                <div class="skill-name">rabbitmq.js</div>
+                <div class="skill-bar">
+                  <div class="skill-level" style="width: 95%"></div>
+                </div>
               </div>
-            </div>
-            <div class="skill-item">
-              <div class="skill-name">java</div>
-              <div class="skill-bar">
-                <div class="skill-level" style="width: 85%"></div>
+              <div class="skill-item">
+                <div class="skill-name">java</div>
+                <div class="skill-bar">
+                  <div class="skill-level" style="width: 85%"></div>
+                </div>
               </div>
-            </div>
-            <div class="skill-item">
-              <div class="skill-name">TypeScript</div>
-              <div class="skill-bar">
-                <div class="skill-level" style="width: 80%"></div>
+              <div class="skill-item">
+                <div class="skill-name">TypeScript</div>
+                <div class="skill-bar">
+                  <div class="skill-level" style="width: 80%"></div>
+                </div>
               </div>
-            </div>
-            <div class="skill-item">
-              <div class="skill-name">Spring</div>
-              <div class="skill-bar">
-                <div class="skill-level" style="width: 90%"></div>
+              <div class="skill-item">
+                <div class="skill-name">Spring</div>
+                <div class="skill-bar">
+                  <div class="skill-level" style="width: 90%"></div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <div class="skill-category">
-          <h3 class="skill-heading">后端开发</h3>
-          <div class="skill-items">
-            <div class="skill-item">
-              <div class="skill-name">Node.js</div>
-              <div class="skill-bar">
-                <div class="skill-level" style="width: 85%"></div>
+          <div class="skill-category">
+            <h3 class="skill-heading">后端开发</h3>
+            <div class="skill-items">
+              <div class="skill-item">
+                <div class="skill-name">Node.js</div>
+                <div class="skill-bar">
+                  <div class="skill-level" style="width: 85%"></div>
+                </div>
               </div>
-            </div>
-            <div class="skill-item">
-              <div class="skill-name">redis</div>
-              <div class="skill-bar">
-                <div class="skill-level" style="width: 70%"></div>
+              <div class="skill-item">
+                <div class="skill-name">redis</div>
+                <div class="skill-bar">
+                  <div class="skill-level" style="width: 70%"></div>
+                </div>
               </div>
-            </div>
-            <div class="skill-item">
-              <div class="skill-name">PostgreSQL</div>
-              <div class="skill-bar">
-                <div class="skill-level" style="width: 75%"></div>
+              <div class="skill-item">
+                <div class="skill-name">PostgreSQL</div>
+                <div class="skill-bar">
+                  <div class="skill-level" style="width: 75%"></div>
+                </div>
               </div>
-            </div>
-            <div class="skill-item">
-              <div class="skill-name">MongoDB</div>
-              <div class="skill-bar">
-                <div class="skill-level" style="width: 80%"></div>
+              <div class="skill-item">
+                <div class="skill-name">MongoDB</div>
+                <div class="skill-bar">
+                  <div class="skill-level" style="width: 80%"></div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <div class="skill-category">
-          <h3 class="skill-heading">开发工具</h3>
-          <div class="skill-items">
-            <div class="skill-item">
-              <div class="skill-name">Git</div>
-              <div class="skill-bar">
-                <div class="skill-level" style="width: 90%"></div>
+          <div class="skill-category">
+            <h3 class="skill-heading">开发工具</h3>
+            <div class="skill-items">
+              <div class="skill-item">
+                <div class="skill-name">Git</div>
+                <div class="skill-bar">
+                  <div class="skill-level" style="width: 90%"></div>
+                </div>
               </div>
-            </div>
-            <div class="skill-item">
-              <div class="skill-name">Docker</div>
-              <div class="skill-bar">
-                <div class="skill-level" style="width: 80%"></div>
+              <div class="skill-item">
+                <div class="skill-name">Docker</div>
+                <div class="skill-bar">
+                  <div class="skill-level" style="width: 80%"></div>
+                </div>
               </div>
-            </div>
-            <div class="skill-item">
-              <div class="skill-name">Linux</div>
-              <div class="skill-bar">
-                <div class="skill-level" style="width: 85%"></div>
+              <div class="skill-item">
+                <div class="skill-name">Linux</div>
+                <div class="skill-bar">
+                  <div class="skill-level" style="width: 85%"></div>
+                </div>
               </div>
-            </div>
-            <div class="skill-item">
-              <div class="skill-name">VS Code</div>
-              <div class="skill-bar">
-                <div class="skill-level" style="width: 95%"></div>
+              <div class="skill-item">
+                <div class="skill-name">VS Code</div>
+                <div class="skill-bar">
+                  <div class="skill-level" style="width: 95%"></div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+    </article>
 
-      <!-- 联系方式部分 -->
-      <h2 class="contact-title">联系我</h2>
-      <div class="contact-section">
-        <div class="contact-item">
-          <svg
-            class="contact-icon"
-            viewBox="0 0 24 24"
-            fill="currentColor"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"
-            />
-          </svg>
-          <a href="mailto:1248909111@qq.com" class="contact-link"
-            >1248909111@qq.com</a
-          >
-        </div>
-        <div class="contact-item">
-          <svg
-            class="contact-icon"
-            viewBox="0 0 24 24"
-            fill="currentColor"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M12 12c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm6-1.8C18 6.57 15.35 4 12 4s-6 2.57-6 6.2c0 2.34 1.95 5.44 6 9.14 4.05-3.7 6-6.8 6-9.14zM12 2c4.2 0 8 3.22 8 8.2 0 3.32-2.67 7.25-8 11.8-5.33-4.55-8-8.48-8-11.8C4 5.22 7.8 2 12 2z"
-            />
-          </svg>
-          <span class="contact-text">中国，福州</span>
+    <!-- 联系方式卡片 -->
+    <article class="card-base contact-card group">
+      <!-- 装饰性发光效果 -->
+      <div class="card-glow-purple"></div>
+
+      <div class="relative flex-1 flex flex-col justify-center">
+        <h2 class="gradient-title contact-title">联系我</h2>
+        <div class="contact-section">
+          <div class="contact-item">
+            <svg
+              class="contact-icon"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"
+              />
+            </svg>
+            <a href="mailto:1248909111@qq.com" class="contact-link"
+              >1248909111@qq.com</a
+            >
+          </div>
+          <div class="contact-item">
+            <svg
+              class="contact-icon"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 12c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm6-1.8C18 6.57 15.35 4 12 4s-6 2.57-6 6.2c0 2.34 1.95 5.44 6 9.14 4.05-3.7 6-6.8 6-9.14zM12 2c4.2 0 8 3.22 8 8.2 0 3.32-2.67 7.25-8 11.8-5.33-4.55-8-8.48-8-11.8C4 5.22 7.8 2 12 2z"
+              />
+            </svg>
+            <span class="contact-text">中国，福州</span>
+          </div>
         </div>
       </div>
-    </div>
+    </article>
   </div>
 </template>
 
 <script setup lang="ts">
-// 可在此添加所需的交互逻辑
+import StarfieldBackground from "@/components/layout/StarfieldBackground.vue";
 </script>
 
 <style scoped>
 .about-container {
-  @apply flex flex-col items-center py-0 px-0;
+  @apply flex flex-col items-center py-0 px-2 sm:px-4 md:px-8 max-w-7xl mx-auto relative;
+  min-height: 100vh;
+  padding-bottom: 5vh; /* 保持适当的底部间距 */
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden; /* 防止水平滚动 */
 }
 
-/* 技术轮播图横幅 */
+/* 更大屏幕上增加最大宽度 */
+@media (min-width: 1600px) {
+  .about-container {
+    max-width: 1536px; /* 约等于8xl */
+  }
+}
+
+/* 统一卡片宽度 - 响应式设计 */
+.about-container article {
+  width: 100%;
+  max-width: 95%; /* 移动端留出适当边距 */
+  margin-left: auto;
+  margin-right: auto;
+  overflow: hidden; /* 防止内容超出卡片边界 */
+}
+
+/* 在较大屏幕上限制最大宽度 */
+@media (min-width: 1200px) {
+  .about-container article {
+    max-width: 1100px;
+  }
+}
+
+@media (min-width: 1400px) {
+  .about-container article {
+    max-width: 1200px;
+  }
+}
+
+/* ================================
+   通用样式类
+   ================================ */
+
+/* 卡片基础样式 */
+.card-base {
+  @apply relative bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-md hover:shadow-2xl transition-all duration-500 border border-gray-100 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 hover:-translate-y-2 mb-12 min-h-[450px] max-h-[550px] flex flex-col;
+}
+
+/* 装饰性发光效果 - 蓝色系 */
+.card-glow-blue {
+  @apply absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-500 blur-xl;
+}
+
+/* 装饰性发光效果 - 绿色系 */
+.card-glow-green {
+  @apply absolute inset-0 bg-gradient-to-r from-green-500 via-teal-500 to-blue-500 rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-500 blur-xl;
+}
+
+/* 装饰性发光效果 - 紫色系 */
+.card-glow-purple {
+  @apply absolute inset-0 bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-500 blur-xl;
+}
+
+/* 渐变标题 */
+.gradient-title {
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  word-wrap: break-word;
+  overflow: hidden;
+}
+
+/* 现代化技术轮播图横幅 */
 .tech-banner {
-  @apply w-full bg-gray-100 dark:bg-gray-900 relative overflow-hidden transition-colors duration-300;
-  height: 280px;
+  @apply w-full rounded-3xl overflow-hidden shadow-lg relative mb-12;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  height: 40vh;
+  min-height: 300px;
 }
 
 .banner-content {
@@ -420,19 +510,27 @@
 }
 
 .banner-text {
-  @apply z-10 text-gray-800 dark:text-white transition-colors duration-300;
+  @apply z-10 text-white transition-all duration-500;
 }
 
 .banner-title {
-  @apply text-3xl sm:text-4xl font-bold mb-0;
+  @apply text-4xl md:text-5xl font-bold mb-2;
+  background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .banner-subtitle {
-  @apply text-3xl sm:text-4xl font-bold mb-2;
+  @apply text-3xl md:text-4xl font-bold mb-4;
+  background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .banner-domain {
-  @apply text-sm text-gray-500 dark:text-gray-400 transition-colors duration-300;
+  @apply text-lg text-blue-100 font-medium tracking-wider;
 }
 
 .floating-icons {
@@ -440,13 +538,19 @@
 }
 
 .tech-icon {
-  @apply absolute w-12 h-12 sm:w-16 sm:h-16 opacity-80;
+  @apply absolute w-16 h-16 sm:w-20 sm:h-20 opacity-90 transition-all duration-300;
   animation: float var(--duration) ease-in-out infinite;
   animation-delay: var(--delay);
 }
 
+.tech-icon:hover {
+  @apply scale-110 opacity-100;
+}
+
 .tech-icon svg {
-  filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.2)) drop-shadow(0 0 8px rgba(255, 255, 255, 0.2));
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3))
+    drop-shadow(0 0 20px rgba(255, 255, 255, 0.4));
+  transition: filter 0.3s ease;
 }
 
 .java {
@@ -481,213 +585,407 @@
 
 @keyframes float {
   0% {
-    transform: translateY(0) rotate(0deg);
+    transform: translateY(0) rotate(0deg) scale(1);
   }
-  50% {
-    transform: translateY(-20px) rotate(5deg);
+  33% {
+    transform: translateY(-15px) rotate(3deg) scale(1.05);
+  }
+  66% {
+    transform: translateY(-25px) rotate(-2deg) scale(0.95);
   }
   100% {
-    transform: translateY(0) rotate(0deg);
+    transform: translateY(0) rotate(0deg) scale(1);
   }
 }
 
-/* 原有样式 */
-.about-card {
-  @apply bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6 md:p-8 w-full max-w-4xl my-8;
+/* ================================
+   页面特定样式
+   ================================ */
+
+/* 移动端卡片内边距优化 */
+@media (max-width: 768px) {
+  .card-base {
+    padding: 1rem; /* 移动端减少内边距 */
+    min-height: 400px; /* 移动端适当减少高度 */
+    max-width: 98%; /* 移动端增加边距 */
+  }
+}
+
+/* 极小屏幕优化 */
+@media (max-width: 480px) {
+  .about-container {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  .card-base {
+    padding: 0.75rem; /* 极小屏幕进一步减少内边距 */
+    max-width: 100%; /* 极小屏幕占满宽度 */
+  }
 }
 
 /* 个人信息部分 */
 .profile-section {
-  @apply flex flex-col md:flex-row items-center md:items-start gap-6 mb-10;
+  @apply flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-8 mb-0;
+  margin: 0 auto; /* 居中对齐 */
+  padding: 0 0.5rem; /* 移动端内边距 */
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden; /* 防止内容溢出 */
+}
+
+/* 在更大屏幕上限制个人信息区域宽度 */
+@media (min-width: 1200px) {
+  .profile-section {
+    max-width: 85%;
+    padding: 0;
+  }
 }
 
 .avatar-container {
-  @apply w-32 h-32 md:w-40 md:h-40 flex-shrink-0;
+  @apply w-40 h-40 md:w-48 md:h-48 flex-shrink-0 relative;
 }
 
 .avatar-image {
-  @apply w-full h-full rounded-full object-cover border-4 border-indigo-100 dark:border-gray-700;
+  @apply w-full h-full rounded-full object-cover border-4 border-blue-200 dark:border-blue-600 shadow-lg transition-all duration-300 hover:scale-105;
+  box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
 }
 
 .profile-info {
   @apply flex-1;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden; /* 防止内容溢出 */
+}
+
+/* 移动端个人信息优化 */
+@media (max-width: 768px) {
+  .profile-section {
+    padding: 0 0.25rem; /* 进一步减少内边距 */
+    gap: 1rem; /* 减少间距 */
+  }
 }
 
 .name-title {
-  @apply text-3xl font-bold text-gray-800 dark:text-white mb-2;
+  @apply text-3xl md:text-4xl font-bold mb-3;
+}
+
+/* 移动端标题优化 */
+@media (max-width: 768px) {
+  .name-title {
+    font-size: 1.875rem; /* 移动端减小字体 */
+    margin-bottom: 0.75rem; /* 减少底部间距 */
+  }
 }
 
 .job-title {
-  @apply text-lg text-indigo-600 dark:text-indigo-400 font-medium mb-4;
+  @apply text-xl font-semibold mb-4 px-4 py-2 rounded-full inline-block;
+  background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%);
+  color: #3b82f6;
+  word-wrap: break-word;
+  overflow: hidden;
+}
+
+/* 移动端工作标题优化 */
+@media (max-width: 768px) {
+  .job-title {
+    font-size: 1.125rem; /* 移动端减小字体 */
+    padding: 0.5rem 1rem; /* 减少内边距 */
+    margin-bottom: 1rem; /* 减少底部间距 */
+  }
 }
 
 .about-paragraph {
   @apply text-gray-600 dark:text-gray-300 mb-6 text-lg leading-relaxed;
+  word-wrap: break-word;
+  overflow: hidden;
+}
+
+/* 移动端个人信息文本优化 */
+@media (max-width: 768px) {
+  .about-paragraph {
+    font-size: 1rem; /* 移动端减小字体 */
+    margin-bottom: 1rem; /* 减少底部间距 */
+  }
 }
 
 .social-links {
   @apply flex gap-4;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden; /* 防止内容溢出 */
+}
+
+/* 移动端社交链接优化 */
+@media (max-width: 768px) {
+  .social-links {
+    gap: 0.75rem; /* 减少间距 */
+    justify-content: center; /* 居中对齐 */
+  }
 }
 
 .social-link {
-  @apply text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors;
+  @apply w-12 h-12 rounded-full bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-700 dark:to-gray-600 flex items-center justify-center text-blue-600 dark:text-blue-400 hover:from-blue-500 hover:to-purple-500 hover:text-white transition-all duration-300 hover:scale-110 hover:shadow-lg;
 }
 
 .social-icon {
-  @apply w-6 h-6;
+  @apply w-6 h-6 transition-transform duration-300;
 }
 
 /* 技能部分 */
 .skills-title,
-.experience-title,
-.projects-title,
-.education-title,
 .contact-title {
-  @apply text-2xl font-bold text-gray-800 dark:text-white mt-10 mb-6 pb-2 border-b border-gray-200 dark:border-gray-700;
+  @apply text-2xl font-bold mb-6 pb-3;
+  border-bottom: 2px solid;
+  border-image: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899) 1;
+}
+
+/* 移动端技能和联系标题优化 */
+@media (max-width: 768px) {
+  .skills-title,
+  .contact-title {
+    font-size: 1.5rem; /* 移动端减小字体 */
+    margin-bottom: 1rem; /* 减少底部间距 */
+    padding-bottom: 0.5rem; /* 减少底部内边距 */
+  }
 }
 
 .skills-section {
-  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6;
+  @apply grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6;
+  margin: 0 auto; /* 居中对齐 */
+  padding: 0 0.5rem; /* 移动端内边距 */
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* 在更大屏幕上限制技能区域宽度 */
+@media (min-width: 1200px) {
+  .skills-section {
+    max-width: 90%;
+    padding: 0;
+  }
 }
 
 .skill-category {
-  @apply bg-gray-50 dark:bg-gray-700 rounded-xl p-5;
+  @apply bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 rounded-2xl p-4 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border border-blue-100 dark:border-gray-600;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden; /* 防止内容溢出 */
+}
+
+/* 移动端技能分类优化 */
+@media (max-width: 768px) {
+  .skill-category {
+    padding: 0.75rem; /* 移动端减少内边距 */
+    margin: 0; /* 移除外边距 */
+  }
 }
 
 .skill-heading {
-  @apply text-xl font-semibold mb-4 text-gray-800 dark:text-white;
+  @apply text-lg font-bold mb-4 text-center;
+  background: linear-gradient(135deg, #1e40af 0%, #7c3aed 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  word-wrap: break-word;
+  overflow: hidden;
+}
+
+/* 移动端技能小标题优化 */
+@media (max-width: 768px) {
+  .skill-heading {
+    font-size: 1rem; /* 移动端减小字体 */
+    margin-bottom: 0.75rem; /* 减少底部间距 */
+  }
 }
 
 .skill-items {
   @apply space-y-4;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .skill-item {
-  @apply space-y-1;
+  @apply space-y-2;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .skill-name {
-  @apply text-gray-700 dark:text-gray-300 font-medium;
+  @apply text-gray-700 dark:text-gray-300 font-semibold text-sm;
+  word-wrap: break-word;
+  overflow: hidden;
 }
 
 .skill-bar {
-  @apply w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden;
+  @apply w-full h-3 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden shadow-inner;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .skill-level {
-  @apply h-full bg-indigo-500 dark:bg-indigo-400 rounded-full;
+  @apply h-full rounded-full transition-all duration-1000 ease-out;
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
-/* 工作经历部分 */
-.experience-section {
-  @apply space-y-8;
-}
+/* 移动端技能条优化 */
+@media (max-width: 768px) {
+  .skill-items {
+    @apply space-y-3; /* 减少间距 */
+  }
 
-.experience-item {
-  @apply bg-gray-50 dark:bg-gray-700 rounded-xl p-5;
-}
+  .skill-item {
+    @apply space-y-2; /* 减少间距 */
+  }
 
-.experience-header {
-  @apply flex flex-col md:flex-row md:justify-between items-start md:items-center gap-2 mb-2;
-}
+  .skill-name {
+    font-size: 0.875rem; /* 稍微减小字体 */
+  }
 
-.company-name {
-  @apply text-xl font-semibold text-gray-800 dark:text-white;
-}
-
-.date-range {
-  @apply text-gray-500 dark:text-gray-400 text-sm md:text-base;
-}
-
-.job-position {
-  @apply text-indigo-600 dark:text-indigo-400 font-medium mb-3;
-}
-
-.job-description {
-  @apply text-gray-600 dark:text-gray-300;
-}
-
-/* 项目展示部分 */
-.projects-section {
-  @apply grid grid-cols-1 md:grid-cols-2 gap-6;
-}
-
-.project-card {
-  @apply bg-gray-50 dark:bg-gray-700 rounded-xl p-5;
-}
-
-.project-info {
-  @apply mb-4;
-}
-
-.project-name {
-  @apply text-xl font-semibold text-gray-800 dark:text-white mb-2;
-}
-
-.project-description {
-  @apply text-gray-600 dark:text-gray-300 mb-3;
-}
-
-.project-tags {
-  @apply flex flex-wrap gap-2;
-}
-
-.project-tag {
-  @apply text-xs font-medium text-indigo-600 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-1 rounded-md;
-}
-
-.project-links {
-  @apply flex gap-4;
-}
-
-.project-link {
-  @apply text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 text-sm font-medium;
-}
-
-/* 教育背景部分 */
-.education-section {
-  @apply space-y-6;
-}
-
-.education-item {
-  @apply bg-gray-50 dark:bg-gray-700 rounded-xl p-5;
-}
-
-.education-header {
-  @apply flex flex-col md:flex-row md:justify-between items-start md:items-center gap-2 mb-2;
-}
-
-.university-name {
-  @apply text-xl font-semibold text-gray-800 dark:text-white;
-}
-
-.degree {
-  @apply text-indigo-600 dark:text-indigo-400 font-medium mb-3;
-}
-
-.education-description {
-  @apply text-gray-600 dark:text-gray-300;
+  .skill-bar {
+    height: 0.75rem; /* 稍微增加高度便于触摸 */
+  }
 }
 
 /* 联系方式部分 */
 .contact-section {
-  @apply grid grid-cols-1 md:grid-cols-2 gap-4;
+  @apply grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6;
+  margin: 0 auto; /* 居中对齐 */
+  padding: 0 0.5rem; /* 移动端内边距 */
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* 在更大屏幕上限制联系区域宽度 */
+@media (min-width: 1200px) {
+  .contact-section {
+    max-width: 70%;
+    padding: 0;
+  }
 }
 
 .contact-item {
-  @apply flex items-center gap-3 bg-gray-50 dark:bg-gray-700 rounded-xl p-4;
+  @apply flex items-center gap-4 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 rounded-2xl p-5 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border border-blue-100 dark:border-gray-600;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden; /* 防止内容溢出 */
+}
+
+/* 移动端联系方式优化 */
+@media (max-width: 768px) {
+  .contact-item {
+    padding: 1rem; /* 移动端减少内边距 */
+    gap: 0.75rem; /* 减少间距 */
+  }
 }
 
 .contact-icon {
-  @apply w-5 h-5 text-indigo-500 dark:text-indigo-400;
+  @apply w-8 h-8 p-2 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 text-white shadow-lg;
 }
 
 .contact-link,
 .contact-text {
-  @apply text-gray-700 dark:text-gray-300;
+  @apply text-gray-700 dark:text-gray-300 font-medium text-lg;
+  word-wrap: break-word;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
 }
 
 .contact-link:hover {
-  @apply text-indigo-600 dark:text-indigo-300;
+  @apply text-blue-600 dark:text-blue-400 transition-colors duration-300;
+}
+
+/* 移动端联系方式文本优化 */
+@media (max-width: 768px) {
+  .contact-link,
+  .contact-text {
+    font-size: 1rem; /* 移动端减小字体 */
+  }
+}
+
+/* 卡片样式 */
+.card {
+  @apply bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-xl border border-gray-100 dark:border-gray-700 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 relative overflow-hidden;
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(59, 130, 246, 0.1) 0%,
+    rgba(139, 92, 246, 0.1) 50%,
+    rgba(236, 72, 153, 0.1) 100%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.card:hover::before {
+  opacity: 1;
+}
+
+/* 装饰性发光效果 */
+.glow {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(59, 130, 246, 0.3) 0%,
+    transparent 70%
+  );
+  animation: float-glow 6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.glow:nth-child(1) {
+  top: 10%;
+  left: 10%;
+  animation-delay: 0s;
+}
+
+.glow:nth-child(2) {
+  top: 60%;
+  right: 10%;
+  background: radial-gradient(
+    circle,
+    rgba(139, 92, 246, 0.3) 0%,
+    transparent 70%
+  );
+  animation-delay: 2s;
+}
+
+.glow:nth-child(3) {
+  bottom: 10%;
+  left: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(236, 72, 153, 0.3) 0%,
+    transparent 70%
+  );
+  animation-delay: 4s;
+}
+
+@keyframes float-glow {
+  0%,
+  100% {
+    transform: translateY(0px) scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translateY(-20px) scale(1.1);
+    opacity: 0.6;
+  }
 }
 </style>

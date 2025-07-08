@@ -1,10 +1,5 @@
 <template>
   <div class="article-page">
-    <!-- 阅读进度条 -->
-    <div class="reading-progress">
-      <div class="progress-bar" :style="{ width: readingProgress + '%' }"></div>
-    </div>
-
     <!-- 顶部导航栏 -->
     <header class="article-header" :class="{
       'header-scrolled': isHeaderScrolled
@@ -12,6 +7,10 @@
       <div class="header-container" :class="{
         'container-compact': isHeaderScrolled
       }">
+          <!-- 阅读进度条 -->
+    <div class="reading-progress">
+      <div class="progress-bar" :style="{ width: readingProgress + '%' }"></div>
+    </div>
         <button class="back-btn group" @click="handleBackToList" aria-label="返回文章列表">
           <svg class="back-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H5m7-7l-7 7 7 7"/>
@@ -21,11 +20,60 @@
         
         <!-- 文章标题 - 滚动时显示 -->
         <div class="header-title" :class="{
-          'title-visible': isHeaderScrolled && article?.title
+          'title-visible': isHeaderScrolled && article?.title,
+          'mobile-title': isMobile
         }">
           <h1 v-if="article?.title">{{ article.title }}</h1>
+          
+          <!-- 📖 阅读时间和当前章节 - 仅桌面端显示 -->
+          <div class="header-subtitle" v-if="(isHeaderScrolled || true) && !isMobile">
+            <div class="reading-info">
+              <span class="reading-time">
+                <svg class="info-icon" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+                </svg>
+                {{ estimatedReadingTime }}
+              </span>
+              <span class="divider">•</span>
+              <span class="current-section" v-if="currentSection">
+                <svg class="info-icon" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" />
+                </svg>
+                {{ currentSection }}
+              </span>
+            </div>
+          </div>
         </div>
         
+        <!-- ⚡ 快速操作面板 -->
+        <div class="header-actions" :class="{
+          'actions-visible': isHeaderScrolled || true
+        }">
+          
+          <!-- 📊 统计信息按钮 - 仅桌面端显示 -->
+          <button v-if="!isMobile" class="quick-action-btn stats-toggle" @click="toggleStats" title="文章统计">
+            <svg class="action-icon" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+            </svg>
+            <span class="stats-badge" v-if="showStatsBadge">{{ article?.viewCount || 0 }}</span>
+          </button>
+          
+          <!-- ❤️ 快速点赞按钮 -->
+          <button class="quick-action-btn like-toggle" @click="handleQuickLike" title="点赞">
+            <svg class="action-icon" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" />
+            </svg>
+            <span class="like-badge" v-if="article?.likeCount">{{ article.likeCount }}</span>
+          </button>
+          
+          <!-- 📤 分享按钮 -->
+          <button class="quick-action-btn share-toggle" @click="toggleShare" title="分享文章">
+            <svg class="action-icon" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
+            </svg>
+          </button>
+        </div>
+
         <!-- 阅读进度指示器 -->
         <div class="header-progress" :class="{
           'progress-visible': isHeaderScrolled
@@ -312,9 +360,32 @@ const lastScrollY = ref(0);
 const showDeleteConfirm = ref(false);
 const deleting = ref(false);
 
+// 🏝️ 灵动岛新功能状态
+const currentSection = ref('开始阅读'); // 🔧 初始化为默认值
+const isDarkMode = ref(false);
+const showStatsBadge = ref(true); // 🔧 初始显示统计徽章
+const showSharePanel = ref(false);
+
 // 计算属性
 const isAuthor = computed(() => userStore.userInfo?.id === article.value?.userId);
 const isAdmin = computed(() => userStore.userInfo?.role === 'admin');
+
+// 🏝️ 灵动岛计算属性
+const estimatedReadingTime = computed(() => {
+  if (!article.value?.wordCount) {
+    // 🔧 如果没有字数，基于内容长度估算
+    const contentLength = article.value?.content?.length || 0;
+    if (contentLength > 0) {
+      const estimatedWords = Math.ceil(contentLength / 2); // 中文平均字符密度
+      const minutes = Math.ceil(estimatedWords / 200);
+      return `约 ${minutes} 分钟`;
+    }
+    return '预计阅读时间';
+  }
+  const wordsPerMinute = 200; // 中文平均阅读速度
+  const minutes = Math.ceil(article.value.wordCount / wordsPerMinute);
+  return `约 ${minutes} 分钟`;
+});
 
 // 检测移动端
 const checkMobile = () => {
@@ -346,6 +417,49 @@ const handleThumb = async () => {
   } catch (error) {
     messageService.error('点赞失败');
   }
+};
+
+const toggleStats = () => {
+  showStatsBadge.value = !showStatsBadge.value;
+  if (showStatsBadge.value) {
+    messageService.info(`📊 浏览量: ${article.value?.viewCount || 0} | 字数: ${article.value?.wordCount || 0}`);
+  }
+};
+
+const handleQuickLike = async () => {
+  await handleThumb();
+};
+
+const toggleShare = () => {
+  showSharePanel.value = !showSharePanel.value;
+  if (showSharePanel.value) {
+    // 复制当前文章链接到剪贴板
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(() => {
+      messageService.success('文章链接已复制到剪贴板');
+      showSharePanel.value = false;
+    }).catch(() => {
+      messageService.error('复制失败，请手动复制链接');
+    });
+  }
+};
+
+// 检测当前阅读章节
+const detectCurrentSection = () => {
+  const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+  const scrollTop = window.scrollY + 150; // 偏移量
+  
+  let current = '';
+  headings.forEach((heading) => {
+    const rect = heading.getBoundingClientRect();
+    const offsetTop = rect.top + window.scrollY;
+    
+    if (offsetTop <= scrollTop) {
+      current = heading.textContent || '';
+    }
+  });
+  
+  currentSection.value = current || '开始阅读';
 };
 
 const handleEditArticle = () => {
@@ -405,6 +519,12 @@ const fetchArticleDetail = async (id: string) => {
       setTimeout(() => {
         scrollToTop();
         console.log('📖 文章内容加载完成，滚动到顶部');
+        
+        // 🏝️ 强制检测一次当前章节
+        setTimeout(() => {
+          detectCurrentSection();
+          console.log('🏝️ 强制检测当前章节:', currentSection.value);
+        }, 500);
       }, 150); // 给内容渲染一些时间
     }
   } catch (error) {
@@ -425,7 +545,7 @@ const calculateReadingProgress = () => {
 // 动态导航栏逻辑
 const handleHeaderScroll = () => {
   const scrollY = window.scrollY;
-  const scrollThreshold = 100; // 滚动多少像素后开始改变状态
+  const scrollThreshold = 50; // 🔧 降低阈值到50px，更容易触发
   
   // 🔧 添加调试日志
   console.log('🏝️ 灵动岛滚动检测:', {
@@ -537,6 +657,7 @@ const handleScroll = throttle(() => {
   console.log('📜 handleScroll被调用, scrollY:', window.scrollY);
   calculateReadingProgress();
   handleHeaderScroll();
+  detectCurrentSection(); // 🏝️ 检测当前章节
 }, 100);
 
 // 提供阅读进度给Toc组件
@@ -594,6 +715,10 @@ watch(() => route.params.id, (newId, oldId) => {
 // 生命周期
 onMounted(() => {
   console.log('🚀 ArticleDetail组件挂载开始');
+  
+  // 🏝️ 初始化主题状态
+  const savedTheme = localStorage.getItem('theme');
+  isDarkMode.value = savedTheme === 'dark' || document.documentElement.classList.contains('dark');
   
   const id = route.params.id;
   if (id && typeof id === 'string') {
@@ -976,9 +1101,42 @@ onUnmounted(() => {
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  margin: 0;
+  margin: 0 0 4px 0;
   line-height: 1.3;
   max-width: 100%;
+}
+
+/* 🏝️ 灵动岛副标题样式 */
+.header-subtitle {
+  opacity: 1; /* 🔧 强制显示 */
+  transform: translateY(0); /* 🔧 强制显示 */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0.1s;
+}
+
+.header-title.title-visible .header-subtitle {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reading-info {
+  @apply flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400;
+  font-weight: 500;
+}
+
+.reading-time,
+.current-section {
+  @apply flex items-center gap-1.5 px-2 py-1 bg-gray-100/80 dark:bg-gray-700/60;
+  @apply rounded-lg border border-gray-200/50 dark:border-gray-600/50;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.info-icon {
+  @apply w-3 h-3 opacity-70;
+}
+
+.divider {
+  @apply text-gray-400 dark:text-gray-500 mx-1;
 }
 
 /* ===== 阅读进度指示器 ===== */
@@ -1034,7 +1192,173 @@ onUnmounted(() => {
   filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.6));
 }
 
-/* 移动端目录按钮已移除，目录现在在左侧导航栏中 */
+/* 🏝️ 快速操作面板样式 */
+.header-actions {
+  @apply flex items-center gap-2;
+  opacity: 1; /* 🔧 强制显示 */
+  transform: translateX(0) scale(1); /* 🔧 强制显示 */
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: auto; /* 🔧 强制可点击 */
+}
+
+.header-actions.actions-visible {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+  pointer-events: auto;
+}
+
+.quick-action-btn {
+  @apply relative w-10 h-10 flex items-center justify-center;
+  @apply bg-white/90 dark:bg-gray-800/90 hover:bg-gray-50/95 dark:hover:bg-gray-700/95;
+  @apply border border-gray-200/60 dark:border-gray-600/60;
+  @apply rounded-xl transition-all duration-200 ease-out;
+  @apply hover:scale-110 active:scale-95;
+  @apply focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-1;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.quick-action-btn:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.action-icon {
+  @apply w-5 h-5 text-gray-600 dark:text-gray-300 transition-colors duration-200;
+}
+
+/* 主题切换按钮 */
+.theme-toggle:hover .action-icon {
+  @apply text-amber-500 dark:text-amber-400;
+}
+
+/* 统计按钮 */
+.stats-toggle {
+  @apply relative;
+}
+
+.stats-toggle:hover .action-icon {
+  @apply text-blue-500 dark:text-blue-400;
+}
+
+.stats-badge {
+  @apply absolute -top-1 -right-1 bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded-full;
+  @apply text-xs font-bold leading-none;
+  font-size: 10px;
+  min-width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 点赞按钮 */
+.like-toggle {
+  @apply relative;
+}
+
+.like-toggle:hover .action-icon {
+  @apply text-red-500 dark:text-red-400;
+}
+
+.like-badge {
+  @apply absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full;
+  @apply text-xs font-bold leading-none;
+  font-size: 10px;
+  min-width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 分享按钮 */
+.share-toggle:hover .action-icon {
+  @apply text-green-500 dark:text-green-400;
+}
+
+/* 移动端特殊优化 */
+@media (max-width: 768px) {
+  /* 🏝️ 移动端标题优化 */
+  .header-title.mobile-title h1 {
+    @apply text-sm !important;
+    line-height: 1.2 !important;
+    margin-bottom: 0 !important;
+  }
+  
+  /* 移动端隐藏副标题信息 */
+  .header-subtitle {
+    display: none !important;
+  }
+  
+  /* 移动端快速操作面板优化 */
+  .header-actions {
+    gap: 1.5px;
+  }
+  
+  .quick-action-btn {
+    @apply w-8 h-8;
+  }
+  
+  .action-icon {
+    @apply w-4 h-4;
+  }
+  
+  .stats-badge,
+  .like-badge {
+    font-size: 9px;
+    min-width: 14px;
+    height: 14px;
+  }
+  
+  /* 移动端灵动岛更紧凑 */
+  .header-container.container-compact {
+    @apply py-1.5;
+    min-height: 48px;
+  }
+  
+  .header-title {
+    @apply mx-2;
+  }
+}
+
+@media (max-width: 480px) {
+  /* 🏝️ 超小屏幕标题进一步优化 */
+  .header-title.mobile-title h1 {
+    @apply text-xs !important;
+    line-height: 1.1 !important;
+  }
+  
+  /* 超小屏幕快速操作更紧凑 */
+  .header-actions {
+    gap: 1px;
+  }
+  
+  .quick-action-btn {
+    @apply w-7 h-7;
+  }
+  
+  .action-icon {
+    @apply w-3.5 h-3.5;
+  }
+  
+  .stats-badge,
+  .like-badge {
+    font-size: 8px;
+    min-width: 12px;
+    height: 12px;
+  }
+  
+  /* 超小屏幕灵动岛最紧凑状态 */
+  .header-container.container-compact {
+    @apply py-1;
+    min-height: 44px;
+  }
+  
+  .header-title {
+    @apply mx-1.5;
+  }
+}
 
 /* ===== 主要内容区域 ===== */
 .article-main {

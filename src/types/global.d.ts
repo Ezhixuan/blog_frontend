@@ -63,7 +63,6 @@ export interface PaginationParams {
   current: number;
   pageSize: number;
   sortOrder: string;
-  sortField: string;
 }
 
 export interface PaginationResult<T> {

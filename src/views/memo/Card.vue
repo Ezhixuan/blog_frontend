@@ -1,12 +1,13 @@
 <template>
-  <div class="p-4">
+  <div class="p-6 md:p-8 min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <StarfieldBackground />
     <!-- Deck选择和分页控制 -->
-    <div class="mb-4 flex flex-col md:flex-row gap-4 justify-between items-center">
+    <div class="mb-8 flex flex-col md:flex-row gap-6 justify-between items-center">
       <!-- 自定义下拉框 -->
       <div class="deck-dropdown w-full md:w-64 relative">
         <div 
           @click="toggleDeckDropdown"
-          class="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white cursor-pointer flex justify-between items-center bg-white"
+          class="w-full p-3 border border-gray-200 rounded-2xl dark:bg-gray-800 dark:border-gray-600 dark:text-white cursor-pointer flex justify-between items-center bg-white/80 backdrop-blur-sm shadow-md hover:shadow-xl hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-300 hover:-translate-y-1"
         >
           <span class="truncate">
             {{ selectedDeckName || '全部卡片' }}
@@ -33,23 +34,23 @@
         >
           <div 
             v-if="deckDropdownOpen"
-            class="absolute z-10 mt-1 w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-auto"
+            class="absolute z-10 mt-2 w-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-md border border-gray-200 dark:border-gray-600 rounded-2xl shadow-2xl max-h-60 overflow-auto"
           >
             <!-- 全部卡片选项 -->
             <div 
               @click="selectDeck('', '全部卡片')"
-              class="px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-white flex justify-between items-center"
-              :class="{ 'bg-blue-50 dark:bg-blue-900': selectedDeckId === '' }"
+              class="px-4 py-3 cursor-pointer hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 dark:hover:from-blue-900/30 dark:hover:to-purple-900/30 dark:text-white flex justify-between items-center transition-all duration-300 rounded-xl mx-2 my-1"
+              :class="{ 'bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/50 dark:to-purple-900/50 border border-blue-200 dark:border-blue-700': selectedDeckId === '' }"
             >
-              <span>全部卡片</span>
+              <span class="font-medium">全部卡片</span>
             </div>
             
             <!-- 卡片组选项 -->
             <div 
               v-for="deck in decks" 
               :key="deck.id"
-              class="px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-white flex justify-between items-center group"
-              :class="{ 'bg-blue-50 dark:bg-blue-900': selectedDeckId === deck.id }"
+              class="px-4 py-3 cursor-pointer hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 dark:hover:from-blue-900/30 dark:hover:to-purple-900/30 dark:text-white flex justify-between items-center group transition-all duration-300 rounded-xl mx-2 my-1"
+              :class="{ 'bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/50 dark:to-purple-900/50 border border-blue-200 dark:border-blue-700': selectedDeckId === deck.id }"
             >
               <span @click="selectDeck(deck.id, deck.name)" class="flex-1 truncate">
                 {{ deck.name }}
@@ -76,19 +77,19 @@
         </transition>
       </div>
       
-      <div class="flex items-center space-x-2">
+      <div class="flex items-center space-x-4">
         <button 
           @click="loadCards(currentPage - 1)" 
           :disabled="currentPage <= 1"
-          class="px-3 py-1 border rounded-md disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+          class="px-4 py-2 border border-gray-200 rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-800 dark:border-gray-600 dark:text-white bg-white/80 backdrop-blur-sm shadow-md hover:shadow-xl hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-300 hover:-translate-y-1 font-medium"
         >
           上一页
         </button>
-        <span class="dark:text-white">{{ currentPage }} / {{ totalPages || 1 }}</span>
+        <span class="dark:text-white px-4 py-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-md font-medium border border-gray-200 dark:border-gray-600">{{ currentPage }} / {{ totalPages || 1 }}</span>
         <button 
           @click="loadCards(currentPage + 1)" 
           :disabled="currentPage >= totalPages"
-          class="px-3 py-1 border rounded-md disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+          class="px-4 py-2 border border-gray-200 rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-800 dark:border-gray-600 dark:text-white bg-white/80 backdrop-blur-sm shadow-md hover:shadow-xl hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-300 hover:-translate-y-1 font-medium"
         >
           下一页
         </button>
@@ -96,35 +97,41 @@
     </div>
 
     <!-- 工具按钮区 -->
-    <div class="mb-4 flex justify-end space-x-3">
+    <div class="mb-8 flex justify-end space-x-4">
       <!-- 提交卡片按钮 - 仅当用户已登录且是管理员时显示 -->
       <button 
         v-if="canSubmitCard"
         @click="openSubmitForm"
-        class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition duration-300 flex items-center"
+        class="group relative px-6 py-3 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-2xl hover:from-green-500 hover:to-teal-500 transition-all duration-300 flex items-center shadow-lg hover:shadow-2xl hover:-translate-y-2 font-medium"
         :disabled="loading"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+        <!-- 装饰性发光效果 -->
+        <div class="absolute inset-0 bg-gradient-to-r from-green-600 to-teal-600 rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-500 blur-xl"></div>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 relative z-10" viewBox="0 0 20 20" fill="currentColor">
           <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
         </svg>
-        提交卡片
+        <span class="relative z-10">提交卡片</span>
       </button>
     
       <!-- 小测按钮 -->
       <button 
         @click="startQuiz"
-        class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-300 flex items-center"
+        class="group relative px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl hover:from-blue-500 hover:to-purple-500 transition-all duration-300 flex items-center shadow-lg hover:shadow-2xl hover:-translate-y-2 font-medium"
         :disabled="loading"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+        <!-- 装饰性发光效果 -->
+        <div class="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-500 blur-xl"></div>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 relative z-10" viewBox="0 0 20 20" fill="currentColor">
           <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clip-rule="evenodd" />
         </svg>
-        小测一下
+        <span class="relative z-10">小测一下</span>
       </button>
     </div>
 
     <!-- 卡片网格 -->
-    <div class="flashcard-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div class="flashcard-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
       <Flashcard
         v-for="(card, index) in flashcards"
         :key="card.id"
@@ -141,18 +148,24 @@
         @navigate="handleCardNavigate"
         @delete="handleCardDelete"
       />
-      <div v-if="loading" class="col-span-full flex justify-center py-10">
-        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
+      <div v-if="loading" class="col-span-full flex justify-center py-16">
+        <div class="animate-spin rounded-full h-16 w-16 border-4 border-gradient-to-r from-blue-200 to-purple-200 border-t-blue-600 shadow-lg"></div>
       </div>
-      <div v-if="!loading && flashcards.length === 0" class="col-span-full text-center py-10 dark:text-white">
-        没有找到卡片
+      <div v-if="!loading && flashcards.length === 0" class="col-span-full text-center py-16">
+        <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-3xl p-12 shadow-xl border border-gray-200 dark:border-gray-700">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 mx-auto text-gray-400 dark:text-gray-500 mb-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <h3 class="text-2xl font-bold text-gray-600 dark:text-gray-300 mb-2">暂无卡片</h3>
+          <p class="text-gray-500 dark:text-gray-400">该分类下还没有记忆卡片，快去创建一些吧！</p>
+        </div>
       </div>
     </div>
 
     <!-- 小测弹窗 -->
     <teleport to="body" v-if="quizActive">
-      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-        <div class="bg-white dark:bg-gray-800 rounded-xl w-full max-w-xl mx-auto shadow-2xl overflow-hidden">
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+        <div class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-md rounded-3xl w-full max-w-xl mx-auto shadow-2xl overflow-hidden border border-white/20 dark:border-gray-700/50">
           <!-- 没有测试数据时显示 -->
           <div v-if="quizCards.length === 0" class="p-8 text-center">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-yellow-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -173,13 +186,13 @@
           <!-- 有测试数据时显示 -->
           <div v-else>
             <!-- 标题栏 -->
-            <div class="flex justify-between items-center p-4 border-b dark:border-gray-700">
-              <h3 class="font-bold text-gray-800 dark:text-white text-lg">
+            <div class="flex justify-between items-center p-6 border-b border-gray-200/50 dark:border-gray-700/50 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20">
+              <h3 class="font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent text-xl">
                 记忆小测 {{ currentQuizIndex + 1 }}/{{ quizCards.length }}
               </h3>
               <button 
                 @click="closeQuiz"
-                class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
+                class="p-2 rounded-2xl hover:bg-white/50 dark:hover:bg-gray-800/50 transition-all duration-300 hover:scale-110"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -188,7 +201,7 @@
             </div>
 
             <!-- 问题内容 -->
-            <div class="p-6 border-b dark:border-gray-700">
+            <div class="p-8 border-b border-gray-200/50 dark:border-gray-700/50">
               <div class="mb-4">
                 <h4 class="text-sm text-gray-500 dark:text-gray-400 mb-1">问题：</h4>
                 <p class="text-lg text-gray-800 dark:text-white">{{ currentQuizCard.front }}</p>
@@ -200,31 +213,31 @@
             </div>
 
             <!-- 操作按钮 -->
-            <div class="p-4">
+            <div class="p-8">
               <div v-if="!showAnswer" class="flex justify-center">
                 <button 
                   @click="revealAnswer" 
-                  class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-300"
+                  class="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl hover:from-blue-500 hover:to-purple-500 transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1 font-medium text-lg"
                 >
                   查看答案
                 </button>
               </div>
-              <div v-else class="grid grid-cols-3 gap-3">
+              <div v-else class="grid grid-cols-3 gap-4">
                 <button 
                   @click="rateCard(0)" 
-                  class="px-3 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition duration-300"
+                  class="px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-2xl hover:from-green-400 hover:to-emerald-400 transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1 font-medium"
                 >
                   简单
                 </button>
                 <button 
                   @click="rateCard(1)" 
-                  class="px-3 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition duration-300"
+                  class="px-4 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-2xl hover:from-yellow-400 hover:to-orange-400 transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1 font-medium"
                 >
                   模糊
                 </button>
                 <button 
                   @click="rateCard(2)" 
-                  class="px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition duration-300"
+                  class="px-4 py-3 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-2xl hover:from-red-400 hover:to-pink-400 transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1 font-medium"
                 >
                   忘记
                 </button>
@@ -237,16 +250,16 @@
 
     <!-- 提交卡片弹窗 -->
     <teleport to="body" v-if="submitFormActive">
-      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-        <div class="bg-white dark:bg-gray-800 rounded-xl w-full max-w-xl mx-auto shadow-2xl overflow-hidden">
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+        <div class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-md rounded-3xl w-full max-w-xl mx-auto shadow-2xl overflow-hidden border border-white/20 dark:border-gray-700/50">
           <!-- 标题栏 -->
-          <div class="flex justify-between items-center p-4 border-b dark:border-gray-700">
-            <h3 class="font-bold text-gray-800 dark:text-white text-lg">
+          <div class="flex justify-between items-center p-6 border-b border-gray-200/50 dark:border-gray-700/50 bg-gradient-to-r from-green-50 to-teal-50 dark:from-green-900/20 dark:to-teal-900/20">
+            <h3 class="font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent text-xl">
               {{ isCreatingDeck ? '创建新卡片集' : '提交记忆卡片' }}
             </h3>
             <button 
               @click="closeSubmitForm"
-              class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
+              class="p-2 rounded-2xl hover:bg-white/50 dark:hover:bg-gray-800/50 transition-all duration-300 hover:scale-110"
             >
               <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -255,29 +268,29 @@
           </div>
 
           <!-- 创建卡片集表单 -->
-          <div v-if="isCreatingDeck" class="p-6">
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <div v-if="isCreatingDeck" class="p-8">
+            <div class="mb-6">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                 卡片集名称
               </label>
               <input 
                 v-model="newDeckName" 
                 type="text" 
-                class="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                class="w-full p-4 border border-gray-200 rounded-2xl dark:bg-gray-800/50 dark:border-gray-600 dark:text-white bg-white/80 backdrop-blur-sm shadow-md focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-300"
                 placeholder="输入卡片集名称"
               />
             </div>
 
-            <div class="flex justify-between mt-6">
+            <div class="flex justify-between mt-8">
               <button 
                 @click="() => isCreatingDeck = false" 
-                class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 transition duration-300"
+                class="px-6 py-3 border border-gray-300 text-gray-700 rounded-2xl hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700/50 transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-1 font-medium"
               >
                 返回
               </button>
               <button 
                 @click="createDeck" 
-                class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition duration-300"
+                class="px-6 py-3 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-2xl hover:from-green-500 hover:to-teal-500 transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1 font-medium"
                 :disabled="!newDeckName || submitting"
               >
                 创建
@@ -286,39 +299,39 @@
           </div>
 
           <!-- 提交卡片表单 -->
-          <div v-else class="p-6">
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <div v-else class="p-8">
+            <div class="mb-6">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                 问题
               </label>
               <textarea 
                 v-model="newCardFront" 
                 rows="3"
-                class="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                class="w-full p-4 border border-gray-200 rounded-2xl dark:bg-gray-800/50 dark:border-gray-600 dark:text-white bg-white/80 backdrop-blur-sm shadow-md focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-300 resize-none"
                 placeholder="输入卡片正面的问题"
               ></textarea>
             </div>
 
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <div class="mb-6">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                 答案
               </label>
               <textarea 
                 v-model="newCardBack" 
                 rows="3"
-                class="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                class="w-full p-4 border border-gray-200 rounded-2xl dark:bg-gray-800/50 dark:border-gray-600 dark:text-white bg-white/80 backdrop-blur-sm shadow-md focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-300 resize-none"
                 placeholder="输入卡片背面的答案"
               ></textarea>
             </div>
 
-            <div class="mb-4">
-              <div class="flex justify-between">
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <div class="mb-6">
+              <div class="flex justify-between items-center">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                   选择卡片集
                 </label>
                 <button 
                   @click="() => isCreatingDeck = true" 
-                  class="text-sm text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
+                  class="text-sm text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 font-medium transition-colors duration-300"
                 >
                   创建新卡片集
                 </button>
@@ -327,8 +340,8 @@
                 <div 
                   ref="submitDeckTrigger"
                   @click="toggleSubmitDeckDropdown"
-                  class="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white cursor-pointer flex justify-between items-center bg-white"
-                  :class="{ 'border-red-300': !newCardDeckId }"
+                  class="w-full p-4 border border-gray-200 rounded-2xl dark:bg-gray-800/50 dark:border-gray-600 dark:text-white cursor-pointer flex justify-between items-center bg-white/80 backdrop-blur-sm shadow-md hover:shadow-lg hover:border-green-300 dark:hover:border-green-600 transition-all duration-300"
+                  :class="{ 'border-red-300 dark:border-red-600': !newCardDeckId }"
                 >
                   <span class="truncate" :class="{ 'text-gray-400': !newCardDeckId }">
                     {{ getSelectedDeckName() || '请选择卡片集' }}
@@ -386,10 +399,10 @@
               </div>
             </teleport>
 
-            <div class="flex justify-end mt-6">
+            <div class="flex justify-end mt-8">
               <button 
                 @click="submitCard" 
-                class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition duration-300"
+                class="px-8 py-4 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-2xl hover:from-green-500 hover:to-teal-500 transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1 font-medium text-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 :disabled="!newCardFront || !newCardBack || !newCardDeckId || submitting"
               >
                 提交
@@ -402,16 +415,16 @@
 
     <!-- 删除卡片确认弹窗 -->
     <teleport to="body" v-if="deleteConfirmActive">
-      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-        <div class="bg-white dark:bg-gray-800 rounded-xl w-full max-w-md mx-auto shadow-2xl overflow-hidden">
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+        <div class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-md rounded-3xl w-full max-w-md mx-auto shadow-2xl overflow-hidden border border-white/20 dark:border-gray-700/50">
           <!-- 标题栏 -->
-          <div class="flex justify-between items-center p-4 border-b dark:border-gray-700">
-            <h3 class="font-bold text-gray-800 dark:text-white text-lg">
+          <div class="flex justify-between items-center p-6 border-b border-gray-200/50 dark:border-gray-700/50 bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20">
+            <h3 class="font-bold bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent text-xl">
               确认删除
             </h3>
             <button 
               @click="closeDeleteConfirm"
-              class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
+              class="p-2 rounded-2xl hover:bg-white/50 dark:hover:bg-gray-800/50 transition-all duration-300 hover:scale-110"
             >
               <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -420,7 +433,7 @@
           </div>
 
           <!-- 确认内容 -->
-          <div class="p-6">
+          <div class="p-8">
             <div class="flex items-center mb-4">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-red-500 mr-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
@@ -446,17 +459,17 @@
             </div>
 
             <!-- 操作按钮 -->
-            <div class="flex justify-end space-x-3">
+            <div class="flex justify-end space-x-4">
               <button 
                 @click="closeDeleteConfirm" 
-                class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 transition duration-300"
+                class="px-6 py-3 border border-gray-300 text-gray-700 rounded-2xl hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700/50 transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-1 font-medium"
                 :disabled="deleting"
               >
                 取消
               </button>
               <button 
                 @click="confirmDeleteCard" 
-                class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition duration-300"
+                class="px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-2xl hover:from-red-500 hover:to-pink-500 transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1 font-medium disabled:opacity-50"
                 :disabled="deleting"
               >
                 <span v-if="deleting">删除中...</span>
@@ -470,16 +483,16 @@
 
     <!-- 删除卡片组确认弹窗 -->
     <teleport to="body" v-if="deleteDeckConfirmActive">
-      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-        <div class="bg-white dark:bg-gray-800 rounded-xl w-full max-w-md mx-auto shadow-2xl overflow-hidden">
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+        <div class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-md rounded-3xl w-full max-w-md mx-auto shadow-2xl overflow-hidden border border-white/20 dark:border-gray-700/50">
           <!-- 标题栏 -->
-          <div class="flex justify-between items-center p-4 border-b dark:border-gray-700">
-            <h3 class="font-bold text-gray-800 dark:text-white text-lg">
+          <div class="flex justify-between items-center p-6 border-b border-gray-200/50 dark:border-gray-700/50 bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20">
+            <h3 class="font-bold bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent text-xl">
               确认删除卡片组
             </h3>
             <button 
               @click="closeDeleteDeckConfirm"
-              class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
+              class="p-2 rounded-2xl hover:bg-white/50 dark:hover:bg-gray-800/50 transition-all duration-300 hover:scale-110"
             >
               <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -488,7 +501,7 @@
           </div>
 
           <!-- 确认内容 -->
-          <div class="p-6">
+          <div class="p-8">
             <div class="flex items-center mb-4">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-red-500 mr-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
@@ -514,17 +527,17 @@
             </div>
 
             <!-- 操作按钮 -->
-            <div class="flex justify-end space-x-3">
+            <div class="flex justify-end space-x-4">
               <button 
                 @click="closeDeleteDeckConfirm" 
-                class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 transition duration-300"
+                class="px-6 py-3 border border-gray-300 text-gray-700 rounded-2xl hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700/50 transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-1 font-medium"
                 :disabled="deletingDeck"
               >
                 取消
               </button>
               <button 
                 @click="confirmDeleteDeck" 
-                class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition duration-300"
+                class="px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-2xl hover:from-red-500 hover:to-pink-500 transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1 font-medium disabled:opacity-50"
                 :disabled="deletingDeck"
               >
                 <span v-if="deletingDeck">删除中...</span>
@@ -546,6 +559,7 @@ import { getCardList as list, getStudyTest as test, operateCard as operate } fro
 import { createCard as addCard, deleteCard, updateCard } from '@/api/modules/memo';
 import { useUserStore } from '@/stores/user';
 import messageService from '@/utils/helpers/message';
+import StarfieldBackground from '@/components/layout/StarfieldBackground.vue';
 
 // 用户状态
 const userStore = useUserStore();

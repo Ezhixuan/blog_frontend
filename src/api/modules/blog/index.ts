@@ -8,7 +8,8 @@ import type {
   CategoryListResponse,
   TagListResponse,
   BooleanResponse,
-  OperationById
+  OperationById,
+  CountVoResponse
 } from '../../../types';
 
 // ============= 文章相关 =============
@@ -30,7 +31,7 @@ export function getArticleById(id: string): Promise<ArticleInfoResponse> {
  * 提交文章
  */
 export function submitArticle(data: ArticleSubmitData): Promise<BooleanResponse> {
-  return request.post('/article/submit', data);
+  return request.post('/article', data);
 }
 
 /**
@@ -76,6 +77,13 @@ export function deleteCategory(id: number): Promise<BooleanResponse> {
   return request.delete(`/category/${id}`);
 }
 
+/**
+ * 获取分类数量
+ */
+export function getCategoryCount(): Promise<CountVoResponse> {
+  return request.get('/category/count');
+}
+
 // ============= 标签相关 =============
 /**
  * 获取标签列表
@@ -97,3 +105,10 @@ export function addTag(name: string): Promise<BooleanResponse> {
 export function deleteTag(id: number): Promise<BooleanResponse> {
   return request.delete(`/tag/${id}`);
 } 
+
+/**
+ * 获取标签数量
+ */
+export function getTagCount(): Promise<CountVoResponse> {
+  return request.get('/tag/count');
+}

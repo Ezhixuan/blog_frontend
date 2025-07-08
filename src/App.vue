@@ -7,6 +7,7 @@ import { useSidebar } from './composables/useSidebar'
 import { Bars3Icon } from '@heroicons/vue/24/outline'
 // 导入WebSocket连接
 import { useWebSocketSimple } from './composables/useWebSocketSimple'
+import StarfieldBackground from './components/layout/StarfieldBackground.vue'
 
 // 确保主题初始化
 onMounted(() => {
@@ -50,7 +51,10 @@ if (import.meta.env.DEV) {
       
       <!-- Main Content -->
       <main class="flex-1 p-4 pt-16 sm:p-6 sm:pt-6 md:p-8 lg:p-11 lg:ml-72">
-        <router-view></router-view>
+        <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-100/50 dark:border-gray-700/30 rounded-3xl p-6 shadow-lg transition-all duration-300">
+          <StarfieldBackground />
+          <router-view></router-view>
+        </div>
         
         <!-- Footer -->
         <footer class="mt-auto text-sm text-gray-600 dark:text-gray-400 pt-8">

@@ -95,6 +95,11 @@ export interface ArticleCategory {
   description?: string;
 }
 
+export interface CountVo {
+  id: number;
+  count: number;  
+}
+
 export interface ArticleCategoryCount extends ArticleCategory {
   count: number;
 }
@@ -175,8 +180,8 @@ export interface ProjectQueryVO {
 }
 
 export interface ProjectQueryDTO extends PaginationParams{
-  featured: boolean;
-  technology: string;
+  featured?: boolean;
+  technology?: string;
 }
 
 export interface ProjectCreateDTO {
@@ -220,3 +225,4 @@ export type PictureListResponse = ApiResponse<PaginationResult<PictureUpload>>;
 export type BooleanResponse = ApiResponse<boolean>;
 export type StringResponse = ApiResponse<string>;
 export type ProjectListResponse = ApiResponse<PaginationResult<ProjectQueryVO>>;
+export type CountVoResponse = ApiResponse<CountVo[]>;

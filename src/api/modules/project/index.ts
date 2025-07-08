@@ -39,15 +39,8 @@ export function updateProject(data: Partial<ProjectEditDTO>): Promise<ProjectQue
 /**
  * 删除项目
  */
-export function deleteProject(id: string): Promise<void> {
+export function deleteProject(id: string): Promise<boolean> {
   return request.delete(`/projects/${id}`);
-}
-
-/**
- * 增加项目浏览量
- */
-export function incrementViews(id: string): Promise<void> {
-  return request.post(`/projects/${id}/views`);
 }
 
 /**
@@ -55,4 +48,11 @@ export function incrementViews(id: string): Promise<void> {
  */
 export function getTechnologies(): Promise<string[]> {
   return request.get('/projects/technologies');
+}
+
+/**
+ * 设置项目为推荐
+ */
+export function doFeatured(id: string): Promise<boolean> {
+  return request.put(`/projects/featured/${id}`);
 }

@@ -61,6 +61,6 @@ export {
   createProject,
   updateProject,
   deleteProject,
-  incrementViews,
+  doFeatured,
   getTechnologies
 } from './project'; 

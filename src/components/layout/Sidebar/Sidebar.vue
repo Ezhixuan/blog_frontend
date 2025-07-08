@@ -293,7 +293,7 @@
               <line x1="3" y1="18" x2="3.01" y2="18"></line>
             </svg>
           </h3>
-          <div class="toc-wrapper">
+          <div class="toc-wrapper" id="sidebar-toc-container">
             <Toc 
               :content="articleContent || ''" 
               ref="tocRef"
@@ -373,7 +373,7 @@
                 @click="filterByCategory(category.id)"
               >
                 {{ category.name }}
-                <span class="category-count">{{ category.count }}</span>
+                <span class="category-count">{{ category.articleCount }}</span>
               </span>
 
               <div v-if="!categoriesLoading && categories.length === 0" class="empty-placeholder">
@@ -403,7 +403,7 @@
                 @click="filterByTag(tag.id)"
               >
                 {{ tag.name }}
-                <span class="tag-count">{{ tag.count }}</span>
+                <span class="tag-count">{{ tag.articleCount }}</span>
               </span>
 
               <div v-if="!tagsLoading && tags.length === 0" class="empty-placeholder">
@@ -544,7 +544,7 @@ import { on, off } from '@/utils/helpers/eventBus';
 import messageService from '@/utils/helpers/message';
 import { useTheme } from '@/utils/helpers/theme';
 import { useUserStore } from '@/stores/user';
-import { getCategoryList, getTagList } from '@/api/modules/blog';
+import { getCategoryList, getTagList, getCategoryCount, getTagCount } from '@/api/modules/blog';
 import { uploadPicture as upload, getPictureList } from '@/api/modules/common';
 import { useSidebar } from '@/composables/useSidebar';
 import { PICTURE_TYPES } from "@/utils/constants/pictureTypes";
@@ -797,17 +797,27 @@ const loadCategories = async (): Promise<void> => {
 
   categoriesLoading.value = true;
   try {
-    const res = await getCategoryList();
-    if (res.data) {
-      categories.value = res.data;
+    const [categoryRes, countRes] = await Promise.all([
+      getCategoryList(),
+      getCategoryCount(),
+    ]);
+
+    if (categoryRes.data) {
+      const counts = new Map(
+        (countRes.data as any).map((c: any) => [c.id, c.count])
+      );
+      categories.value = categoryRes.data.map((category: any) => ({
+        ...category,
+        articleCount: counts.get(category.id) || 0,
+      }));
     } else {
-       categories.value = [];
-       console.warn('获取分类数据为空或接口格式不符');
+      categories.value = [];
+      console.warn("获取分类数据为空或接口格式不符");
     }
   } catch (error) {
-    console.error('获取分类列表失败:', error);
+    console.error("获取分类列表失败:", error);
     categories.value = [];
-    messageService.error('加载分类失败');
+    messageService.error("加载分类失败");
   } finally {
     categoriesLoading.value = false;
   }
@@ -818,17 +828,27 @@ const loadTags = async (): Promise<void> => {
 
   tagsLoading.value = true;
   try {
-    const res = await getTagList();
-    if (res.data) {
-      tags.value = res.data;
+    const [tagRes, countRes] = await Promise.all([
+      getTagList(),
+      getTagCount(),
+    ]);
+
+    if (tagRes.data) {
+      const counts = new Map(
+        (countRes.data as any).map((c: any) => [c.id, c.count])
+      );
+      tags.value = tagRes.data.map((tag: any) => ({
+        ...tag,
+        articleCount: counts.get(tag.id) || 0,
+      }));
     } else {
-        tags.value = [];
-        console.warn('获取标签数据为空或接口格式不符');
+      tags.value = [];
+      console.warn("获取标签数据为空或接口格式不符");
     }
   } catch (error) {
-    console.error('获取标签列表失败:', error);
+    console.error("获取标签列表失败:", error);
     tags.value = [];
-    messageService.error('加载标签失败');
+    messageService.error("加载标签失败");
   } finally {
     tagsLoading.value = false;
   }
@@ -1729,10 +1749,17 @@ const handleNavClick = (item: any) => {
 
 .toc-wrapper {
   @apply bg-gray-50/80 dark:bg-gray-800/50 rounded-xl p-4 border border-gray-200/60 dark:border-gray-700/60;
-  @apply max-h-96 overflow-y-auto;
+  /* 设置固定的最大高度，确保目录不会太长 */
+  max-height: 480px; /* 稍微增加高度到480px，提供更好的可视空间 */
+  @apply overflow-y-auto overflow-x-hidden;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  /* 确保滚动容器能正确处理自动滚动 */
+  scroll-behavior: smooth;
+  position: relative;
+  /* 确保容器有明确的尺寸 */
+  height: auto;
 }
 
 .toc-wrapper:hover {
@@ -1779,20 +1806,34 @@ const handleNavClick = (item: any) => {
 
 /* 滚动条样式 */
 .toc-wrapper::-webkit-scrollbar {
-  width: 4px;
+  width: 6px;
 }
 
 .toc-wrapper::-webkit-scrollbar-track {
-  background: transparent;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 3px;
 }
 
 .toc-wrapper::-webkit-scrollbar-thumb {
-  background-color: rgba(156, 163, 175, 0.4);
-  border-radius: 4px;
+  background-color: rgba(156, 163, 175, 0.5);
+  border-radius: 3px;
+  transition: background-color 0.2s ease;
 }
 
 .toc-wrapper::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(156, 163, 175, 0.6);
+  background-color: rgba(156, 163, 175, 0.8);
+}
+
+.dark .toc-wrapper::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.dark .toc-wrapper::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.dark .toc-wrapper::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.4);
 }
 
 /* --- 目录模式下的快速导航 --- */

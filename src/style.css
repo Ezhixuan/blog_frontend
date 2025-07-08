@@ -7,13 +7,13 @@
  * 这些变量使用HSL格式，方便调整透明度
  */
 :root {
-  --background: 210 20% 98%;
+  --background: 210 20% 96%; /* 更柔和的背景色 */
   --foreground: 210 40% 2%;
   
-  --card: 0 0% 100%;
+  --card: 210 20% 98%; /* 卡片颜色，与背景形成对比 */
   --card-foreground: 210 40% 2%;
   
-  --popover: 0 0% 100%;
+  --popover: 210 20% 98%;
   --popover-foreground: 210 40% 2%;
   
   --primary: 221 83% 40%;
@@ -22,8 +22,8 @@
   --secondary: 214 100% 67%;
   --secondary-foreground: 0 0% 100%;
   
-  --muted: 210 20% 96%;
-  --muted-foreground: 210 20% 60%;
+  --muted: 210 20% 94%; /* 调整以匹配新背景 */
+  --muted-foreground: 210 20% 55%;
   
   --accent: 214 93% 95%;
   --accent-foreground: 221 83% 40%;
@@ -31,8 +31,8 @@
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
   
-  --border: 210 20% 88%;
-  --input: 210 20% 88%;
+  --border: 210 20% 90%; /* 更柔和的边框 */
+  --input: 210 20% 90%;
   --ring: 214 100% 67%;
   
   --radius: 0.5rem;
@@ -468,4 +468,3 @@ body {
     line-height: 1.7 !important;
   }
 }
-

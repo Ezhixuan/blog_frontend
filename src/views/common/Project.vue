@@ -252,7 +252,7 @@ import ConfirmModal from '@/components/ui/Modal/ConfirmModal.vue'
 import { projectApi } from '@/api/modules'
 import { useUserStore } from '@/stores/user'
 import { ProjectQueryDTO, ProjectQueryVO, ProjectCreateDTO, ProjectEditDTO } from "@/types"
-import messageService from '@/utils/helpers/message'
+import messageService from '@/utils/helpers/message'  
 
 // 用户store
 const userStore = useUserStore()
@@ -305,10 +305,9 @@ const fetchProjects = async () => {
     const params: ProjectQueryDTO = {
       current: currentPage.value,
       pageSize: pageSize.value,
-      featured: showFeaturedOnly.value,
+      featured: showFeaturedOnly.value == false ? undefined : showFeaturedOnly.value,
       technology: selectedTechnology.value,
-      sortOrder: 'desc',
-      sortField: 'createTime',
+      sortOrder: 'desc'
     }
 
     const response = await projectApi.getProjects(params)
@@ -414,10 +413,7 @@ const handleDeleteProject = (project: ProjectQueryVO) => {
 // 切换推荐状态
 const handleToggleFeatured = async (project: ProjectQueryVO) => {
   try {
-    await projectApi.updateProject({
-      id: project.id,
-      featured: !project.featured
-    })
+    await projectApi.doFeatured(project.id)
     messageService.success(`项目${project.featured ? '取消推荐' : '推荐'}成功`)
     fetchProjects()
   } catch (error) {
@@ -429,7 +425,6 @@ const handleToggleFeatured = async (project: ProjectQueryVO) => {
 // 查看项目
 const handleViewProject = async (project: ProjectQueryVO) => {
   try {
-    await projectApi.incrementViews(project.id)
     if (project.liveUrl) {
       window.open(project.liveUrl, '_blank')
     }
