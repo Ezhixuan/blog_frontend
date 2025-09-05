@@ -9,8 +9,6 @@
                 </svg>
                 <span>{{ isUploading ? "上传中..." : "上传Markdown" }}</span>
             </button>
-            <input ref="fileInputRef" type="file" accept=".md" style="display: none" @change="handleFileChange" />
-            
             <!-- 自定义图片选择按钮 -->
             <button type="button" class="select-image-button" @click="handleSelectImage">
                 <svg xmlns="http://www.w3.org/2000/svg" class="button-icon" fill="none" viewBox="0 0 24 24"
@@ -38,6 +36,12 @@
                 </template>
             </MdEditor>
         </div>
+
+        <MarkdownUploadModal 
+            :visible="isUploadModalVisible" 
+            @close="isUploadModalVisible = false"
+            @upload="handleMarkdownUpload"
+        />
     </div>
 </template>
 
@@ -47,9 +51,9 @@ import { MdEditor, NormalFooterToolbar, type ToolbarNames } from "md-editor-v3";
 import "md-editor-v3/lib/style.css";
 import parseTime from "@/utils/helpers/time";
 import { useTheme } from '@/utils/helpers/theme'
-import { markdownUpload } from "@/api/markdownController";
 import { message } from "ant-design-vue";
-import { PICTURE_TYPES } from "@/utils/constants/pictureTypes";
+import { blogApi } from "@/api";
+import MarkdownUploadModal from './MarkdownUploadModal.vue';
 
 const props = defineProps({
     modelValue: {
@@ -83,7 +87,7 @@ const emit = defineEmits([
 
 const content = ref(props.modelValue);
 const isUploading = ref(false);
-const fileInputRef = ref<HTMLInputElement | null>(null);
+const isUploadModalVisible = ref(false);
 
 // 根据传入的 isDark 属性计算主题
 const { currentTheme } = useTheme();
@@ -96,32 +100,25 @@ watch(content, async () => {
 
 // 处理上传 Markdown 文件按钮点击
 const handleUploadMdClick = () => {
-    fileInputRef.value?.click();
+    isUploadModalVisible.value = true;
 };
 
-// 处理文件选择
-const handleFileChange = async (event: Event) => {
-    const target = event.target as HTMLInputElement;
-    if (!target.files || target.files.length === 0) return;
-
-    const file = target.files[0];
-    // 检查文件类型
-    if (!file.name.toLowerCase().endsWith('.md')) {
-        message.error('只能上传 Markdown (.md) 文件');
-        return;
-    }
+// 处理从模态框传递来的上传事件
+const handleMarkdownUpload = async (payload: { mdFile: File, imageFiles: File[] }) => {
+    isUploadModalVisible.value = false;
+    isUploading.value = true;
 
     try {
-        isUploading.value = true;
         const formData = new FormData();
-        formData.append('file', file);
-        formData.append('type', PICTURE_TYPES.CONTENT.toString());
-        const response = await markdownUpload(formData);
-        // 处理响应对象，这里假设后端返回的是 API.BaseResponseString 类型
-        console.log('Response:', response);
-        console.log('Response code type:', typeof response.code, 'value:', response.code);
-        console.log('Response data type:', typeof response.data, 'value:', !!response.data);
-        console.log('Condition result:', response.code === 200 && !!response.data);
+        formData.append('file', payload.mdFile);
+
+        if (payload.imageFiles.length > 0) {
+            payload.imageFiles.forEach(imageFile => {
+                formData.append('images', imageFile);
+            });
+        }
+
+        const response = await blogApi.uploadMarkdown(formData);
         
         if (response.code === 0 && response.data) {
             content.value = response.data;
@@ -135,10 +132,6 @@ const handleFileChange = async (event: Event) => {
         console.error('上传失败', error);
     } finally {
         isUploading.value = false;
-        // 重置文件输入框，以便重复上传相同文件
-        if (fileInputRef.value) {
-            fileInputRef.value.value = '';
-        }
     }
 };
 

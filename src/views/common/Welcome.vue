@@ -409,8 +409,8 @@ import type { ArticleInfo, ProjectQueryVO } from "@/types/api";
 
 // 轮播图配置
 const banners = [
-  "/public/images/local-banner1.jpg",
-  "/public/images/local-banner2.jpg",
+  "/images/local-banner1.jpg",
+  "/images/local-banner2.jpg",
 ];
 const currentIndex = ref(0);
 const timer = ref<number | null>(null);

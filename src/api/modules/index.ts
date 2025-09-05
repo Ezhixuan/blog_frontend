@@ -21,14 +21,14 @@ export {
   getArticleList,
   getArticleById,
   submitArticle,
-  updateArticle,
   deleteArticle,
   getCategoryList,
   addCategory,
   deleteCategory,
   getTagList,
   addTag,
-  deleteTag
+  deleteTag,
+
 } from './blog';
 
 export {

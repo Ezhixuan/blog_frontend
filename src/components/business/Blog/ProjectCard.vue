@@ -178,6 +178,14 @@
           </svg>
           源码
         </a>
+        <button
+          v-if="project.hasArticles"
+          @click="$emit('view-articles', project)"
+          class="group flex-1 relative inline-flex items-center justify-center px-6 py-3 text-sm font-semibold text-slate-700 dark:text-slate-300 bg-white/80 dark:bg-slate-700/80 backdrop-blur-sm border border-slate-200/50 dark:border-slate-600/50 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-600 transition-all duration-300 transform hover:-translate-y-0.5 hover:scale-105 shadow-lg hover:shadow-xl"
+        >
+          <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm2 10a1 1 0 10-2 0v1a1 1 0 102 0v-1zm2-3a1 1 0 011 1v5a1 1 0 11-2 0v-5a1 1 0 011-1z" clip-rule="evenodd"></path></svg>
+          项目文档
+        </button>
       </div>
     </div>
 
@@ -202,6 +210,7 @@ interface Emits {
   (e: 'delete', project: ProjectQueryVO): void
   (e: 'toggleFeatured', project: ProjectQueryVO): void
   (e: 'view', project: ProjectQueryVO): void
+  (e: 'view-articles', project: ProjectQueryVO): void
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -210,6 +219,10 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<Emits>()
+
+// 避免TypeScript未使用变量错误
+void props
+void emit
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('zh-CN')

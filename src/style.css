@@ -2,6 +2,74 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 自定义头像通知样式 */
+.avatar-notification {
+  /* 确保通知框有相对定位的上下文 */
+  position: relative !important;
+  padding: 1rem 1.5rem !important;
+  border-radius: 0.75rem !important;
+  border: none !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* 移除 antd 默认的左边框/图标 */
+.avatar-notification .ant-notification-notice-with-icon .ant-notification-notice-message,
+.avatar-notification .ant-notification-notice-with-icon .ant-notification-notice-description {
+  margin-inline-start: 0 !important;
+}
+
+.avatar-notification .ant-notification-notice-icon {
+  display: none !important;
+}
+
+/* 标题和描述颜色 */
+.avatar-notification .ant-notification-notice-message {
+  color: white !important;
+  font-weight: 600;
+  margin-bottom: 0.25rem !important;
+}
+
+.avatar-notification .ant-notification-notice-description {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* 关闭按钮样式 */
+.avatar-notification .ant-notification-notice-close {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+.avatar-notification .ant-notification-notice-close:hover {
+  color: white !important;
+}
+
+
+/* 对话气泡箭头 */
+.avatar-notification::before {
+  content: '';
+  position: absolute;
+  top: 20px;
+  left: -10px;
+  width: 0;
+  height: 0;
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  border-right: 10px solid; /* 颜色将由内联样式控制 */
+  z-index: 1;
+}
+
+/* 根据类型设置箭头颜色 */
+.avatar-notification.success::before {
+  border-right-color: #2dd4bf; /* 匹配渐变色的起始颜色 */
+}
+.avatar-notification.info::before {
+  border-right-color: #60a5fa;
+}
+.avatar-notification.warning::before {
+  border-right-color: #facc15;
+}
+.avatar-notification.error::before {
+  border-right-color: #f87171;
+}
+
 /* 
  * 主题变量配置 - 亮色模式
  * 这些变量使用HSL格式，方便调整透明度

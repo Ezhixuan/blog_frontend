@@ -81,6 +81,10 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<Emits>()
+
+// 避免TypeScript未使用变量错误
+void props
+void emit
 </script>
 
 <style scoped>

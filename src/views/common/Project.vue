@@ -151,6 +151,7 @@
           @delete="handleDeleteProject"
           @toggle-featured="handleToggleFeatured"
           @view="handleViewProject"
+          @view-articles="handleViewArticles"
           :class="`animate-fade-in-up`"
           :style="`animation-delay: ${index * 0.1}s`"
         />
@@ -246,16 +247,18 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import ProjectCard from '@/components/business/Blog/ProjectCard.vue'
 import ProjectEditModal from '@/components/ui/Modal/ProjectEditModal.vue'
 import ConfirmModal from '@/components/ui/Modal/ConfirmModal.vue'
-import { projectApi } from '@/api/modules'
+import { projectApi, blogApi } from '@/api/modules'
 import { useUserStore } from '@/stores/user'
 import { ProjectQueryDTO, ProjectQueryVO, ProjectCreateDTO, ProjectEditDTO } from "@/types"
 import messageService from '@/utils/helpers/message'  
 
 // 用户store
 const userStore = useUserStore()
+const router = useRouter()
 
 // 响应式数据
 const projects = ref<ProjectQueryVO[]>([])
@@ -430,6 +433,27 @@ const handleViewProject = async (project: ProjectQueryVO) => {
     }
   } catch (error) {
     console.error('增加浏览量失败:', error)
+  }
+}
+
+// 查看项目关联文章
+const handleViewArticles = async (project: ProjectQueryVO) => {
+  try {
+    const response = await blogApi.getArticleList({
+      projectId: project.id,
+      current: 1,
+      pageSize: 1,
+      sortOrder: 'asc' // 获取最旧的一篇作为第一篇
+    });
+    if (response.data && response.data.data.length > 0) {
+      const firstArticle = response.data.data[0];
+      router.push({ path: `/article/${firstArticle.id}`, query: { projectId: project.id } });
+    } else {
+      messageService.info('该项目下暂无关联文章');
+    }
+  } catch (error) {
+    console.error('获取项目文章失败:', error);
+    messageService.error('获取项目文章失败');
   }
 }
 

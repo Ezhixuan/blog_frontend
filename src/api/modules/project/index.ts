@@ -3,6 +3,7 @@ import request from '@/utils/core/request'
 import type {
   ProjectCreateDTO,
   ProjectEditDTO,
+  ProjectLinkArticleVoResponse,
   ProjectListResponse,
   ProjectQueryDTO,
   ProjectQueryVO
@@ -55,4 +56,8 @@ export function getTechnologies(): Promise<string[]> {
  */
 export function doFeatured(id: string): Promise<boolean> {
   return request.put(`/projects/featured/${id}`);
+}
+
+export function getLinkList(): Promise<ProjectLinkArticleVoResponse> {
+  return request.get('/projects/link');
 }

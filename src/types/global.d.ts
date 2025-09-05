@@ -22,7 +22,7 @@ declare global {
     }
 
     interface UserInfoVO {
-      id: number;
+      id: string;
       userAccount: string;
       username: string;
       avatar?: string;
@@ -34,12 +34,12 @@ declare global {
 
     // 文章相关类型
     interface ArticlePageVO {
-      id: number;
+      id: string;
       title: string;
-      userId: number;
+      userId: string;
       summary: string;
       cover?: string;
-      categoryId: number;
+      categoryId: string;
       categoryName: string;
       tagMap: Record<string, any>;
       wordCount: number;

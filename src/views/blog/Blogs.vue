@@ -350,7 +350,7 @@ const handleImageClick = (article: API.ArticlePageVO) => {
 };
 
 // 恢复原有的 goToArticleDetail 函数
-const goToArticleDetail = (id?: number) => {
+const goToArticleDetail = (id?: string) => {
   if (id) {
     saveCurrentPageState();
     router.push(`/article/${id}`);

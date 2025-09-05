@@ -35,7 +35,7 @@
   </template>
   
   <script setup lang="ts">
-  import { ref, onMounted, onBeforeUnmount, watch, computed, inject, nextTick } from 'vue';
+  import { ref, onMounted, onBeforeUnmount, watch, computed, nextTick } from 'vue';
   import { useTheme } from '@/utils/helpers/theme'
 
   const { currentTheme } = useTheme();

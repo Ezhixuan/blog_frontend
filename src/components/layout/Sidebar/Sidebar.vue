@@ -1,683 +1,123 @@
 <template>
-  <aside class="w-72 bg-white shadow-lg p-6 fixed top-0 left-0 bottom-0 overflow-y-auto overflow-hidden z-50 transition-all duration-300 dark:bg-gray-900 dark:border-r dark:border-gray-800 -translate-x-full lg:translate-x-0" 
+  <aside class="w-72 bg-white shadow-lg p-6 fixed top-0 left-0 bottom-0 overflow-y-auto overflow-hidden z-50 transition-all duration-300 dark:bg-gray-900 dark:border-r dark:border-gray-800 -translate-x-full lg:translate-x-0"
          :class="{ 'translate-x-0': isMobileSidebarOpen }"
          @click.stop>
-    
-    <!-- 图片选择模态窗口 -->
-    <a-modal
-      v-model:visible="isPictureModalVisible"
-      title="选择头像"
-      width="800px"
-      :footer="null"
-    >
-      <div v-if="isFetchingPictures" class="loading-container">
-        <a-spin size="large" />
-      </div>
-      <div v-else class="picture-grid">
-        <div
-          v-for="picture in pictureList"
-          :key="picture.id"
-          class="picture-item"
-          @click="selectAvatarPicture(picture.url)"
-        >
-          <img
-            :src="picture.url"
-            :alt="picture.name"
-            class="picture-thumbnail"
-          />
-          <div class="picture-name">{{ picture.name }}</div>
-        </div>
-      </div>
-      <div class="upload-section">
-        <a-upload
-          :customRequest="handleAvatarUpload"
-          :showUploadList="false"
-          accept="image/*"
-          :disabled="isUploadingAvatar"
-        >
-          <a-button type="primary" :loading="isUploadingAvatar">
-            <upload-outlined />
-            上传新头像
-          </a-button>
-        </a-upload>
-      </div>
-    </a-modal>
-    
-    <transition
-      name="sidebar-transition"
-      mode="out-in"
-    >
+
+    <transition name="sidebar-transition" mode="out-in">
       <div class="sidebar-content">
-        <div class="profile-section">
-          <div
-            class="profile-avatar-wrapper"
-            @mouseenter="handleMouseEnter"
-            @mouseleave="handleMouseLeave"
-          >
-            <!-- 恢复原来的头像样式，移除点击更换功能 -->
-            <img
-              :src="userAvatar" 
-              alt="Profile" 
-              @error="handleAvatarError"
-              class="w-32 h-32 rounded-full mx-auto mb-4 border-4 border-slate-100 hover:rotate-[360deg] transition-transform duration-500 dark:border-gray-700"
-            >
+        <UserProfile
+          :is-logged-in="isLoggedIn"
+          :user-info="userInfo"
+          :admin-info="adminInfo"
+          :is-checking-login="isLoading"
+          :is-uploading-avatar="isUploadingAvatar"
+          @check-login-status="checkLoginStatus"
+          @logout="handleLogout"
+          @open-change-password="showChangePasswordModal = true"
+          @open-edit-profile="openEditUserInfoModal"
+          @trigger-avatar-upload="openPictureSelectModal"
+        />
 
-            <div
-              v-if="showLoginDialog && !isLoggedIn"
-              class="absolute left-1/2 transform -translate-x-1/2 mt-2 w-48 bg-white rounded-lg shadow-xl p-4 z-10
-                     animate-fade-in-up border border-gray-200 dark:bg-gray-800 dark:border-gray-700"
-              @mouseenter="clearHideTimeout"
-              @mouseleave="handleDialogLeave"
-            >
-              <div class="login-dialog-content">
-                <p class="login-prompt">登录后体验更多功能</p>
-                <button
-                  @click="handleNavigation('/login')"
-                  class="login-button primary"
-                >
-                  登录
-                </button>
-                <button
-                  @click="handleNavigation('/register')"
-                  class="login-button secondary"
-                >
-                  注册
-                </button>
-              </div>
-              <div class="dialog-arrow">
-                <div class="dialog-arrow-inner"></div>
-              </div>
-            </div>
-
-            <!-- 用户信息弹窗中的头像 -->
-            <div
-              v-if="showLoginDialog && isLoggedIn"
-              class="absolute left-1/2 transform -translate-x-1/2 mt-2 w-72 backdrop-blur-lg bg-white/90 rounded-lg shadow-2xl p-4 z-10
-                     animate-float border border-transparent hover:border-blue-300/50 transition-all duration-500
-                     bg-gradient-to-br from-white/90 via-white/80 to-blue-50/30
-                     dark:from-gray-900/90 dark:via-gray-900/80 dark:to-blue-900/30 dark:hover:border-blue-500/30"
-              @mouseenter="clearHideTimeout"
-              @mouseleave="handleDialogLeave"
-              style="transform-style: preserve-3d; perspective: 1000px;"
-            >
-              <div class="space-y-4">
-                <!-- 用户基本信息 -->
-                <div class="flex items-start space-x-4">
-                  <div class="relative group cursor-pointer">
-                    <img 
-                      :src="userAvatar"
-                      alt="User Avatar"
-                      class="w-16 h-16 rounded-full border-2 border-gray-200 dark:border-gray-700 group-hover:opacity-80"
-                      @error="handleAvatarError"
-                      
-                    />
-                    <!-- 悬浮提示 -->
-                    <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div class="text-white text-xs bg-black bg-opacity-50 px-2 py-1 rounded-full" @click="triggerAvatarUpload">更换头像</div>
-                    </div>
-                    
-                    <!-- 上传中状态 -->
-                    <div v-if="isUploadingAvatar" class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 rounded-full">
-                      <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                    </div>
-                  </div>
-                  <div class="flex-1">
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-white">
-                      {{ userInfo?.username || userInfo?.userAccount || '用户' }}
-                    </h3>
-                    <!-- 角色标签 -->
-                    <div class="flex items-center justify-center space-x-2 my-1">
-                      <span 
-                        :class="[`text-white text-xs px-2 py-0.5 rounded-full`, 
-                                getRoleColorClass(userInfo?.role)]"
-                      >
-                        {{ userInfo?.role || '普通用户' }}
-                      </span>
-                    </div>
-                    <p class="text-sm text-gray-500 truncate dark:text-gray-400" :title="userInfo?.email">
-                      {{ userInfo?.email || '未设置邮箱' }}
-                    </p>
-                  </div>
-                </div>
-                
-                <!-- 用户简介 -->
-                <div class="text-sm text-gray-600 border-t border-gray-100 pt-3 dark:text-gray-400 dark:border-gray-700">
-                  <p class="line-clamp-2" :title="userInfo?.profile">
-                    {{ userInfo?.profile || '这个人很懒，还没有填写简介' }}
-                  </p>
-                </div>
-    
-                <!-- 加入时间 -->
-                <div class="text-xs text-gray-500 border-t border-gray-100 pt-3 dark:text-gray-400 dark:border-gray-700">
-                  加入时间：{{ userInfo?.createTime ? new Date(userInfo.createTime).toLocaleDateString() : '未知' }}
-                </div>
-                
-                <!-- 操作按钮 -->
-                <div class="flex space-x-3 pt-4">
-                  <button
-                    @click="userInfo?.role === 'admin' ? router.push('/blog/edit') : showChangePasswordModal = true"
-                    class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl shadow-md hover:shadow-lg hover:from-blue-600 hover:to-blue-700 active:shadow-inner active:translate-y-0.5 transform transition-all duration-200"
-                  >
-                    <DocumentPlusIcon v-if="userInfo?.role === 'admin'" class="w-4 h-4" />
-                    <KeyIcon v-else class="w-4 h-4" />
-                    {{ userInfo?.role === 'admin' ? '提交博客' : '修改密码' }}
-                  </button>
-                  <button
-                    @click="openEditUserInfoModal"
-                    class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium bg-gradient-to-br from-emerald-500 to-green-600 text-white rounded-xl shadow-md hover:shadow-lg hover:from-emerald-600 hover:to-green-700 active:shadow-inner active:translate-y-0.5 transform transition-all duration-200"
-                  >
-                    <PencilIcon class="w-4 h-4" />
-                    编辑资料
-                  </button>
-                  <button
-                    @click="handleLogout"
-                    class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium bg-gradient-to-br from-gray-200 to-gray-300 text-gray-700 rounded-xl shadow-md hover:shadow-lg hover:from-gray-300 hover:to-gray-400 active:shadow-inner active:translate-y-0.5 transform transition-all duration-200 dark:from-gray-700 dark:to-gray-800 dark:text-gray-200 dark:hover:from-gray-600 dark:hover:to-gray-700"
-                  >
-                    <ArrowRightOnRectangleIcon class="w-4 h-4" />
-                    退出登录
-                  </button>
-                </div>
-              </div>
-              
-              <!-- Arrow -->
-              <div class="absolute -top-2 left-1/2 transform -translate-x-1/2">
-                <div class="border-8 border-transparent border-b-white dark:border-b-gray-900"></div>
-              </div>
-            </div>
+        <!-- Conditional rendering for main content vs. TOC -->
+        <div v-if="currentProjectId">
+          <ProjectArticleList :articles="projectArticles" :project-id="currentProjectId" />
+          <div v-if="shouldShowToc" class="mt-4 border-t border-gray-200 dark:border-gray-700 pt-4">
+            <ArticleToc :article-content="articleContent" />
           </div>
         </div>
-
-        <!-- 导航菜单 - 仅在非文章目录模式下显示 -->
-        <nav v-if="!shouldShowToc" class="main-navigation">
-          <transition-group name="nav-item">
-            <div
-              v-for="item in menuItems"
-              :key="item.name"
-              class="nav-item-container"
-            >
-              <div
-                class="nav-item"
-                :class="{
-                  active:
-                    $route.path === item.link ||
-                    (item.hasSubmenu && expandedMenu === item.name),
-                }"
-                @click="handleNavClick(item)"
-              >
-                <component :is="item.icon" class="nav-item-icon" />
-                <span>{{ item.name }}</span>
-                <span
-                  v-if="item.hasSubmenu"
-                  class="nav-submenu-arrow"
-                  :class="{ rotated: expandedMenu === item.name }"
-                >
-                  <svg class="nav-submenu-arrow-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                  </svg>
-                </span>
-              </div>
-
-              <div
-                v-if="item.name === 'Blogs' && expandedMenu === 'Blogs'"
-                class="submenu"
-              >
-                <div
-                  class="submenu-item"
-                  :class="{
-                    active:
-                      $route.path === '/blogs' && !$route.query.categoryId,
-                  }"
-                  @click="filterByCategory()"
-                >
-                  <span>全部文章</span>
-                </div>
-
-                <div v-if="categoriesLoading" class="submenu-loading">
-                  <span class="loading-indicator">
-                    <svg class="loading-spinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    加载中...
-                  </span>
-                </div>
-
-                <div
-                  v-for="category in categories"
-                  :key="category.id"
-                  class="submenu-item"
-                  :class="{
-                    active: $route.query.categoryId === String(category.id),
-                  }"
-                  @click="filterByCategory(category.id)"
-                >
-                  <span>{{ category.name }}</span>
-                </div>
-
-                <div v-if="!categoriesLoading && categories.length === 0" class="submenu-empty">
-                  暂无分类
-                </div>
-              </div>
-            </div>
-          </transition-group>
-        </nav>
-
-        <!-- 文章目录部分 -->
-        <div v-if="shouldShowToc" class="toc-section">
-          <!-- 目录模式下的快速导航 -->
-          <div class="toc-quick-nav">
-            <router-link to="/blogs" class="quick-nav-btn">
-              <svg class="quick-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-              </svg>
-              <span>返回博客</span>
-            </router-link>
-            <router-link to="/" class="quick-nav-btn">
-              <svg class="quick-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-              </svg>
-              <span>首页</span>
-            </router-link>
-          </div>
-          
-          <h3 class="section-title">
-            <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <line x1="8" y1="6" x2="21" y2="6"></line>
-              <line x1="8" y1="12" x2="21" y2="12"></line>
-              <line x1="8" y1="18" x2="21" y2="18"></line>
-              <line x1="3" y1="6" x2="3.01" y2="6"></line>
-              <line x1="3" y1="12" x2="3.01" y2="12"></line>
-              <line x1="3" y1="18" x2="3.01" y2="18"></line>
-            </svg>
-          </h3>
-          <div class="toc-wrapper" id="sidebar-toc-container">
-            <Toc 
-              :content="articleContent || ''" 
-              ref="tocRef"
-              class="sidebar-toc"
-            />
-          </div>
-          
-          <!-- 目录模式下的控制按钮 -->
-          <div class="toc-controls">
-            <button
-              @click="toggleTheme"
-              class="control-btn"
-              :class="{ dark: currentTheme === 'dark' }"
-              title="切换主题"
-            >
-              <svg v-show="currentTheme === 'light'" xmlns="http://www.w3.org/2000/svg" class="control-icon" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"/>
-              </svg>
-              <svg v-show="currentTheme === 'dark'" xmlns="http://www.w3.org/2000/svg" class="control-icon" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/>
-              </svg>
-            </button>
-          </div>
+        <div v-else-if="shouldShowToc">
+           <ArticleToc :article-content="articleContent" />
         </div>
-
-        <!-- 其他内容 - 仅在非文章目录模式下显示 -->
-        <div v-if="!shouldShowToc">
-          <div class="social-links">
-            <a href="https://github.com" class="social-link" target="_blank" rel="noopener noreferrer">
-              <svg class="social-icon" fill="currentColor" viewBox="0 0 24 24">
-                <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"/>
-              </svg>
-            </a>
-            <a href="#" class="social-link" target="_blank" rel="noopener noreferrer">
-              <svg class="social-icon" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84"/>
-              </svg>
-            </a>
-          </div>
-
-          <div class="theme-toggle-section">
-            <button
-              @click="toggleTheme"
-              class="theme-toggle-btn"
-              :class="{ dark: currentTheme === 'dark' }"
-            >
-              <svg v-show="currentTheme === 'light'" xmlns="http://www.w3.org/2000/svg" class="theme-icon sun" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"/>
-              </svg>
-              <svg v-show="currentTheme === 'dark'" xmlns="http://www.w3.org/2000/svg" class="theme-icon moon" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/>
-              </svg>
-              <span class="theme-toggle-text">
-                {{ currentTheme === 'light' ? '亮色模式' : '暗色模式' }}
-              </span>
-            </button>
-          </div>
-
-          <div class="categories-section">
-            <h3 class="section-title">Categories</h3>
-            <div class="section-content-wrapper">
-              <div v-if="categoriesLoading" class="loading-placeholder">
-                <span class="loading-indicator">
-                  <svg class="loading-spinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  加载中...
-                </span>
-              </div>
-
-              <span
-                v-for="category in categories"
-                :key="category.id"
-                class="category-tag"
-                :class="{ active: $route.query.categoryId === String(category.id) }"
-                @click="filterByCategory(category.id)"
-              >
-                {{ category.name }}
-                <span class="category-count">{{ category.articleCount }}</span>
-              </span>
-
-              <div v-if="!categoriesLoading && categories.length === 0" class="empty-placeholder">
-                暂无分类
-              </div>
-            </div>
-          </div>
-
-          <div class="tags-section">
-            <h3 class="section-title">Tags</h3>
-            <div class="section-content-wrapper">
-              <div v-if="tagsLoading" class="loading-placeholder">
-                <span class="loading-indicator">
-                  <svg class="loading-spinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  加载中...
-                </span>
-              </div>
-
-              <span
-                v-for="tag in tags"
-                :key="tag.id"
-                class="tag-item"
-                :class="{ active: $route.query.tagId === String(tag.id) }"
-                @click="filterByTag(tag.id)"
-              >
-                {{ tag.name }}
-                <span class="tag-count">{{ tag.articleCount }}</span>
-              </span>
-
-              <div v-if="!tagsLoading && tags.length === 0" class="empty-placeholder">
-                暂无标签
-              </div>
-            </div>
-          </div>
+        <div v-else>
+          <MainMenu />
+          <SidebarFooter />
+          <TaxonomyList type="categories" />
+          <TaxonomyList type="tags" />
         </div>
       </div>
     </transition>
   </aside>
 
+  <!-- Modals -->
   <ChangePasswordModal
     v-model:isOpen="showChangePasswordModal"
     @passwordChanged="checkLoginStatus"
   />
-
-  <SubmitBlogModal
-    v-model:isOpen="showSubmitBlogModal"
+  <EditUserInfoModal
+    v-model:isOpen="showEditUserInfoModal"
+    :user-info="userInfo"
+    @user-info-updated="handleUserInfoUpdate"
   />
-
-  <!-- 编辑用户信息模态框 -->
-  <div v-if="showEditUserInfoModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div 
-      class="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md mx-4 p-6 transform transition-all duration-300 ease-out"
-      :class="{'scale-100 opacity-100': showEditUserInfoModal, 'scale-95 opacity-0': !showEditUserInfoModal}"
-    >
-      <!-- 模态框标题 -->
-      <div class="flex justify-between items-center mb-4">
-        <h3 class="text-xl font-semibold text-gray-900 dark:text-white">编辑个人资料</h3>
-        <button 
-          @click="closeEditUserInfoModal"
-          class="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-
-      <!-- 分隔线 -->
-      <div class="border-t border-gray-200 dark:border-gray-700 mb-4"></div>
-
-      <!-- 编辑表单 -->
-      <form @submit.prevent="saveUserInfo">
-        <!-- 用户昵称 -->
-        <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            用户昵称
-          </label>
-          <div class="relative">
-            <input 
-              v-model="editUserForm.username"
-              type="text"
-              class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              placeholder="请输入您的昵称"
-            />
-            <div v-if="editUserErrors.username" class="text-red-500 text-xs mt-1">
-              {{ editUserErrors.username }}
-            </div>
-          </div>
-        </div>
-
-        <!-- 用户邮箱 -->
-        <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            邮箱地址
-          </label>
-          <div class="relative">
-            <input 
-              v-model="editUserForm.email"
-              type="email"
-              class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              placeholder="请输入您的邮箱"
-            />
-            <div v-if="editUserErrors.email" class="text-red-500 text-xs mt-1">
-              {{ editUserErrors.email }}
-            </div>
-          </div>
-        </div>
-
-        <!-- 用户简介 -->
-        <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            个人简介
-          </label>
-          <div class="relative">
-            <textarea 
-              v-model="editUserForm.profile"
-              rows="3"
-              class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none"
-              placeholder="请简单介绍一下自己"
-            ></textarea>
-            <div v-if="editUserErrors.profile" class="text-red-500 text-xs mt-1">
-              {{ editUserErrors.profile }}
-            </div>
-          </div>
-        </div>
-
-        <!-- 保存取消按钮 -->
-        <div class="flex justify-end space-x-3 mt-6">
-          <button 
-            type="button"
-            @click="closeEditUserInfoModal"
-            class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          >
-            取消
-          </button>
-          <button 
-            type="submit"
-            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            :disabled="isSaving"
-          >
-            <span v-if="isSaving" class="flex items-center">
-              <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              保存中...
-            </span>
-            <span v-else>保存</span>
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
+  <PictureSelectModal
+    v-model:isOpen="showPictureSelectModal"
+    @avatar-updated="handleUserInfoUpdate"
+  />
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, computed, watch, onBeforeUnmount } from 'vue';
-import ChangePasswordModal from '@/components/ui/Modal/ChangePasswordModal.vue';
-import SubmitBlogModal from '@/components/ui/Modal/SubmitBlogModal.vue';
-import Toc from '@/components/business/Blog/Toc.vue';
-import { HomeIcon, UserIcon, DocumentTextIcon, CodeBracketIcon, UserGroupIcon, EnvelopeIcon, PencilIcon, ArrowRightOnRectangleIcon, DocumentPlusIcon, KeyIcon, BookOpenIcon, WifiIcon } from '@heroicons/vue/24/outline';
-import { useRouter, useRoute, LocationQueryValue } from 'vue-router';
-import { logout as doLogout, getUserInfo as getLoginUserInfo, updateUserInfo as editUserInfo } from '@/api/modules/auth';
-import { on, off } from '@/utils/helpers/eventBus';
-import messageService from '@/utils/helpers/message';
-import { useTheme } from '@/utils/helpers/theme';
+import { useRoute } from 'vue-router';
 import { useUserStore } from '@/stores/user';
-import { getCategoryList, getTagList, getCategoryCount, getTagCount } from '@/api/modules/blog';
-import { uploadPicture as upload, getPictureList } from '@/api/modules/common';
 import { useSidebar } from '@/composables/useSidebar';
-import { PICTURE_TYPES } from "@/utils/constants/pictureTypes";
-import type { PictureUpload } from '@/types';
-import { UploadOutlined } from '@ant-design/icons-vue';
+import { on, off } from '@/utils/helpers/eventBus';
+import { getUserInfo as getLoginUserInfo, getAdminInfo } from '@/api/modules/auth';
+import { getArticleList } from '@/api/modules/blog';
+import type { ArticleInfo } from '@/types';
 
-// --- Stores ---
+// Import new modular components
+import UserProfile from './modules/UserProfile.vue';
+import MainMenu from './modules/MainMenu.vue';
+import ArticleToc from './modules/ArticleToc.vue';
+import ProjectArticleList from './modules/ProjectArticleList.vue';
+import TaxonomyList from './modules/TaxonomyList.vue';
+import SidebarFooter from './modules/SidebarFooter.vue';
+import EditUserInfoModal from './modules/EditUserInfoModal.vue';
+import PictureSelectModal from './modules/PictureSelectModal.vue';
+import ChangePasswordModal from '@/components/ui/Modal/ChangePasswordModal.vue';
+
+// --- Stores & Composables ---
 const userStore = useUserStore();
-
-// --- Composables ---
-const { currentTheme, toggleTheme } = useTheme();
-const { isMobileSidebarOpen, closeMobileSidebar } = useSidebar();
-const router = useRouter();
+const { isMobileSidebarOpen } = useSidebar();
 const route = useRoute();
 
-// --- Refs ---
+// --- State ---
 const isLoggedIn = ref(false);
-const showLoginDialog = ref(false);
 const isLoading = ref(true);
-const hideTimeout = ref<number | null>(null);
 const userInfo = ref<any | null>(null);
-const avatarError = ref(false);
+const adminInfo = ref<any | null>(null);
+const isUploadingAvatar = ref(false); // This might be better inside PictureSelectModal if not needed elsewhere
+
+// --- Modal Visibility ---
 const showChangePasswordModal = ref(false);
-const showSubmitBlogModal = ref(false);
-const expandedMenu = ref<string | null>(null);
-const categories = ref<any[]>([]);
-const categoriesLoading = ref(false);
-const tags = ref<any[]>([]);
-const tagsLoading = ref(false);
-
-// 编辑用户信息相关
 const showEditUserInfoModal = ref(false);
-const isSaving = ref(false);
-const editUserForm = ref({
-  username: '',
-  email: '',
-  profile: '',
-});
-const editUserErrors = ref({
-  username: '',
-  email: '',
-  profile: '',
-});
+const showPictureSelectModal = ref(false);
 
-// 用户头像更换相关
-const isUploadingAvatar = ref(false);
-
-// 图片选择相关
-const pictureList = ref<PictureUpload[]>([]);
-const isPictureModalVisible = ref(false);
-const isFetchingPictures = ref(false);
-
-// 文章目录相关 - 使用EventBus监听
+// --- Article TOC State ---
 const articleContent = ref<string>('');
-const tocRef = ref<any>(null);
+const projectArticles = ref<ArticleInfo[]>([]);
+const currentProjectId = ref<string | null>(null);
 
-// EventBus事件处理函数
-const handleArticleContentUpdate = (data: { content: string; path: string }) => {
-  console.log('📻 Sidebar接收到EventBus事件 - 文章内容已更新');
-  
-  // 只有在文章详情页面时才更新内容
-  if (data.path.startsWith('/article/')) {
-    articleContent.value = data.content;
-  }
-};
-
-// --- Constants ---
-const defaultAvatar = "https://avatars.githubusercontent.com/u/46998172?v=4";
-const roleColorMap: Record<string, string> = {
-  'admin': 'bg-red-500',
-  'vip': 'bg-yellow-500',
-  'user': 'bg-green-500',
-  'default': 'bg-blue-500'
-};
-
-// --- Computed ---
-const userAvatar = computed(() => {
-  if (!isLoggedIn.value || !userInfo.value?.avatar || avatarError.value) {
-    return defaultAvatar;
-  }
-  return userInfo.value.avatar;
-});
-
-// 检测是否为移动端
-const isMobile = computed(() => {
-  return window.innerWidth < 1024; // lg断点
-});
-
-// 检测是否在文章详情页
+// --- Computed Properties ---
 const isArticleDetailPage = computed(() => {
-  return route.path.startsWith('/article/') || route.path.startsWith('/blog/');
+  return route.path.startsWith('/article/');
 });
 
-// 是否显示目录
 const shouldShowToc = computed(() => {
-  const hasContent = articleContent.value && articleContent.value.length > 0;
-  const result = isArticleDetailPage.value && hasContent;
-  return result;
+  return isArticleDetailPage.value && articleContent.value && articleContent.value.length > 0;
 });
-
-// --- Interfaces ---
-interface RedirectInfo {
-  path: string;
-  query: Record<string, LocationQueryValue | LocationQueryValue[]>;
-  timestamp: number;
-  scrollPosition?: number;
-}
 
 // --- Methods ---
-const getRoleColorClass = (role?: string) => {
-  if (!role) return roleColorMap.default;
-  const lowerRole = role.toLowerCase();
-  return roleColorMap[lowerRole] || roleColorMap.default;
-};
-
 const checkLoginStatus = async () => {
   if (userInfo.value !== null) {
+    isLoading.value = false;
     return;
   }
+  isLoading.value = true;
   try {
     const response = await getLoginUserInfo();
     isLoggedIn.value = response.data != null;
     if (isLoggedIn.value && response.data) {
-      userInfo.value = response.data;
-      const token = localStorage.getItem('token') || '';
-      userStore.setUserInfo({
-        id: userInfo.value.id || 0,
-        username: userInfo.value.username || userInfo.value.userAccount || '',
-        avatar: userInfo.value.avatar,
-        email: userInfo.value.email,
-        role: userInfo.value.role
-      });
-      userStore.setToken(token);
+      handleUserInfoUpdate(response.data);
     }
   } catch (error) {
     isLoggedIn.value = false;
@@ -687,964 +127,117 @@ const checkLoginStatus = async () => {
   }
 };
 
-const handleAvatarError = () => {
-  avatarError.value = true;
+const handleUserInfoUpdate = (newUserInfo: any) => {
+  userInfo.value = newUserInfo;
+  const token = localStorage.getItem('token') || '';
+  userStore.setUserInfo({
+    id: newUserInfo.id || 0,
+    username: newUserInfo.username || newUserInfo.userAccount || '',
+    avatar: newUserInfo.avatar,
+    email: newUserInfo.email,
+    role: newUserInfo.role
+  });
+  userStore.setToken(token);
+  isLoggedIn.value = true;
 };
 
-const handleNavigation = (path: string) => {
-  if (path === '/login' || path === '/register') {
-    const currentPath = route.path;
-    const currentQuery = { ...route.query };
-    
-    if (currentPath !== '/login' && currentPath !== '/register') {
-      const redirectInfo: RedirectInfo = {
-        path: currentPath,
-        query: currentQuery,
-        timestamp: new Date().getTime()
-      };
-      
-      if (currentPath.startsWith('/article/') || currentPath.startsWith('/blog/')) {
-        redirectInfo.scrollPosition = window.scrollY;
-      }
-      
-      const redirectPath = `${path}?redirect=${encodeURIComponent(JSON.stringify(redirectInfo))}`;
-      
-      router.push(redirectPath);
-    } else {
-      router.push(path);
-    }
-  } else {
-    router.push(path);
-  }
-  
-  showLoginDialog.value = false;
-  if (hideTimeout.value !== null) {
-    clearTimeout(hideTimeout.value);
-    hideTimeout.value = null;
-  }
-};
-
-const handleMouseEnter = () => {
-  checkLoginStatus()
-  if (!isLoading.value) {
-    if (hideTimeout.value !== null) {
-      clearTimeout(hideTimeout.value);
-      hideTimeout.value = null;
-    }
-    showLoginDialog.value = true;
-  }
-};
-
-const handleMouseLeave = () => {
-  hideTimeout.value = setTimeout(() => {
-    showLoginDialog.value = false;
-    hideTimeout.value = null;
-  }, 1500) as unknown as number;
-};
-
-const clearHideTimeout = () => {
-  if (hideTimeout.value !== null) {
-    clearTimeout(hideTimeout.value);
-    hideTimeout.value = null;
-  }
-};
-
-const handleDialogLeave = () => {
-  hideTimeout.value = setTimeout(() => {
-    showLoginDialog.value = false;
-    hideTimeout.value = null;
-  }, 500) as unknown as number;
-};
-
-const handleLogout = async () => {
-  try {
-    await doLogout();
-    messageService.info('退出登录成功, 期待您下次再来');
-  } catch (error: any) {
-    if (error?.response?.data?.code === 40100) {
-      console.log('Token已过期');
-    } else {
-      messageService.error('退出登录失败');
-      return;
-    }
-  }
+const handleLogout = () => {
   localStorage.removeItem('token');
   localStorage.removeItem('tokenName');
   localStorage.removeItem('loginId');
   localStorage.removeItem('isLogin');
   isLoggedIn.value = false;
   userInfo.value = null;
-  showLoginDialog.value = false;
-  
   userStore.logout();
-  
-  router.push('/');
 };
 
-const toggleSubmenu = (menuName: string): void => {
-  if (expandedMenu.value === menuName) {
-    expandedMenu.value = null;
-  } else {
-    expandedMenu.value = menuName;
-    if (menuName === 'Blogs' && categories.value.length === 0) {
-      loadCategories();
-    }
-  }
-};
-
-const loadCategories = async (): Promise<void> => {
-  if (categories.value.length > 0 && !categoriesLoading.value) return;
-
-  categoriesLoading.value = true;
+const fetchProjectArticles = async (projectId: string) => {
   try {
-    const [categoryRes, countRes] = await Promise.all([
-      getCategoryList(),
-      getCategoryCount(),
-    ]);
-
-    if (categoryRes.data) {
-      const counts = new Map(
-        (countRes.data as any).map((c: any) => [c.id, c.count])
-      );
-      categories.value = categoryRes.data.map((category: any) => ({
-        ...category,
-        articleCount: counts.get(category.id) || 0,
-      }));
-    } else {
-      categories.value = [];
-      console.warn("获取分类数据为空或接口格式不符");
+    const response = await getArticleList({
+      projectId,
+      pageSize: 100,
+      current: 1,
+      sortOrder: 'desc'
+    }); // Fetch all articles for the project
+    if (response.data) {
+      projectArticles.value = response.data.data;
+      currentProjectId.value = projectId;
     }
   } catch (error) {
-    console.error("获取分类列表失败:", error);
-    categories.value = [];
-    messageService.error("加载分类失败");
-  } finally {
-    categoriesLoading.value = false;
+    console.error('Failed to fetch project articles:', error);
+    projectArticles.value = [];
+    currentProjectId.value = null;
   }
 };
 
-const loadTags = async (): Promise<void> => {
-  if (tags.value.length > 0 && !tagsLoading.value) return;
+const openEditUserInfoModal = () => {
+  showEditUserInfoModal.value = true;
+};
 
-  tagsLoading.value = true;
+const openPictureSelectModal = () => {
+  showPictureSelectModal.value = true;
+};
+
+// --- EventBus Handlers ---
+const handleArticleContentUpdate = (data: { content: string; path: string }) => {
+  if (data.path.startsWith('/article/')) {
+    articleContent.value = data.content;
+  }
+};
+
+const handleLoginSuccess = (userData: any) => {
+    handleUserInfoUpdate(userData);
+};
+
+// --- Methods ---
+const fetchAdminInfo = async () => {
   try {
-    const [tagRes, countRes] = await Promise.all([
-      getTagList(),
-      getTagCount(),
-    ]);
-
-    if (tagRes.data) {
-      const counts = new Map(
-        (countRes.data as any).map((c: any) => [c.id, c.count])
-      );
-      tags.value = tagRes.data.map((tag: any) => ({
-        ...tag,
-        articleCount: counts.get(tag.id) || 0,
-      }));
-    } else {
-      tags.value = [];
-      console.warn("获取标签数据为空或接口格式不符");
+    const response = await getAdminInfo();
+    if (response.data) {
+      adminInfo.value = response.data;
     }
   } catch (error) {
-    console.error("获取标签列表失败:", error);
-    tags.value = [];
-    messageService.error("加载标签失败");
-  } finally {
-    tagsLoading.value = false;
+    console.error('Failed to fetch admin info:', error);
   }
 };
 
-const filterByCategory = (categoryId?: number): void => {
-  const query: Record<string, string> = {};
-  if (categoryId !== undefined) {
-    query.categoryId = String(categoryId);
-  }
-  router.push({ path: '/blogs', query });
-  
-  // 如果是移动端，导航后自动关闭侧边栏
-  if (isMobile.value) {
-    closeMobileSidebar();
-  }
-};
-
-const filterByTag = (tagId?: number): void => {
-  const query: Record<string, string> = {};
-  if (tagId !== undefined) {
-    query.tagId = String(tagId);
-  }
-  router.push({ path: '/blogs', query });
-  
-  // 如果是移动端，导航后自动关闭侧边栏
-  if (isMobile.value) {
-    closeMobileSidebar();
-  }
-};
-
-const handleLoginSuccess = (userData: any): void => {
-    userInfo.value = userData;
-    isLoggedIn.value = true;
-    isLoading.value = false;
-
-    const token = localStorage.getItem('token') || '';
-    userStore.setUserInfo({
-        id: userData.id || 0,
-        username: userData.username || userData.userAccount || '',
-        avatar: userData.avatar,
-        email: userData.email,
-        role: userData.role,
-    });
-    userStore.setToken(token);
-
-    const redirectInfoStr = localStorage.getItem('loginRedirect');
-    if (redirectInfoStr) {
-      try {
-        const redirectInfo = JSON.parse(redirectInfoStr) as RedirectInfo;
-        const currentTime = new Date().getTime();
-        const redirectTime = redirectInfo.timestamp || 0;
-        const thirtyMinutesInMs = 30 * 60 * 1000;
-
-        if (currentTime - redirectTime < thirtyMinutesInMs) {
-          router.push({
-            path: redirectInfo.path,
-            query: redirectInfo.query,
-          }).then(() => {
-            if (redirectInfo.scrollPosition !== undefined) {
-              setTimeout(() => {
-                window.scrollTo({
-                  top: redirectInfo.scrollPosition,
-                  behavior: 'smooth',
-                });
-              }, 300);
-            }
-          });
-        } else {
-          console.log('重定向信息已过期。');
-        }
-      } catch (e) {
-        console.error('解析重定向信息失败:', e);
-      } finally {
-        localStorage.removeItem('loginRedirect');
-      }
-    }
-};
-
+// --- Lifecycle Hooks ---
 onMounted(() => {
   checkLoginStatus();
-  loadTags();
-  loadCategories();
-
+  fetchAdminInfo();
   on('user-login-success', handleLoginSuccess);
-  
-  // 注册文章内容EventBus监听器
   on('article-content-updated', handleArticleContentUpdate);
 });
 
-// 监听路由变化，清空非文章页面的内容
+watch(() => route.query.projectId, (newProjectId, oldProjectId) => {
+  if (newProjectId && typeof newProjectId === 'string') {
+    if (newProjectId !== currentProjectId.value) {
+      fetchProjectArticles(newProjectId);
+    }
+  } else {
+    currentProjectId.value = null;
+    projectArticles.value = [];
+  }
+}, { immediate: true });
+
 watch(() => route.path, (newPath) => {
   if (!newPath.startsWith('/article/')) {
-    console.log('🧹 已离开文章页面，清空目录内容');
     articleContent.value = '';
   }
 });
 
 onBeforeUnmount(() => {
-  // 取消EventBus监听器
+  off('user-login-success', handleLoginSuccess);
   off('article-content-updated', handleArticleContentUpdate);
 });
-
-const menuItems = [
-  { name: 'Home', icon: HomeIcon, link: '/', hasSubmenu: false },
-  { name: 'About', icon: UserIcon, link: '/about', hasSubmenu: false },
-  { name: 'Blogs', icon: DocumentTextIcon, link: '/blogs', hasSubmenu: true },
-  { name: 'Memory', icon: BookOpenIcon, link: '/memory', hasSubmenu: false },
-  { name: 'Project', icon: CodeBracketIcon, link: '/project', hasSubmenu: false },
-  { name: 'Friend', icon: UserGroupIcon, link: '/friend', hasSubmenu: false },
-  { name: 'Contact', icon: EnvelopeIcon, link: '/contact', hasSubmenu: false },
-  { name: 'WebSocket', icon: WifiIcon, link: '/websocket-test', hasSubmenu: false },
-];
-
-// 打开编辑用户信息模态框
-const openEditUserInfoModal = () => {
-  // 确保已登录且有用户信息
-  if (!isLoggedIn.value || !userInfo.value) {
-    messageService.error('获取用户信息失败，请重新登录');
-    return;
-  }
-  
-  // 初始化表单数据
-  editUserForm.value = {
-    username: userInfo.value.username || userInfo.value.userAccount || '',
-    email: userInfo.value.email || '',
-    profile: userInfo.value.profile || ''
-  };
-  
-  // 清空错误信息
-  editUserErrors.value = { username: '', email: '', profile: '' };
-  
-  // 显示模态框
-  showEditUserInfoModal.value = true;
-};
-
-// 关闭编辑用户信息模态框
-const closeEditUserInfoModal = () => {
-  showEditUserInfoModal.value = false;
-  editUserErrors.value = { username: '', email: '', profile: '' };
-};
-
-// 验证表单数据
-const validateUserInfoForm = () => {
-  let isValid = true;
-  editUserErrors.value = { username: '', email: '', profile: '' };
-
-  // 验证用户名
-  if (!editUserForm.value.username.trim()) {
-    editUserErrors.value.username = '用户昵称不能为空';
-    isValid = false;
-  } else if (editUserForm.value.username.length > 20) {
-    editUserErrors.value.username = '用户昵称不能超过20个字符';
-    isValid = false;
-  }
-
-  // 验证邮箱
-  if (editUserForm.value.email.trim()) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(editUserForm.value.email)) {
-      editUserErrors.value.email = '请输入有效的邮箱地址';
-      isValid = false;
-    }
-  }
-
-  // 验证简介
-  if (editUserForm.value.profile.length > 200) {
-    editUserErrors.value.profile = '个人简介不能超过200个字符';
-    isValid = false;
-  }
-
-  return isValid;
-};
-
-// 保存用户信息
-const saveUserInfo = async () => {
-  if (!validateUserInfoForm()) {
-    return;
-  }
-
-  isSaving.value = true;
-  try {
-    // 调用API更新用户信息
-    const response = await editUserInfo({
-      username: editUserForm.value.username,
-      email: editUserForm.value.email,
-      profile: editUserForm.value.profile
-    });
-    
-    console.log(response);
-    if (response.code === 0 && response.data) {
-      // 更新本地用户信息
-      userInfo.value = response.data;
-      
-      // 更新全局用户状态
-      userStore.setUserInfo({
-        id: userInfo.value.id || 0,
-        username: userInfo.value.username || '',
-        avatar: userInfo.value.avatar,
-        email: userInfo.value.email,
-        role: userInfo.value.role
-      });
-      
-      // 显示成功消息
-      messageService.success('个人资料更新成功');
-      
-      // 关闭模态框
-      closeEditUserInfoModal();
-    } else {
-      throw new Error(response.message || '更新失败');
-    }
-  } catch (error: any) {
-    console.error('更新用户信息失败:', error);
-    messageService.error(error.message || '更新失败，请稍后再试');
-  } finally {
-    isSaving.value = false;
-  }
-};
-
-// 触发文件选择
-// 获取头像图片列表
-const fetchAvatarPictureList = async () => {
-  try {
-    isFetchingPictures.value = true;
-    const params: any = { current: 1, pageSize: 50, type: PICTURE_TYPES.AVATAR };
-    const res = await getPictureList(params);
-    if (res.data) {
-      pictureList.value = res.data.data || [];
-    }
-  } catch (error) {
-    console.error("获取头像图片列表失败:", error);
-    messageService.error("获取图片列表失败");
-  } finally {
-    isFetchingPictures.value = false;
-  }
-};
-
-const triggerAvatarUpload = async () => {
-  // 确保用户已登录
-  if (!isLoggedIn.value) {
-    messageService.info('请先登录后再更换头像');
-    return;
-  }
-  
-  // 显示图片选择模态窗口
-  isPictureModalVisible.value = true;
-  await fetchAvatarPictureList();
-};
-
-// 选择头像图片
-const selectAvatarPicture = async (avatarUrl: string) => {
-  try {
-    isUploadingAvatar.value = true;
-    
-    // 更新用户信息
-    const updateResponse = await editUserInfo({
-      avatar: avatarUrl
-    });
-    
-    if (updateResponse.code !== 0 || !updateResponse.data) {
-      throw new Error(updateResponse.message || '头像更新失败');
-    }
-    
-    // 更新本地用户信息
-    userInfo.value = updateResponse.data;
-    
-    // 更新Pinia store中的用户头像
-    userStore.setUserInfo({
-      id: userInfo.value.id || 0,
-      username: userInfo.value.username || userInfo.value.userAccount || '',
-      avatar: avatarUrl,
-      email: userInfo.value.email,
-      role: userInfo.value.role
-    });
-    
-    // 重置头像错误状态
-    avatarError.value = false;
-    
-    // 关闭模态窗口
-    isPictureModalVisible.value = false;
-    
-    // 显示成功消息
-    messageService.success('头像更新成功');
-  } catch (error: any) {
-    console.error('头像更新失败:', error);
-    messageService.error(error.message || '头像更新失败，请稍后再试');
-  } finally {
-    isUploadingAvatar.value = false;
-  }
-};
-
-// 处理头像文件上传
-const handleAvatarUpload = async (options: any) => {
-  const { file } = options;
-  
-  // 验证文件类型
-  const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-  if (!validTypes.includes(file.type)) {
-    messageService.error('请上传图片文件 (JPG, PNG, GIF, WEBP)');
-    return;
-  }
-  
-  // 验证文件大小 (最大2MB)
-  const maxSize = 2 * 1024 * 1024; // 2MB
-  if (file.size > maxSize) {
-    messageService.error('图片大小不能超过2MB');
-    return;
-  }
-  
-  try {
-    isUploadingAvatar.value = true;
-    
-    // 第一步：上传图片
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('type', PICTURE_TYPES.AVATAR.toString());
-    
-    const uploadResponse = await upload(formData);
-    
-    if (uploadResponse.code !== 0 || !uploadResponse.data) {
-      throw new Error(uploadResponse.message || '头像上传失败');
-    }
-    
-    const avatarUrl = uploadResponse.data;
-    
-    // 第二步：更新用户信息
-    const updateResponse = await editUserInfo({
-      avatar: avatarUrl
-    });
-    
-    if (updateResponse.code !== 0 || !updateResponse.data) {
-      throw new Error(updateResponse.message || '头像更新失败');
-    }
-    
-    // 更新本地用户信息
-    userInfo.value = updateResponse.data;
-    
-    // 更新Pinia store中的用户头像
-    userStore.setUserInfo({
-      id: userInfo.value.id || 0,
-      username: userInfo.value.username || userInfo.value.userAccount || '',
-      avatar: avatarUrl,
-      email: userInfo.value.email,
-      role: userInfo.value.role
-    });
-    
-    // 重置头像错误状态
-    avatarError.value = false;
-    
-    // 添加到图片列表并关闭模态窗口
-    pictureList.value.unshift({
-      id: Date.now(),
-      url: avatarUrl,
-      name: file.name,
-      type: PICTURE_TYPES.AVATAR
-    });
-    isPictureModalVisible.value = false;
-    
-    // 显示成功消息
-    messageService.success('头像更新成功');
-  } catch (error: any) {
-    console.error('头像更新失败:', error);
-    messageService.error(error.message || '头像更新失败，请稍后再试');
-  } finally {
-    isUploadingAvatar.value = false;
-  }
-};
-
-// 处理导航项点击，在移动端自动关闭侧边栏
-const handleNavClick = (item: any) => {
-  if (item.hasSubmenu) {
-    toggleSubmenu(item.name);
-  } else {
-    router.push(item.link);
-    // 如果是移动端，导航后自动关闭侧边栏
-    if (isMobile.value) {
-      closeMobileSidebar();
-    }
-  }
-};
 </script>
 
 <style scoped>
-/* --- Base Sidebar --- */
-.sidebar-container {
-  @apply w-72 bg-white shadow-lg p-6 fixed top-0 left-0 bottom-0 overflow-y-auto overflow-hidden z-30 transition-colors duration-300;
-  /* Dark mode styles */
-  @apply dark:bg-gray-900 dark:border-r dark:border-gray-800;
-}
-
 .sidebar-content {
   @apply flex flex-col;
-  min-height: calc(100vh - 3rem); /* 确保内容至少填满视口高度减去padding */
+  min-height: calc(100vh - 3rem);
 }
 
-/* --- Profile Section --- */
-.profile-section {
-  @apply text-center mb-8 relative;
-}
-
-.profile-avatar-wrapper {
-  @apply relative inline-block;
-}
-
-.profile-avatar {
-  @apply w-32 h-32 rounded-full mx-auto mb-4 border-4 border-slate-100 hover:rotate-[360deg] transition-transform duration-500 dark:border-gray-700;
-}
-
-/* --- Dialogs (Login & User Welcome) --- */
-.login-dialog,
-.user-welcome-dialog {
-  @apply absolute left-1/2 transform -translate-x-1/2 mt-2 z-10; /* Common positioning */
-}
-
-/* Login Dialog Specifics */
-.login-dialog {
-  @apply w-48 bg-white rounded-lg shadow-xl p-4 border border-gray-200;
-  /* Animation */
-  @apply animate-fade-in-up;
-  /* Dark mode */
-  @apply dark:bg-gray-800 dark:border-gray-700;
-}
-
-.login-dialog-content {
-  @apply text-center space-y-3;
-}
-
-.login-prompt {
-  @apply text-gray-600 text-sm mb-2;
-  /* Dark mode */
-  @apply dark:text-gray-300;
-}
-
-.login-button {
-  @apply w-full px-4 py-2 rounded-lg transition-colors;
-}
-.login-button.primary {
-  @apply bg-blue-600 text-white hover:bg-blue-700;
-}
-.login-button.secondary {
-  @apply bg-gray-100 text-gray-700 hover:bg-gray-200;
-  /* Dark mode */
-  @apply dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600;
-}
-
-/* User Welcome Dialog Specifics */
-.user-welcome-dialog {
-  @apply w-72 backdrop-blur-lg bg-white/90 rounded-lg shadow-2xl p-4 border border-transparent transition-all duration-500;
-  /* Gradient background */
-  @apply bg-gradient-to-br from-white/90 via-white/80 to-blue-50/30;
-  /* Hover border */
-  @apply hover:border-blue-300/50;
-  /* Animation */
-  animation: float 0.6s cubic-bezier(0.16, 1, 0.3, 1), glow 3s ease-in-out infinite;
-  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.1); /* Base shadow for animation */
-  /* Dark mode */
-  @apply dark:from-gray-900/90 dark:via-gray-900/80 dark:to-blue-900/30 dark:hover:border-blue-500/30;
-}
-
-.user-welcome-content {
-  @apply space-y-4;
-}
-
-.user-info-basic {
-  @apply flex items-start space-x-4;
-}
-
-.user-info-avatar {
-  @apply w-16 h-16 rounded-full border-2 border-gray-200;
-  /* Dark mode */
-  @apply dark:border-gray-700;
-}
-
-.user-info-details {
-  @apply flex-1;
-  /* Animation children */
-  & > * {
-    animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-    opacity: 0;
-  }
-  & h3 { animation-delay: 0.1s; }
-  & .user-role-tags { animation-delay: 0.15s; }
-  & .user-info-email { animation-delay: 0.2s; }
-}
-
-.user-info-name {
-  @apply text-lg font-medium text-gray-900;
-  /* Dark mode */
-  @apply dark:text-white;
-}
-
-.user-role-tags {
-  @apply flex items-center justify-start space-x-2 my-1; /* Adjusted alignment */
-}
-
-.user-role-tag {
-  @apply text-white text-xs px-2 py-0.5 rounded-full;
-}
-/* Role specific colors */
-.role-admin { @apply bg-red-500; }
-.role-vip { @apply bg-yellow-500; }
-.role-user { @apply bg-green-500; }
-.role-default { @apply bg-blue-500; }
-
-.user-info-email {
-  @apply text-sm text-gray-500 truncate;
-  /* Dark mode */
-  @apply dark:text-gray-400;
-}
-
-.user-profile-section {
-  @apply text-sm text-gray-600 border-t border-gray-100 pt-3;
-  /* Dark mode */
-  @apply dark:text-gray-400 dark:border-gray-700;
-  /* Animation */
-  animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-  opacity: 0;
-  animation-delay: 0.3s;
-}
-
-.user-profile-text {
-  @apply line-clamp-2; /* Requires @tailwindcss/line-clamp plugin */
-}
-
-.user-join-time {
-  @apply text-xs text-gray-500 border-t border-gray-100 pt-3;
-  /* Dark mode */
-  @apply dark:text-gray-400 dark:border-gray-700;
- /* Animation */
- animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
- opacity: 0;
- animation-delay: 0.35s; /* Slightly later than profile */
-}
-
-
-.user-action-buttons {
-  @apply flex space-x-2 pt-2;
-  /* Animation */
-  animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-  opacity: 0;
-  animation-delay: 0.4s;
-}
-
-.action-button {
-  @apply flex-1 px-3 py-2 text-sm rounded-lg transition-colors;
-  /* Hover effect from original style block */
-  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.action-button:hover {
-  transform: translateY(-2px);
-}
-
-.action-button.primary {
-  @apply bg-blue-600 text-white hover:bg-blue-700;
-}
-.action-button.secondary {
-  @apply bg-gray-100 text-gray-700 hover:bg-gray-200;
-  /* Dark mode */
-  @apply dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600;
-}
-
-
-/* Dialog Arrow */
-.dialog-arrow {
-  @apply absolute -top-2 left-1/2 transform -translate-x-1/2;
-}
-.dialog-arrow-inner {
-  @apply border-8 border-transparent border-b-white;
-}
-.dialog-arrow-inner.dark {
-  @apply dark:border-b-gray-900; /* Specific dark mode arrow for user dialog */
-}
-.login-dialog .dialog-arrow-inner {
-  @apply dark:border-b-gray-800; /* Specific dark mode arrow for login dialog */
-}
-
-
-/* --- Navigation --- */
-.main-navigation {
-  @apply space-y-2 mb-8;
-}
-
-.nav-item-container {
-  /* Base container for transition */
-}
-
-.nav-item {
-  @apply flex items-center space-x-3 px-4 py-2 text-gray-700 rounded-lg transition-colors cursor-pointer;
-  /* Hover state */
-  @apply hover:bg-slate-100;
-  /* Dark mode */
-  @apply dark:text-gray-300 dark:hover:bg-gray-800;
-}
-.nav-item.active {
-  @apply bg-slate-100 text-blue-600;
-  /* Dark mode active */
-  @apply dark:bg-gray-800 dark:text-blue-400;
-}
-
-.nav-item-icon {
-  @apply w-5 h-5;
-}
-
-.nav-submenu-arrow {
-  @apply ml-auto transform transition-transform duration-300;
-}
-.nav-submenu-arrow.rotated {
-  @apply rotate-180;
-}
-
-.nav-submenu-arrow-icon {
-  @apply w-4 h-4;
-}
-
-/* Submenu */
-.submenu {
-  @apply pl-9 mt-1 space-y-1 overflow-hidden transition-all duration-300;
-}
-
-.submenu-item {
-  @apply py-2 px-3 text-sm rounded-md cursor-pointer flex items-center justify-between transition-colors;
-  /* Hover state */
-  @apply hover:bg-slate-100;
-  /* Dark mode */
-  @apply dark:text-gray-300 dark:hover:bg-gray-800;
-}
-.submenu-item.active {
-  @apply text-blue-600 font-medium bg-blue-50;
-  /* Dark mode active */
-  @apply dark:bg-blue-900/20 dark:text-blue-400;
-}
-
-.submenu-loading, .submenu-empty {
-  @apply py-2 px-3 text-sm text-gray-500 italic;
-  /* Dark mode */
-  @apply dark:text-gray-300;
-}
-
-
-/* --- Social Links --- */
-.social-links {
-  @apply flex justify-center space-x-4 mb-8;
-  /* Animation */
-  @apply animate-fade-slow;
-}
-
-.social-link {
-  @apply text-gray-600 transition-colors duration-300;
-  /* Hover state */
-  @apply hover:text-gray-900;
-  /* Dark mode */
-  @apply dark:text-gray-400 dark:hover:text-white;
-}
-
-.social-icon {
-  @apply w-6 h-6;
-}
-
-/* --- Theme Toggle --- */
-.theme-toggle-section {
-  @apply mb-8 flex justify-center;
-}
-
-.theme-toggle-btn {
-  @apply flex items-center space-x-2 px-4 py-2 rounded-full border border-gray-200 transition-all duration-300;
-  /* Hover state */
-  @apply hover:bg-slate-100;
-  /* Dark mode */
-  @apply dark:border-gray-700 dark:hover:bg-gray-800;
-}
-.theme-toggle-btn.dark { /* Style when dark mode is active */
-  @apply bg-blue-50; /* This seems incorrect for dark, likely should be dark specific */
-  @apply dark:bg-gray-800; /* Correct dark mode background */
-}
-
-.theme-icon {
-  @apply h-5 w-5;
-}
-.theme-icon.sun {
-  @apply text-yellow-500;
-}
-.theme-icon.moon {
-  @apply text-blue-300;
-}
-
-.theme-toggle-text {
-  @apply text-sm font-medium;
-  /* Dark mode */
-  @apply dark:text-gray-300;
-}
-
-
-/* --- Categories & Tags Sections --- */
-.categories-section, .tags-section {
-  @apply mb-8 animate-fade-slow;
-}
-.categories-section { animation-delay: 0.1s; }
-.tags-section { animation-delay: 0.2s; }
-
-.section-title {
-  @apply text-lg font-semibold mb-4;
-  /* Dark mode */
-  @apply dark:text-white;
-}
-
-.section-content-wrapper {
-  @apply flex flex-wrap gap-2;
-}
-
-.loading-placeholder, .empty-placeholder {
-  @apply text-sm text-gray-500 italic w-full; /* Ensure takes full width if needed */
-  /* Dark mode */
-  @apply dark:text-gray-300;
-}
-
-.loading-indicator {
-  @apply flex items-center;
-}
-
-.loading-spinner {
-  @apply animate-spin h-4 w-4 mr-2 text-blue-600;
-  /* Dark mode */
-  @apply dark:text-blue-400;
-}
-.loading-spinner circle { @apply opacity-25; }
-.loading-spinner path { @apply opacity-75; }
-
-.category-tag, .tag-item {
-  @apply px-3 py-1 bg-slate-100 rounded-full text-sm flex items-center transition-colors duration-300 transform cursor-pointer;
-  /* Hover states */
-  @apply hover:bg-slate-200 hover:scale-105;
-  /* Dark mode */
-  @apply dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-300;
-}
-.category-tag.active, .tag-item.active {
-  @apply bg-blue-100 text-blue-800;
-  /* Dark mode active */
-  @apply dark:bg-blue-900 dark:text-blue-300;
-}
-
-.category-count, .tag-count {
-  @apply ml-2 bg-slate-200 px-2 rounded-full text-xs;
-  /* Dark mode */
-  @apply dark:bg-gray-700 dark:text-gray-300;
-}
-
-
-/* --- Animations (from original style block) --- */
-@keyframes float {
-  0% {
-    opacity: 0;
-    transform: translateX(-50%) translateY(10px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-}
-
-@keyframes glow {
-  0%, 100% {
-    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.1);
-  }
-  50% {
-    box-shadow: 0 15px 40px -5px rgba(59, 130, 246, 0.2); /* Blue glow */
-  }
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(15px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Add fade-in animations if not provided by Tailwind */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.animate-fade-in-up {
-  animation: float 0.6s cubic-bezier(0.16, 1, 0.3, 1); /* Use float for consistency */
-}
-
-.animate-fade-slow {
-  animation: fadeIn 0.8s ease-out forwards;
-  opacity: 0;
-}
-
-/* --- Transitions --- */
-/* Sidebar transition */
 .sidebar-transition-enter-active,
 .sidebar-transition-leave-active {
   transition: opacity 0.3s ease, transform 0.3s ease;
@@ -1654,251 +247,4 @@ const handleNavClick = (item: any) => {
   opacity: 0;
   transform: translateX(-20px);
 }
-
-/* Nav item transition */
-.nav-item-enter-active,
-.nav-item-leave-active {
-  transition: all 0.3s ease;
-}
-.nav-item-enter-from,
-.nav-item-leave-to {
-  opacity: 0;
-  transform: translateY(-10px);
-}
-.nav-item-move { /* Add move transition for reordering */
-  transition: transform 0.3s ease;
-}
-
-/* --- 图片选择相关样式 --- */
-.loading-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 16rem;
-}
-
-.picture-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 1rem;
-  max-height: 400px;
-  overflow-y: auto;
-  padding: 1rem 0;
-}
-
-.picture-item {
-  cursor: pointer;
-  border-radius: 0.5rem;
-  overflow: hidden;
-  transition: transform 0.2s;
-  border: 2px solid transparent;
-}
-
-.picture-item:hover {
-  transform: scale(1.05);
-  border-color: #3b82f6;
-}
-
-.picture-thumbnail {
-  width: 100%;
-  height: 100px;
-  object-fit: cover;
-}
-
-.picture-name {
-  padding: 0.5rem;
-  font-size: 0.75rem;
-  text-align: center;
-  background-color: #f8fafc;
-  color: #374151;
-  border-top: 1px solid #e5e7eb;
-}
-
-.upload-section {
-  text-align: center;
-  padding: 1rem 0;
-  border-top: 1px solid #e5e7eb;
-  margin-top: 1rem;
-}
-
-/* --- 文章目录样式 --- */
-.toc-section {
-  @apply mb-8 animate-fade-slow;
-  animation-delay: 0.15s;
-}
-
-.toc-section .section-title {
-  @apply flex items-center gap-3 text-lg font-semibold mb-4 text-gray-900 dark:text-white;
-  background: linear-gradient(135deg, #1f2937 0%, #4f46e5 100%);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.dark .toc-section .section-title {
-  background: linear-gradient(135deg, #ffffff 0%, #a5b4fc 100%);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.section-icon {
-  @apply w-5 h-5 text-gray-500 dark:text-gray-400 flex-shrink-0;
-  -webkit-text-fill-color: currentColor !important;
-}
-
-.toc-wrapper {
-  @apply bg-gray-50/80 dark:bg-gray-800/50 rounded-xl p-4 border border-gray-200/60 dark:border-gray-700/60;
-  /* 设置固定的最大高度，确保目录不会太长 */
-  max-height: 480px; /* 稍微增加高度到480px，提供更好的可视空间 */
-  @apply overflow-y-auto overflow-x-hidden;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  /* 确保滚动容器能正确处理自动滚动 */
-  scroll-behavior: smooth;
-  position: relative;
-  /* 确保容器有明确的尺寸 */
-  height: auto;
-}
-
-.toc-wrapper:hover {
-  @apply bg-gray-100/80 dark:bg-gray-700/50;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-  transform: translateY(-1px);
-  transition: all 0.2s ease;
-}
-
-/* 目录内容样式覆盖 */
-.sidebar-toc {
-  @apply bg-transparent border-0 shadow-none p-0 rounded-none;
-  max-height: none !important;
-  overflow: visible !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-}
-
-.sidebar-toc .toc h3 {
-  @apply hidden; /* 隐藏Toc组件自己的标题 */
-}
-
-.sidebar-toc .reading-progress-bar {
-  @apply hidden; /* 在侧边栏中隐藏进度条 */
-}
-
-/* 适配侧边栏宽度的目录项 */
-.sidebar-toc .toc-item-link {
-  @apply text-sm py-2 px-3;
-  /* 确保目录项在侧边栏中不会太宽 */
-  max-width: 100%;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-}
-
-.sidebar-toc .toc-item-text {
-  @apply text-xs leading-relaxed;
-  /* 在侧边栏中使用更小的字体 */
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* 滚动条样式 */
-.toc-wrapper::-webkit-scrollbar {
-  width: 6px;
-}
-
-.toc-wrapper::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 3px;
-}
-
-.toc-wrapper::-webkit-scrollbar-thumb {
-  background-color: rgba(156, 163, 175, 0.5);
-  border-radius: 3px;
-  transition: background-color 0.2s ease;
-}
-
-.toc-wrapper::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(156, 163, 175, 0.8);
-}
-
-.dark .toc-wrapper::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.dark .toc-wrapper::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.2);
-}
-
-.dark .toc-wrapper::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(255, 255, 255, 0.4);
-}
-
-/* --- 目录模式下的快速导航 --- */
-.toc-quick-nav {
-  @apply mb-6 flex gap-2;
-}
-
-.quick-nav-btn {
-  @apply flex-1 flex items-center justify-center gap-2 px-3 py-2.5;
-  @apply bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30;
-  @apply text-blue-700 dark:text-blue-300 text-sm font-medium rounded-xl;
-  @apply border border-blue-200/60 dark:border-blue-800/60;
-  @apply transition-all duration-200 hover:scale-105 active:scale-95;
-  @apply hover:from-blue-100 hover:to-indigo-100 dark:hover:from-blue-900/50 dark:hover:to-indigo-900/50;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
-  text-decoration: none;
-}
-
-.quick-nav-btn:hover {
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
-  transform: translateY(-1px) scale(1.02);
-}
-
-.quick-nav-icon {
-  @apply w-4 h-4;
-}
-
-.quick-nav-btn span {
-  @apply text-xs font-medium;
-}
-
-/* --- 目录模式下的控制按钮 --- */
-.toc-controls {
-  @apply mt-6 flex justify-center;
-}
-
-.control-btn {
-  @apply w-10 h-10 flex items-center justify-center rounded-full;
-  @apply bg-gray-100/80 dark:bg-gray-700/50 hover:bg-gray-200/80 dark:hover:bg-gray-600/50;
-  @apply transition-all duration-200 active:scale-95;
-  @apply border border-gray-200/60 dark:border-gray-600/50;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.control-btn:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transform: translateY(-1px);
-}
-
-.control-btn.dark {
-  @apply bg-gray-600/60 hover:bg-gray-500/60;
-}
-
-.control-icon {
-  @apply w-5 h-5 text-gray-600 dark:text-gray-300;
-  transition: color 0.2s ease;
-}
-
-.control-btn:hover .control-icon {
-  @apply text-gray-800 dark:text-white;
-}
-
-
 </style>

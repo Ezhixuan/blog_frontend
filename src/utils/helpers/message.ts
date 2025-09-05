@@ -32,16 +32,8 @@ interface MessageOptions extends Omit<NotificationOptions, 'message' | 'descript
 
 // 默认配置
 const defaultOptions: MessageOptions = {
-  duration: 4.5, // 默认显示时间，单位秒
-  placement: 'topRight', // 默认显示位置
-  className: 'modern-notification', // 默认添加一个用于统一样式的类名
-  style: {
-    borderRadius: '0.8rem',
-    padding: '12px',
-    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
-    border: '1px solid transparent',
-    overflow: 'hidden',
-  },
+  duration: 4.5,
+  placement: 'topRight',
 };
 
 /**
@@ -56,11 +48,10 @@ class MessageService {
    * @param options 其他配置选项
    */
   success(message: string, description?: string, options?: MessageOptions) {
-    const successStyle = {
-      background: 'linear-gradient(145deg, rgba(240, 253, 244, 0.95), rgba(220, 252, 231, 0.95))',
-      borderLeft: '4px solid #22c55e',
+    const style = {
+      background: 'linear-gradient(135deg, #2dd4bf 0%, #10b981 100%)',
     };
-    this.show('success', message, description, { ...options, style: { ...defaultOptions.style, ...successStyle, ...options?.style } });
+    this.show('success', message, description, { ...options, style });
   }
 
   /**
@@ -70,11 +61,10 @@ class MessageService {
    * @param options 其他配置选项
    */
   info(message: string, description?: string, options?: MessageOptions) {
-    const infoStyle = {
-      background: 'linear-gradient(145deg, rgba(236, 243, 253, 0.95), rgba(219, 234, 254, 0.95))',
-      borderLeft: '4px solid #3b82f6',
+    const style = {
+      background: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)',
     };
-    this.show('info', message, description, { ...options, style: { ...defaultOptions.style, ...infoStyle, ...options?.style } });
+    this.show('info', message, description, { ...options, style });
   }
 
   /**
@@ -84,11 +74,10 @@ class MessageService {
    * @param options 其他配置选项
    */
   warning(message: string, description?: string, options?: MessageOptions) {
-    const warningStyle = {
-      background: 'linear-gradient(145deg, rgba(255, 247, 237, 0.95), rgba(254, 240, 215, 0.95))',
-      borderLeft: '4px solid #f59e0b',
+    const style = {
+      background: 'linear-gradient(135deg, #facc15 0%, #f59e0b 100%)',
     };
-    this.show('warning', message, description, { ...options, style: { ...defaultOptions.style, ...warningStyle, ...options?.style } });
+    this.show('warning', message, description, { ...options, style });
   }
 
   /**
@@ -98,11 +87,10 @@ class MessageService {
    * @param options 其他配置选项
    */
   error(message: string, description?: string, options?: MessageOptions) {
-    const errorStyle = {
-      background: 'linear-gradient(145deg, rgba(254, 242, 242, 0.95), rgba(254, 226, 226, 0.95))',
-      borderLeft: '4px solid #ef4444',
+    const style = {
+      background: 'linear-gradient(135deg, #f87171 0%, #ef4444 100%)',
     };
-    this.show('error', message, description, { ...options, style: { ...defaultOptions.style, ...errorStyle, ...options?.style } });
+    this.show('error', message, description, { ...options, style });
   }
 
   /**
@@ -114,10 +102,16 @@ class MessageService {
    */
   private show(type: MessageType, message: string, description?: string, options?: MessageOptions) {
     const mergedOptions = { ...defaultOptions, ...options };
+
     notification[type]({
       message,
       description,
       ...mergedOptions,
+      class: `xuan-notification ${mergedOptions.className || ''} ${type}`,
+      style: {
+        ...mergedOptions.style,
+        color: 'white', // 统一设置文字颜色为白色
+      },
     });
   }
 

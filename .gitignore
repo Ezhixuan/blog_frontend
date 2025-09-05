@@ -28,3 +28,4 @@ dist-ssr
 *.sw?
 src/api/blog_api
 tips.md
+/md/

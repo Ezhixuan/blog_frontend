@@ -9,7 +9,10 @@ import type {
   TagListResponse,
   BooleanResponse,
   OperationById,
-  CountVoResponse
+  CountVoResponse,
+  StringResponse,
+  ArticleCategory,
+  ArticleTag
 } from '../../../types';
 
 // ============= 文章相关 =============
@@ -32,13 +35,6 @@ export function getArticleById(id: string): Promise<ArticleInfoResponse> {
  */
 export function submitArticle(data: ArticleSubmitData): Promise<BooleanResponse> {
   return request.post('/article', data);
-}
-
-/**
- * 更新文章
- */
-export function updateArticle(id: string, data: Partial<ArticleSubmitData>): Promise<BooleanResponse> {
-  return request.put(`/article/${id}`, data);
 }
 
 /**
@@ -66,14 +62,14 @@ export function getCategoryList(): Promise<CategoryListResponse> {
 /**
  * 添加分类
  */
-export function addCategory(name: string): Promise<BooleanResponse> {
-  return request.put(`/category/${name}`);
+export function addCategory(data: ArticleCategory): Promise<BooleanResponse> {
+  return request.post('/category', data);
 }
 
 /**
  * 删除分类
  */
-export function deleteCategory(id: number): Promise<BooleanResponse> {
+export function deleteCategory(id: string): Promise<BooleanResponse> {
   return request.delete(`/category/${id}`);
 }
 
@@ -95,14 +91,14 @@ export function getTagList(): Promise<TagListResponse> {
 /**
  * 添加标签
  */
-export function addTag(name: string): Promise<BooleanResponse> {
-  return request.put(`/tag/${name}`);
+export function addTag(data: ArticleTag): Promise<BooleanResponse> {
+  return request.post('/tag', data);
 }
 
 /**
  * 删除标签
  */
-export function deleteTag(id: number): Promise<BooleanResponse> {
+export function deleteTag(id: string): Promise<BooleanResponse> {
   return request.delete(`/tag/${id}`);
 } 
 
@@ -111,4 +107,12 @@ export function deleteTag(id: number): Promise<BooleanResponse> {
  */
 export function getTagCount(): Promise<CountVoResponse> {
   return request.get('/tag/count');
+}
+
+// ============== markdown相关 =============
+/**
+ * 上传markdown文件
+ */
+export function uploadMarkdown(data: FormData): Promise<StringResponse> {
+  return request.post('/markdown/upload', data);
 }

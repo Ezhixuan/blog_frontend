@@ -2,7 +2,7 @@ import type { ApiResponse, PaginationParams, PaginationResult } from './global';
 
 // ============= 用户相关类型 =============
 export interface UserInfo {
-  id: number;
+  id: string;
   userAccount: string;
   username: string;
   avatar?: string;
@@ -48,14 +48,15 @@ export interface TokenInfo {
 
 // ============= 文章相关类型 =============
 export interface ArticleInfo {
-  id: number;
+  id: string;
   title: string;
-  userId: number;
+  userId: string;
   summary: string;
   cover?: string;
-  categoryId: number;
+  projectId?: string;
+  categoryId: string;
   categoryName: string;
-  tagMap: Record<string, any>;
+  tagMap: Record<string, string>;
   wordCount: number;
   viewCount: number;
   likeCount: number;
@@ -68,6 +69,7 @@ export interface ArticleInfo {
 
 export interface ArticleSubmitData {
   id?: string;
+  projectId?: string;
   title: string;
   summary: string;
   cover?: string;
@@ -86,66 +88,57 @@ export interface ArticleQueryParams extends PaginationParams {
   ids?: number[];
   tagIds?: number[];
   categoryIds?: number[];
+  projectId?: string;
 }
 
 // ============= 分类和标签类型 =============
 export interface ArticleCategory {
-  id: number;
+  id?: string;
   name: string;
-  description?: string;
-}
-
-export interface CountVo {
-  id: number;
-  count: number;  
-}
-
-export interface ArticleCategoryCount extends ArticleCategory {
-  count: number;
 }
 
 export interface ArticleTag {
-  id: number;
+  id?: string;
   name: string;
 }
 
-export interface ArticleTagCount extends ArticleTag {
-  count: number;
+export interface CountVo {
+  id: string;
+  count: number;  
 }
-
 // ============= 记忆卡相关类型 =============
 export interface MemoDeck {
-  id: number;
+  id: string;
   name: string;
 }
 
 export interface MemoCard {
-  id: number;
-  deckId: number;
+  id: string;
+  deckId: string;
   deckName: string;
   front: string;
   back: string;
 }
 
 export interface MemoCardSubmitData {
-  deckId: number;
+  deckId: string;
   front: string;
   back: string;
 }
 
 export interface MemoCardOperateData {
-  id: number;
+  id: string;
   useTime: number;
   type: number;
 }
 
 export interface MemoQueryParams extends PaginationParams {
-  deckId?: number;
+  deckId?: string;
 }
 
 // ============= 图片相关类型 =============
 export interface PictureUpload {
-  id: number;
+  id?: string;
   url: string;
   name: string;
   /** 图片类型 1.博客内容图片 2.博客封面图片 3.博客用户头像 */
@@ -153,7 +146,7 @@ export interface PictureUpload {
 }
 
 export interface PictureUploadData {
-  id?: number;
+  id?: string;
   /** 图片类型 1.博客内容图片 2.博客封面图片 3.博客用户头像 */
   type: number;
 }
@@ -177,6 +170,7 @@ export interface ProjectQueryVO {
   views: number;
   featured: boolean;
   technologies: string[];
+  hasArticles: boolean;
 }
 
 export interface ProjectQueryDTO extends PaginationParams{
@@ -207,6 +201,11 @@ export interface ProjectEditDTO {
   featured?: boolean;
 }
 
+export interface ProjectLinkArticleVo {
+  id: string;
+  title: string;
+}
+
 // ============= 通用操作类型 =============
 export interface OperationById {
   id: string;
@@ -226,3 +225,4 @@ export type BooleanResponse = ApiResponse<boolean>;
 export type StringResponse = ApiResponse<string>;
 export type ProjectListResponse = ApiResponse<PaginationResult<ProjectQueryVO>>;
 export type CountVoResponse = ApiResponse<CountVo[]>;
+export type ProjectLinkArticleVoResponse = ApiResponse<PaginationResult<ProjectLinkArticleVo>>;

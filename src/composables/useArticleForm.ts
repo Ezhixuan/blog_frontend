@@ -10,11 +10,12 @@ import {
   deleteTag,
   deleteCategory,
 } from "@/api/modules/blog";
+import { getLinkList } from "@/api/modules/project";
 import { uploadPicture as upload, getPictureList } from "@/api/modules/common";
 import { mockGenerateBlogContent } from "@/api/ai";
 import { useAsyncOperation } from "./useAsyncOperation";
 import { PICTURE_TYPES } from "@/utils/constants/pictureTypes";
-import type { ArticleCategory, ArticleTag, PictureUpload } from "@/types";
+import type { ArticleCategory, ArticleTag, PictureUpload, ProjectLinkArticleVo } from "@/types";
 
 export function useArticleForm() {
   const router = useRouter();
@@ -23,12 +24,17 @@ export function useArticleForm() {
   const title = ref("");
   const content = ref("");
   const summary = ref("");
-  const categoryId = ref<number | undefined>(undefined);
-  const tagIds = ref<number[]>([]);
+  const categoryId = ref<string | undefined>(undefined);
+  const tagIds = ref<string[]>([]);
   const status = ref(1); // 默认发布状态: 1-发布, 0-草稿
   const coverUrl = ref(""); // 封面图片URL
   const articleId = ref<string | undefined>(undefined); // 文章ID，编辑时使用
+  const projectId = ref<string | undefined>(undefined); // 关联项目ID
   const wordCount = ref(0); // 字数统计
+
+  // 项目相关状态
+  const projects = ref<ProjectLinkArticleVo[]>([]);
+
   // 分类相关状态
   const categories = ref<ArticleCategory[]>([]);
   const newCategoryName = ref("");
@@ -100,6 +106,18 @@ export function useArticleForm() {
     { successMessage: "博客提交成功", errorMessage: "博客提交失败" }
   );
 
+  const { isLoading: isLoadingProjects, execute: fetchProjects } =
+    useAsyncOperation(
+      async () => {
+        const res = await getLinkList();
+        if (res.data && res.data.data) {
+          projects.value = res.data.data;
+        }
+        return res;
+      },
+      { errorMessage: "获取项目列表失败" }
+    );
+
   const { isLoading: isLoadingCategories, execute: fetchCategories } =
     useAsyncOperation(
       async () => {
@@ -131,7 +149,7 @@ export function useArticleForm() {
           return null;
         }
 
-        const res = await submitCategory(name);
+        const res = await submitCategory({name: name.trim()});
         if (res.code === 0) {
           // 重新获取分类列表
           await fetchCategories();
@@ -149,8 +167,7 @@ export function useArticleForm() {
         message.warning("标签名称不能为空");
         return null;
       }
-
-                      const res = await submitTag(name);
+      const res = await submitTag({name: name.trim()});
         if (res.code === 0) {
           // 重新获取标签列表
           await fetchTags();
@@ -211,7 +228,7 @@ const handleImageUpload = async (options: any) => {
       
       // 添加到图片列表
       pictureList.value.unshift({
-        id: Date.now(),
+        id: Date.now().toString(),
         url: imageUrl,
         name: file.name,
         type: type
@@ -285,6 +302,7 @@ const handleImageUpload = async (options: any) => {
       status: status.value,
       cover: coverUrl.value, // 添加封面图片URL
       wordCount: wordCount.value,
+      projectId: projectId.value,
     });
   };
 
@@ -317,7 +335,7 @@ const handleImageUpload = async (options: any) => {
   };
 
   // 删除标签
-  const deleteTagFunction = async (tagId: number | undefined) => {
+  const deleteTagFunction = async (tagId: string | undefined) => {
     if (tagId === undefined) return;
 
     try {
@@ -332,7 +350,7 @@ const handleImageUpload = async (options: any) => {
   };
 
   // 删除分类
-  const deleteCategoryFunction = async (id: number | undefined) => {
+  const deleteCategoryFunction = async (id: string | undefined) => {
     if (id === undefined) return;
 
     try {
@@ -356,6 +374,7 @@ const handleImageUpload = async (options: any) => {
     title.value = data.title || "";
     content.value = data.content || "";
     summary.value = data.summary || "";
+    projectId.value = data.projectId || undefined;
     tagIds.value = data.tagIds || [];
     status.value = data.status || 1;
     coverUrl.value = data.coverUrl || "";
@@ -364,6 +383,9 @@ const handleImageUpload = async (options: any) => {
     tagNames.value = data.tagNames || [];
 
     // 如果有分类名称和标签名称，预先处理选择项
+    if (data.projectId) {
+      projectId.value = data.projectId;
+    }
     const categoryName = data.categoryName;
     const tagNamesList = data.tagNames || [];
 
@@ -471,6 +493,7 @@ const handleImageUpload = async (options: any) => {
   onMounted(() => {
     fetchCategories();
     fetchTags();
+    fetchProjects();
     initAnimations();
   });
 
@@ -484,6 +507,11 @@ const handleImageUpload = async (options: any) => {
     status,
     coverUrl,
     articleId,
+    projectId,
+
+    // 项目相关
+    projects,
+    isLoadingProjects,
 
     // 分类相关
     categories,

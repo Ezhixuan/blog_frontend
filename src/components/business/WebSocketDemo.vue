@@ -79,7 +79,7 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import { useWebSocket, type WebSocketMessage, type BackendMessage } from '@/composables/useWebSocket';
 import request from '@/utils/core/request';
 
-const { isConnected, userId, setMessageHandler, sendMessage } = useWebSocket();
+const { isConnected, userId, setMessageHandler } = useWebSocket();
 
 // 在线用户数量
 const onlineCount = ref(0);

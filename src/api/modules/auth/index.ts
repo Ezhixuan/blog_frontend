@@ -31,6 +31,13 @@ export function getUserInfo(): Promise<UserInfoResponse> {
 }
 
 /**
+ * 获取管理员信息 * 
+ */
+export function getAdminInfo(): Promise<UserInfoResponse> {
+  return request.get('/user/admin');
+}
+
+/**
  * 更新用户信息
  */
 export function updateUserInfo(data: UserEditData): Promise<BooleanResponse> {

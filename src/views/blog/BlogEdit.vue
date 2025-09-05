@@ -339,6 +339,51 @@
         <div
           class="form-section"
           :class="{
+            'translate-y-0 opacity-100': animations.category,
+            'translate-y-4 opacity-0': !animations.category,
+          }"
+          @mouseenter="activeSection = 'project'"
+          @mouseleave="activeSection = ''"
+        >
+          <div class="section-header">
+            <label
+              for="project"
+              class="section-label"
+              :class="{ 'active-label': activeSection === 'project' }"
+            >
+              关联项目
+            </label>
+          </div>
+          <a-select
+            id="project"
+            v-model:value="projectId"
+            :loading="isLoadingProjects"
+            show-search
+            placeholder="请选择或搜索项目"
+            :filter-option="filterOption"
+            class="w-full transition-all duration-300"
+            :class="{ 'ant-select-focused': activeSection === 'project' }"
+            allow-clear
+          >
+            <a-select-option
+              v-for="project in projects"
+              :key="project.id"
+              :value="project.id"
+              :label="project.title"
+            >
+              <div class="select-option">
+                <span>{{ project.title }}</span>
+              </div>
+            </a-select-option>
+          </a-select>
+          <div v-if="isLoadingProjects" class="loading-indicator">
+            加载项目中...
+          </div>
+        </div>
+
+        <div
+          class="form-section"
+          :class="{
             'translate-y-0 opacity-100': animations.tags,
             'translate-y-4 opacity-0': !animations.tags,
           }"
@@ -438,7 +483,7 @@
                 <div class="select-option">
                   <span>{{ tag.name }}</span>
                   <button
-                    v-if="!tagIds.includes(tag.id)"
+                    v-if="tag.id && !tagIds.includes(tag.id)"
                     @click.stop="deleteTagFunction(tag.id)"
                     class="delete-button"
                   >
@@ -623,6 +668,11 @@ const {
   tagIds,
   status,
   coverUrl,
+  projectId,
+
+  // 项目相关
+  projects,
+  isLoadingProjects,
 
   // 分类相关
   categories,
@@ -701,6 +751,7 @@ const fetchArticleDetail = async (id: string) => {
         tagNames: tagNamesArray,
         status: article.status,
         coverUrl: article.cover,
+        projectId: article.projectId,
       });
     }
   } catch (error) {
